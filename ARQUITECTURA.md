@@ -44,11 +44,13 @@ Todas tienen RLS con `org_id IN (SELECT public.get_my_org_ids())`.
 
 ## Log de Sprints
 
-### Sprint 0 — Setup y Conexión ✅ (2026-03-18)
+### Sprint 0 — Setup y Conexión ✅ CERRADO (2026-03-18)
 - Repo creado: `github.com/casanchez71/presupuestador-backend`
-- Deploy en Render: `https://presupuestador-backend-adm1.onrender.com`
+- Deploy live en Render: `https://presupuestador-backend-adm1.onrender.com`
+- Health check OK: `{"status":"OK","timestamp":"2026-03-18T04:46:23.677665"}`
 - 6 tablas migradas en Supabase con RLS
 - Endpoints base: `/health`, `/budget/import-excel`, `/budget/tree/{id}`, `/budget/{id}/item/update`
+- Python 3.11.9 + Dockerfile en repo (build exitoso)
 
 ### Sprint 1 — Núcleo + Árbol + Edición (pendiente)
 - CRUD real de presupuestos (`budgets` + `budget_items`)
@@ -72,7 +74,8 @@ Todas tienen RLS con `org_id IN (SELECT public.get_my_org_ids())`.
 
 | Problema | Causa | Solución |
 |----------|-------|----------|
-| Build falla con error Rust/Cargo | `pydantic-core` intenta compilar desde fuente | `--prefer-binary` en pip |
+| Build falla con error Rust/Cargo | Render usa Python 3.14 por defecto, sin wheels para pydantic-core | Setear `PYTHON_VERSION=3.11.9` en Render Environment |
+| `--prefer-binary` no alcanza solo | Render free buildpack igual intenta compilar | Agregar `Dockerfile` con `python:3.11-slim` en repo |
 | `python-jose[cryptography]` conflicto | Dependencias Rust en Render free | Reemplazar por `pyjwt[crypto]` |
 | RLS policy error SETOF | `get_my_org_ids()` es set-returning | Usar `IN (SELECT ...)` no `= ANY(...)` |
 | JWT inválido con tokens nuevos | Supabase migró a ECC P-256 | JWKS client con `PyJWKClient` |
