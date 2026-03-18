@@ -1,7 +1,8 @@
 -- =============================================================
 -- MIGRACIÓN: Módulo Presupuestador
 -- Ejecutar en: Supabase SQL Editor
--- NOTA: usa get_my_org_ids() (plural) — función existente en tu schema
+-- NOTA: usa subquery IN (SELECT ...) porque get_my_org_ids()
+--       es SETOF y no puede usarse directo en policy expressions
 -- =============================================================
 
 -- 1. price_snapshots
@@ -18,7 +19,7 @@ ALTER TABLE price_snapshots ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "price_snapshots_org_isolation"
   ON price_snapshots FOR ALL
-  USING (org_id = ANY(public.get_my_org_ids()));
+  USING (org_id IN (SELECT public.get_my_org_ids()));
 
 -- 2. audit_logs
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -36,7 +37,7 @@ ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "audit_logs_org_isolation"
   ON audit_logs FOR ALL
-  USING (org_id = ANY(public.get_my_org_ids()));
+  USING (org_id IN (SELECT public.get_my_org_ids()));
 
 -- 3. budgets
 CREATE TABLE IF NOT EXISTS budgets (
@@ -53,7 +54,7 @@ ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "budgets_org_isolation"
   ON budgets FOR ALL
-  USING (org_id = ANY(public.get_my_org_ids()));
+  USING (org_id IN (SELECT public.get_my_org_ids()));
 
 -- 4. budget_items (árbol jerárquico)
 CREATE TABLE IF NOT EXISTS budget_items (
@@ -77,7 +78,7 @@ ALTER TABLE budget_items ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "budget_items_org_isolation"
   ON budget_items FOR ALL
-  USING (org_id = ANY(public.get_my_org_ids()));
+  USING (org_id IN (SELECT public.get_my_org_ids()));
 
 -- 5. budget_versions (snapshots de versiones completas)
 CREATE TABLE IF NOT EXISTS budget_versions (
@@ -94,7 +95,7 @@ ALTER TABLE budget_versions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "budget_versions_org_isolation"
   ON budget_versions FOR ALL
-  USING (org_id = ANY(public.get_my_org_ids()));
+  USING (org_id IN (SELECT public.get_my_org_ids()));
 
 -- 6. indirect_config (configuración de indirectos por organización)
 CREATE TABLE IF NOT EXISTS indirect_config (
@@ -111,4 +112,4 @@ ALTER TABLE indirect_config ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "indirect_config_org_isolation"
   ON indirect_config FOR ALL
-  USING (org_id = ANY(public.get_my_org_ids()));
+  USING (org_id IN (SELECT public.get_my_org_ids()));

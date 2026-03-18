@@ -1,8 +1,8 @@
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import os
-import httpx
-from jose import jwt, JWTError
+import jwt
+from jwt import PyJWKClient
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
@@ -15,30 +15,27 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 security = HTTPBearer()
 
-# Cache de JWKS para no fetchear en cada request
-_jwks_cache = None
+# Cliente JWKS con cache automático (PyJWT nativo)
+_jwks_client = None
 
 
-def get_jwks():
-    """Obtiene las claves públicas de Supabase (con cache en memoria)"""
-    global _jwks_cache
-    if _jwks_cache is None:
+def get_jwks_client():
+    global _jwks_client
+    if _jwks_client is None:
         jwks_url = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
-        response = httpx.get(jwks_url, timeout=10)
-        response.raise_for_status()
-        _jwks_cache = response.json()
-    return _jwks_cache
+        _jwks_client = PyJWKClient(jwks_url, cache_keys=True)
+    return _jwks_client
 
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Valida JWT de Supabase (ES256 + HS256) y devuelve user_id + org_id"""
+    """Valida JWT de Supabase (ES256/HS256) y devuelve user_id + org_id"""
     token = credentials.credentials
     try:
-        # Soporta tanto ECC (ES256, actual) como legacy HS256
-        jwks = get_jwks()
+        client = get_jwks_client()
+        signing_key = client.get_signing_key_from_jwt(token)
         payload = jwt.decode(
             token,
-            jwks,
+            signing_key.key,
             algorithms=["ES256", "HS256"],
             audience="authenticated"
         )
@@ -62,7 +59,9 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
         return {"user_id": user_id, "tenant_id": org_id}
 
-    except JWTError as e:
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expirado")
+    except jwt.InvalidTokenError as e:
         raise HTTPException(status_code=401, detail=f"Token inválido: {str(e)}")
     except HTTPException:
         raise
