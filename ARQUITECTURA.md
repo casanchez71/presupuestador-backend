@@ -52,10 +52,18 @@ Todas tienen RLS con `org_id IN (SELECT public.get_my_org_ids())`.
 - Endpoints base: `/health`, `/budget/import-excel`, `/budget/tree/{id}`, `/budget/{id}/item/update`
 - Python 3.11.9 + Dockerfile en repo (build exitoso)
 
+### Sprint 1 — Núcleo + Árbol + Edición ✅ CERRADO (2026-03-18)
+- CRUD budgets, árbol jerárquico con parent_id, parser Excel Las Heras
+
 ### Sprint 1 — Núcleo + Árbol + Edición (pendiente)
 - CRUD real de presupuestos (`budgets` + `budget_items`)
 - Parser de Excel → árbol jerárquico
 - Endpoints: `POST /budget`, `GET /budgets`, `GET /budget/{id}/tree`, `POST /budget/{id}/items`
+
+### Sprint 2 — IA + Lectura de Planos ✅ CERRADO (2026-03-18)
+- GPT-4o Vision para planos, indirectos ponderados, vista análisis
+- Columnas `indirecto` y `total_con_indirecto` agregadas a `budget_items`
+- Variable `OPENAI_API_KEY` en Render
 
 ### Sprint 2 — IA + Lectura de Planos (pendiente)
 - GPT-4o vision para leer planos (PDF, foto, CAD)
