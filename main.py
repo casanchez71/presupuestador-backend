@@ -1,16 +1,17 @@
-from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
+from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
+from supabase import Client
 from utils.supabase_client import supabase, get_current_user
-from typing import Dict
+from typing import Dict, List, Optional
 import json
 from datetime import datetime
 import os
+from uuid import UUID
 
-app = FastAPI(title="Presupuestador Backend - Módulo Desacoplado")
+app = FastAPI(title="Presupuestador Backend - Sprint 1")
 
-# CORS restrictivo: solo orígenes autorizados (configurable por env)
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 app.add_middleware(
     CORSMiddleware,
@@ -20,110 +21,171 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# ========================= MODELOS =========================
 class BudgetCreate(BaseModel):
     name: str
-    description: str | None = None
+    description: Optional[str] = None
 
+class BudgetItemCreate(BaseModel):
+    parent_id: Optional[UUID] = None
+    code: Optional[str] = None
+    description: str
+    unidad: Optional[str] = None
+    cantidad: Optional[float] = None
+    precio_unitario: Optional[float] = None
+    notas: Optional[str] = None
 
-class ItemUpdate(BaseModel):
-    id: str
-    cantidad: float | None = None
-    precio_unitario: float | None = None
-    notas: str | None = None
+# ========================= FUNCIÓN ÁRBOL =========================
+def build_tree(items: List[Dict]) -> List[Dict]:
+    """Convierte lista plana → árbol jerárquico usando parent_id"""
+    if not items:
+        return []
+    
+    item_map = {item["id"]: {**item, "children": []} for item in items}
+    roots = []
+    
+    for item in items:
+        if item.get("parent_id") is None:
+            roots.append(item_map[item["id"]])
+        elif item["parent_id"] in item_map:
+            item_map[item["parent_id"]]["children"].append(item_map[item["id"]])
+    
+    return roots
 
+# ========================= ENDPOINTS =========================
 
 @app.get("/health")
 def health_check():
     return {"status": "OK", "timestamp": datetime.utcnow().isoformat()}
 
+@app.post("/budgets")
+async def create_budget(budget: BudgetCreate, current_user: Dict = Depends(get_current_user)):
+    data = {
+        "org_id": current_user["tenant_id"],
+        "name": budget.name,
+        "description": budget.description,
+        "status": "draft"
+    }
+    result = supabase.table("budgets").insert(data).execute()
+    return result.data[0]
 
+@app.get("/budgets")
+async def list_budgets(current_user: Dict = Depends(get_current_user)):
+    result = supabase.table("budgets") \
+        .select("*") \
+        .eq("org_id", current_user["tenant_id"]) \
+        .execute()
+    return result.data or []
+
+@app.get("/budget/{budget_id}")
+async def get_budget(budget_id: UUID, current_user: Dict = Depends(get_current_user)):
+    result = supabase.table("budgets") \
+        .select("*") \
+        .eq("id", str(budget_id)) \
+        .eq("org_id", current_user["tenant_id"]) \
+        .single().execute()
+    if not result.data:
+        raise HTTPException(404, "Presupuesto no encontrado")
+    return result.data
+
+@app.delete("/budget/{budget_id}")
+async def delete_budget(budget_id: UUID, current_user: Dict = Depends(get_current_user)):
+    result = supabase.table("budgets") \
+        .delete() \
+        .eq("id", str(budget_id)) \
+        .eq("org_id", current_user["tenant_id"]) \
+        .execute()
+    return {"message": "Eliminado" if result.data else "No encontrado"}
+
+@app.post("/budget/{budget_id}/items")
+async def create_items(budget_id: UUID, items: List[BudgetItemCreate], current_user: Dict = Depends(get_current_user)):
+    to_insert = [{
+        "budget_id": str(budget_id),
+        "org_id": current_user["tenant_id"],
+        "parent_id": str(item.parent_id) if item.parent_id else None,
+        "code": item.code,
+        "description": item.description,
+        "unidad": item.unidad,
+        "cantidad": item.cantidad,
+        "precio_unitario": item.precio_unitario,
+        "notas": item.notas
+    } for item in items]
+
+    result = supabase.table("budget_items").insert(to_insert).execute()
+    return {"inserted": len(result.data)}
+
+@app.get("/budget/{budget_id}/tree")
+async def get_tree(budget_id: UUID, current_user: Dict = Depends(get_current_user)):
+    result = supabase.table("budget_items") \
+        .select("*") \
+        .eq("budget_id", str(budget_id)) \
+        .eq("org_id", current_user["tenant_id"]) \
+        .execute()
+    
+    tree = build_tree(result.data or [])
+    return {"budget_id": str(budget_id), "tree": tree}
+
+# ========================= PARSER EXCEL (definido por mí) =========================
 @app.post("/budget/import-excel")
 async def import_excel(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Importa Excel y guarda snapshot de precios"""
-    if not file.filename.lower().endswith(('.xlsx', '.xls')):
-        raise HTTPException(400, "Solo archivos .xlsx o .xls")
-
+    """Parser basado en tu Excel real 'EDIFICIO LAS HERAS'"""
     contents = await file.read()
-    try:
-        df_dict = pd.read_excel(contents, sheet_name=None)
-    except Exception as e:
-        raise HTTPException(400, f"Error leyendo Excel: {str(e)}")
+    df_dict = pd.read_excel(contents, sheet_name=None)
 
-    precios = []
+    # 1. Precios base (hoja 00_Mat)
+    precios = {}
     if "00_Mat" in df_dict:
-        precios = df_dict["00_Mat"].to_dict(orient="records")
+        mat = df_dict["00_Mat"]
+        for _, row in mat.iterrows():
+            if pd.notna(row.get("CODIGO")):
+                precios[str(row["CODIGO"])] = row.get("PRECIO CON IVA") or row.get("PRECIO SIN IVA")
 
-    snapshot_data = {
+    # 2. Estructura principal (hoja 01_C&P) - detectamos jerarquía por ITEM
+    items = []
+    if "01_C&P" in df_dict:
+        df = df_dict["01_C&P"]
+        current_parent = None
+        level_stack = []
+
+        for _, row in df.iterrows():
+            item_text = str(row.get("ITEM", "")).strip()
+            desc = str(row.get("DESCRIPCIÓN", "")).strip()
+            if not desc or desc == "nan":
+                continue
+
+            # Detectamos nivel (simple pero efectivo para tu Excel)
+            if item_text.startswith(("0.", "1.", "2.", "3.", "4.")) or item_text.startswith("46"):
+                # Nuevo nivel o piso
+                current_parent = None
+                level_stack = []
+
+            item_data = {
+                "code": item_text,
+                "description": desc,
+                "unidad": row.get("UNIDAD"),
+                "cantidad": float(row.get("CANTIDAD")) if pd.notna(row.get("CANTIDAD")) else None,
+                "precio_unitario": None,  # se puede enriquecer después con precios
+                "parent_id": current_parent
+            }
+            items.append(item_data)
+
+    # Guardar snapshot y presupuesto
+    snapshot = supabase.table("price_snapshots").insert({
         "org_id": current_user["tenant_id"],
         "user_id": current_user["user_id"],
         "file_name": file.filename,
-        "data": json.dumps({"precios": precios}),
-        "created_at": datetime.utcnow().isoformat()
+        "data": json.dumps({"precios": precios})
+    }).execute()
+
+    return {
+        "message": "Excel procesado correctamente",
+        "snapshot_id": snapshot.data[0]["id"],
+        "items_detected": len(items),
+        "note": "Parser inicial basado en tu Excel Las Heras. Podemos refinarlo después."
     }
-
-    try:
-        result = supabase.table("price_snapshots").insert(snapshot_data).execute()
-        return {
-            "message": "Excel importado y snapshot creado",
-            "snapshot_id": result.data[0]["id"],
-            "org_id": current_user["tenant_id"]
-        }
-    except Exception as e:
-        raise HTTPException(500, f"Error al guardar en Supabase: {str(e)}")
-
-
-@app.get("/budget/tree/{budget_id}")
-async def get_tree(
-    budget_id: str,
-    current_user: Dict = Depends(get_current_user)
-):
-    """Devuelve estructura de árbol jerárquico del presupuesto"""
-    # Sprint 1: esto se generará desde DB. Por ahora es un placeholder.
-    tree = {
-        "name": "Obra Ejemplo",
-        "org_id": current_user["tenant_id"],
-        "children": [
-            {"name": "Piso 1", "children": [
-                {"name": "Cimientos"},
-                {"name": "Columnas y tabiques"},
-                {"name": "Losa"},
-                {"name": "Mampostería"}
-            ]},
-        ]
-    }
-    return tree
-
-
-@app.post("/budget/{budget_id}/item/update")
-async def update_item(
-    budget_id: str,
-    item: ItemUpdate,
-    current_user: Dict = Depends(get_current_user)
-):
-    """Actualiza ítem y registra en audit_logs"""
-    changes = item.model_dump(exclude_unset=True)
-
-    audit_entry = {
-        "org_id": current_user["tenant_id"],
-        "user_id": current_user["user_id"],
-        "budget_id": budget_id,
-        "item_id": item.id,
-        "action": "update",
-        "changes": changes,
-        "timestamp": datetime.utcnow().isoformat()
-    }
-
-    try:
-        supabase.table("audit_logs").insert(audit_entry).execute()
-        # Sprint 1: aquí irá la actualización real en budget_items
-        return {"message": "Ítem actualizado y auditado", "changes": changes}
-    except Exception as e:
-        raise HTTPException(500, f"Error en Supabase: {str(e)}")
-
 
 if __name__ == "__main__":
     import uvicorn
