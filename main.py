@@ -58,6 +58,10 @@ class IndirectApplyRequest(BaseModel):
 class VersionCreate(BaseModel):
     notes: Optional[str] = None
 
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
 # ── Funciones auxiliares ─────────────────────────────────────────────────────
 def build_tree(items: List[Dict]) -> List[Dict]:
     if not items:
@@ -105,6 +109,13 @@ def get_parent_candidates(code: str) -> List[str]:
     if len(parts) > 1:
         return [".".join(parts[:i]) for i in range(len(parts) - 1, 0, -1)]
     return []
+
+def read_obj_value(obj: object, key: str) -> object:
+    if obj is None:
+        return None
+    if isinstance(obj, dict):
+        return obj.get(key)
+    return getattr(obj, key, None)
 
 async def analyze_plan_with_vision(file_content: bytes, filename: str, prompt: str) -> List[Dict]:
     base64_image = base64.b64encode(file_content).decode('utf-8')
@@ -316,8 +327,8 @@ def index():
         <div class="wrap">
           <section class="hero">
             <h1>Presupuestador</h1>
-            <p>Esta es una pantalla minima para usar el backend sin entrar a Swagger.</p>
-            <p>Pegas tu token, cargas presupuestos y podes ver detalle + arbol en un solo lugar.</p>
+            <p>Esta es una pantalla minima para probar el backend sin Swagger.</p>
+            <p>Primero inicia sesion con email y contrasena. Luego ya podes operar presupuestos.</p>
             <div class="links">
               <a href="/health" target="_blank" rel="noreferrer">/health</a>
               <a href="/docs" target="_blank" rel="noreferrer">/docs</a>
@@ -327,13 +338,24 @@ def index():
           <section class="grid">
             <article class="card">
               <h2>Acceso y acciones</h2>
-              <label for="tokenInput">Bearer token / JWT</label>
-              <textarea id="tokenInput" placeholder="Pega el token aqui"></textarea>
+              <label for="emailInput">Email</label>
+              <input id="emailInput" type="email" placeholder="tu@email.com" />
+              <label for="passwordInput">Contrasena</label>
+              <input id="passwordInput" type="password" placeholder="Tu contrasena" />
               <div class="row">
-                <button class="btn-primary" id="saveTokenBtn">Guardar token</button>
+                <button class="btn-primary" id="loginBtn">Iniciar sesion</button>
                 <button class="btn-secondary" id="loadBudgetsBtn">Cargar presupuestos</button>
               </div>
               <div id="statusBox" class="status"></div>
+
+              <details style="margin-top: 12px;">
+                <summary style="cursor: pointer; font-weight: 700;">Avanzado: token manual</summary>
+                <label for="tokenInput">Token de acceso</label>
+                <textarea id="tokenInput" placeholder="Pega el token aqui"></textarea>
+                <div class="row">
+                  <button class="btn-secondary" id="saveTokenBtn">Guardar token manual</button>
+                </div>
+              </details>
 
               <label for="budgetName">Crear presupuesto</label>
               <input id="budgetName" placeholder="Nombre" />
@@ -354,6 +376,9 @@ def index():
         </div>
 
         <script>
+          const emailInput = document.getElementById("emailInput");
+          const passwordInput = document.getElementById("passwordInput");
+          const loginBtn = document.getElementById("loginBtn");
           const tokenInput = document.getElementById("tokenInput");
           const saveTokenBtn = document.getElementById("saveTokenBtn");
           const loadBudgetsBtn = document.getElementById("loadBudgetsBtn");
@@ -372,10 +397,19 @@ def index():
           function getToken() {
             const token = tokenInput.value.trim();
             if (!token) {
-              showStatus("Falta token. Pegalo y toca Guardar token.", "error");
+              showStatus("Primero inicia sesion. Si hace falta, usa token manual en Avanzado.", "error");
               return null;
             }
             return token;
+          }
+
+          function safeText(value) {
+            return String(value || "")
+              .replaceAll("&", "&amp;")
+              .replaceAll("<", "&lt;")
+              .replaceAll(">", "&gt;")
+              .replaceAll('"', "&quot;")
+              .replaceAll("'", "&#039;");
           }
 
           async function apiFetch(path, options = {}) {
@@ -394,6 +428,38 @@ def index():
               throw new Error(text || ("HTTP " + response.status));
             }
             return response.json();
+          }
+
+          async function login() {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            if (!email || !password) {
+              showStatus("Completa email y contrasena para iniciar sesion.", "error");
+              return;
+            }
+            try {
+              const response = await fetch("/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+              });
+              if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || ("HTTP " + response.status));
+              }
+              const data = await response.json();
+              if (!data.access_token) {
+                throw new Error("Respuesta de login sin access_token.");
+              }
+              tokenInput.value = data.access_token;
+              localStorage.setItem("presupuestador.jwt", data.access_token);
+              localStorage.setItem("presupuestador.email", email);
+              passwordInput.value = "";
+              showStatus("Sesion iniciada. Ya podes cargar presupuestos.", "ok");
+              await loadBudgets();
+            } catch (err) {
+              showStatus("No se pudo iniciar sesion: " + err.message, "error");
+            }
           }
 
           function money(value) {
@@ -421,7 +487,7 @@ def index():
               return;
             }
             budgetList.innerHTML = items.map((item) => {
-              const name = item.name || "Sin nombre";
+              const name = safeText(item.name || "Sin nombre");
               const date = item.created_at ? new Date(item.created_at).toLocaleString() : "-";
               return (
                 "<button class='budget-item' data-id='" + item.id + "'>" +
@@ -509,6 +575,7 @@ def index():
             showStatus("Token guardado en este navegador.", "ok");
           });
 
+          loginBtn.addEventListener("click", login);
           loadBudgetsBtn.addEventListener("click", loadBudgets);
           createBudgetBtn.addEventListener("click", createBudget);
 
@@ -523,12 +590,45 @@ def index():
           const savedToken = localStorage.getItem("presupuestador.jwt");
           if (savedToken) {
             tokenInput.value = savedToken;
-            showStatus("Token cargado desde este navegador.", "ok");
+          }
+          const savedEmail = localStorage.getItem("presupuestador.email");
+          if (savedEmail) {
+            emailInput.value = savedEmail;
+          }
+          if (savedToken) {
+            showStatus("Sesion recordada en este navegador.", "ok");
           }
         </script>
       </body>
     </html>
     """
+
+@app.post("/auth/login")
+async def auth_login(payload: LoginRequest):
+    email = payload.email.strip().lower()
+    password = payload.password
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email y contrasena son obligatorios")
+
+    try:
+        auth_result = supabase.auth.sign_in_with_password({"email": email, "password": password})
+    except Exception:
+        raise HTTPException(status_code=401, detail="Credenciales invalidas")
+
+    session = read_obj_value(auth_result, "session")
+    user = read_obj_value(auth_result, "user")
+    access_token = read_obj_value(session, "access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="No se pudo crear sesion")
+
+    user_id = read_obj_value(user, "id")
+    user_email = read_obj_value(user, "email") or email
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_id": user_id,
+        "email": user_email
+    }
 
 @app.get("/health")
 def health_check():
