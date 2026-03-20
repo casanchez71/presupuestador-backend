@@ -133,29 +133,399 @@ async def analyze_plan_with_vision(file_content: bytes, filename: str, prompt: s
 def index():
     return """
     <!doctype html>
-    <html lang="en">
+    <html lang="es">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Presupuestador Backend</title>
+        <title>Presupuestador - Vista minima</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.5; }
-          h1 { margin-bottom: 8px; }
-          p { max-width: 720px; }
-          ul { margin-top: 10px; }
-          a { color: #0b5fff; text-decoration: none; }
-          a:hover { text-decoration: underline; }
-          .note { margin-top: 16px; color: #444; }
+          :root {
+            --bg: #f3f5f9;
+            --surface: #ffffff;
+            --ink: #1f2937;
+            --muted: #5b6471;
+            --line: #d9dee8;
+            --primary: #0f6fff;
+            --primary-ink: #ffffff;
+            --warn: #b42318;
+            --ok: #027a48;
+          }
+          * { box-sizing: border-box; }
+          body {
+            margin: 0;
+            color: var(--ink);
+            background:
+              radial-gradient(circle at 12% 10%, #dbe9ff 0%, #eef3ff 30%, transparent 55%),
+              radial-gradient(circle at 82% 0%, #ffe6cf 0%, #fff1e3 24%, transparent 52%),
+              var(--bg);
+            font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+          }
+          .wrap {
+            max-width: 1080px;
+            margin: 24px auto 40px;
+            padding: 0 16px;
+          }
+          .hero {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 8px 24px rgba(20, 30, 55, 0.06);
+          }
+          h1 {
+            font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+            margin: 0 0 8px;
+            font-size: 32px;
+          }
+          p {
+            margin: 6px 0;
+            color: var(--muted);
+          }
+          .links {
+            margin-top: 10px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+          .links a { color: var(--primary); text-decoration: none; font-weight: 700; }
+          .links a:hover { text-decoration: underline; }
+          .grid {
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 14px;
+          }
+          .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+          }
+          .card h2 {
+            margin: 0 0 12px;
+            font-size: 18px;
+          }
+          label {
+            display: block;
+            margin: 10px 0 6px;
+            font-weight: 700;
+            font-size: 14px;
+          }
+          input, textarea, button {
+            font: inherit;
+          }
+          input, textarea {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 11px;
+            background: #fff;
+          }
+          textarea { min-height: 88px; resize: vertical; }
+          .row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+          }
+          button {
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            font-weight: 700;
+          }
+          .btn-primary {
+            background: var(--primary);
+            color: var(--primary-ink);
+          }
+          .btn-secondary {
+            background: #e8eef8;
+            color: #284468;
+          }
+          .status {
+            margin-top: 10px;
+            padding: 9px 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+          }
+          .status.error { display: block; background: #fdeceb; color: var(--warn); border: 1px solid #f5b9b4; }
+          .status.ok { display: block; background: #ebf9f1; color: var(--ok); border: 1px solid #b2e5cb; }
+          .budget-list {
+            margin-top: 12px;
+            border-top: 1px solid var(--line);
+            padding-top: 10px;
+            display: grid;
+            gap: 8px;
+          }
+          .budget-item {
+            border: 1px solid var(--line);
+            background: #f9fbff;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+          }
+          .budget-item:hover { border-color: #aac4f8; }
+          .budget-item strong { display: block; color: #203a5f; }
+          .meta {
+            margin-top: 4px;
+            font-size: 13px;
+            color: var(--muted);
+          }
+          .summary {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+          }
+          .pill {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px;
+            background: #fbfcff;
+          }
+          .pill small {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+          }
+          .pill span {
+            display: block;
+            margin-top: 3px;
+            font-weight: 700;
+          }
+          .tree ul {
+            margin: 6px 0 0 20px;
+            padding: 0;
+          }
+          .tree li {
+            margin: 6px 0;
+            color: #2d3642;
+          }
+          .empty {
+            color: var(--muted);
+            font-style: italic;
+          }
+          @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+          }
         </style>
       </head>
       <body>
-        <h1>Presupuestador Backend API</h1>
-        <p>This service is a backend API. It is meant to be consumed by apps and tools, not used as a visual app.</p>
-        <ul>
-          <li><a href="/health">Health check</a></li>
-          <li><a href="/docs">Interactive API docs</a></li>
-        </ul>
-        <p class="note">Note: most business routes are protected and require authentication.</p>
+        <div class="wrap">
+          <section class="hero">
+            <h1>Presupuestador</h1>
+            <p>Esta es una pantalla minima para usar el backend sin entrar a Swagger.</p>
+            <p>Pegas tu token, cargas presupuestos y podes ver detalle + arbol en un solo lugar.</p>
+            <div class="links">
+              <a href="/health" target="_blank" rel="noreferrer">/health</a>
+              <a href="/docs" target="_blank" rel="noreferrer">/docs</a>
+            </div>
+          </section>
+
+          <section class="grid">
+            <article class="card">
+              <h2>Acceso y acciones</h2>
+              <label for="tokenInput">Bearer token / JWT</label>
+              <textarea id="tokenInput" placeholder="Pega el token aqui"></textarea>
+              <div class="row">
+                <button class="btn-primary" id="saveTokenBtn">Guardar token</button>
+                <button class="btn-secondary" id="loadBudgetsBtn">Cargar presupuestos</button>
+              </div>
+              <div id="statusBox" class="status"></div>
+
+              <label for="budgetName">Crear presupuesto</label>
+              <input id="budgetName" placeholder="Nombre" />
+              <label for="budgetDesc">Descripcion (opcional)</label>
+              <input id="budgetDesc" placeholder="Descripcion" />
+              <div class="row">
+                <button class="btn-primary" id="createBudgetBtn">Crear presupuesto</button>
+              </div>
+
+              <div class="budget-list" id="budgetList"></div>
+            </article>
+
+            <article class="card">
+              <h2>Detalle de presupuesto</h2>
+              <div id="budgetDetail" class="empty">Selecciona un presupuesto para ver resumen y arbol.</div>
+            </article>
+          </section>
+        </div>
+
+        <script>
+          const tokenInput = document.getElementById("tokenInput");
+          const saveTokenBtn = document.getElementById("saveTokenBtn");
+          const loadBudgetsBtn = document.getElementById("loadBudgetsBtn");
+          const createBudgetBtn = document.getElementById("createBudgetBtn");
+          const budgetNameInput = document.getElementById("budgetName");
+          const budgetDescInput = document.getElementById("budgetDesc");
+          const budgetList = document.getElementById("budgetList");
+          const budgetDetail = document.getElementById("budgetDetail");
+          const statusBox = document.getElementById("statusBox");
+
+          function showStatus(message, type) {
+            statusBox.textContent = message;
+            statusBox.className = "status " + type;
+          }
+
+          function getToken() {
+            const token = tokenInput.value.trim();
+            if (!token) {
+              showStatus("Falta token. Pegalo y toca Guardar token.", "error");
+              return null;
+            }
+            return token;
+          }
+
+          async function apiFetch(path, options = {}) {
+            const token = getToken();
+            if (!token) {
+              throw new Error("missing_token");
+            }
+            const headers = options.headers || {};
+            headers["Authorization"] = "Bearer " + token;
+            if (!headers["Content-Type"] && options.body) {
+              headers["Content-Type"] = "application/json";
+            }
+            const response = await fetch(path, { ...options, headers });
+            if (!response.ok) {
+              const text = await response.text();
+              throw new Error(text || ("HTTP " + response.status));
+            }
+            return response.json();
+          }
+
+          function money(value) {
+            const num = Number(value || 0);
+            return num.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 2 });
+          }
+
+          function renderTree(nodes) {
+            if (!nodes || !nodes.length) {
+              return "<div class='empty'>Sin items.</div>";
+            }
+            const renderNode = (node) => {
+              const label = (node.code ? ("[" + node.code + "] ") : "") + (node.description || "Sin descripcion");
+              const children = node.children && node.children.length
+                ? "<ul>" + node.children.map(renderNode).join("") + "</ul>"
+                : "";
+              return "<li>" + label + children + "</li>";
+            };
+            return "<ul>" + nodes.map(renderNode).join("") + "</ul>";
+          }
+
+          function renderBudgetList(items) {
+            if (!items.length) {
+              budgetList.innerHTML = "<div class='empty'>No hay presupuestos para este usuario.</div>";
+              return;
+            }
+            budgetList.innerHTML = items.map((item) => {
+              const name = item.name || "Sin nombre";
+              const date = item.created_at ? new Date(item.created_at).toLocaleString() : "-";
+              return (
+                "<button class='budget-item' data-id='" + item.id + "'>" +
+                  "<strong>" + name + "</strong>" +
+                  "<div class='meta'>ID: " + item.id + "</div>" +
+                  "<div class='meta'>Creado: " + date + "</div>" +
+                "</button>"
+              );
+            }).join("");
+          }
+
+          function renderFullBudget(data) {
+            const b = data.budget || {};
+            const a = data.analysis || {};
+            budgetDetail.innerHTML =
+              "<div class='summary'>" +
+                "<div class='pill'><small>Presupuesto</small><span>" + (b.name || "Sin nombre") + "</span></div>" +
+                "<div class='pill'><small>Versiones</small><span>" + (data.versions_count || 0) + "</span></div>" +
+                "<div class='pill'><small>Total directo</small><span>" + money(a.total_directo) + "</span></div>" +
+                "<div class='pill'><small>Total indirectos</small><span>" + money(a.total_indirectos) + "</span></div>" +
+                "<div class='pill'><small>Gran total</small><span>" + money(a.gran_total) + "</span></div>" +
+                "<div class='pill'><small>Items</small><span>" + (a.items_count || 0) + "</span></div>" +
+              "</div>" +
+              "<h3>Arbol de items</h3>" +
+              "<div class='tree'>" + renderTree(data.tree || []) + "</div>";
+          }
+
+          async function loadBudgets() {
+            try {
+              const data = await apiFetch("/budgets");
+              renderBudgetList(data || []);
+              showStatus("Presupuestos cargados.", "ok");
+            } catch (err) {
+              if (String(err.message || "").includes("missing_token")) {
+                return;
+              }
+              showStatus("No se pudieron cargar los presupuestos: " + err.message, "error");
+            }
+          }
+
+          async function createBudget() {
+            const name = budgetNameInput.value.trim();
+            const description = budgetDescInput.value.trim();
+            if (!name) {
+              showStatus("El nombre del presupuesto es obligatorio.", "error");
+              return;
+            }
+            try {
+              await apiFetch("/budgets", {
+                method: "POST",
+                body: JSON.stringify({ name, description: description || null })
+              });
+              budgetNameInput.value = "";
+              budgetDescInput.value = "";
+              showStatus("Presupuesto creado.", "ok");
+              await loadBudgets();
+            } catch (err) {
+              if (String(err.message || "").includes("missing_token")) {
+                return;
+              }
+              showStatus("No se pudo crear el presupuesto: " + err.message, "error");
+            }
+          }
+
+          async function openBudget(id) {
+            try {
+              const data = await apiFetch("/budget/" + id + "/full");
+              renderFullBudget(data);
+              showStatus("Detalle cargado.", "ok");
+            } catch (err) {
+              if (String(err.message || "").includes("missing_token")) {
+                return;
+              }
+              showStatus("No se pudo cargar el detalle: " + err.message, "error");
+            }
+          }
+
+          saveTokenBtn.addEventListener("click", () => {
+            const token = tokenInput.value.trim();
+            if (!token) {
+              showStatus("No hay token para guardar.", "error");
+              return;
+            }
+            localStorage.setItem("presupuestador.jwt", token);
+            showStatus("Token guardado en este navegador.", "ok");
+          });
+
+          loadBudgetsBtn.addEventListener("click", loadBudgets);
+          createBudgetBtn.addEventListener("click", createBudget);
+
+          budgetList.addEventListener("click", (event) => {
+            const target = event.target.closest("button[data-id]");
+            if (!target) {
+              return;
+            }
+            openBudget(target.dataset.id);
+          });
+
+          const savedToken = localStorage.getItem("presupuestador.jwt");
+          if (savedToken) {
+            tokenInput.value = savedToken;
+            showStatus("Token cargado desde este navegador.", "ok");
+          }
+        </script>
       </body>
     </html>
     """
