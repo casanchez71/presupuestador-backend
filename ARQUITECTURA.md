@@ -13,7 +13,7 @@
 - Algoritmos soportados: `ES256` (actual) y `HS256` (legacy) — Supabase usa ECC P-256
 - CORS siempre via `ALLOWED_ORIGINS` env var, nunca `"*"` en producción
 - Nunca subir `.env` real a git — solo `.env.example`
-- `SUPABASE_KEY` = anon key (el backend lee memberships via service role implícito del SDK)
+- `SUPABASE_KEY` debe tener permisos suficientes para leer `memberships` en backend server-side
 
 ### Schema de Supabase (NO inventar tablas o columnas)
 - Tenant = `org_id` en tabla `memberships` (NO existe `profiles.tenant_id`)
@@ -29,6 +29,7 @@
 - Build command: `pip install --upgrade pip && pip install --prefer-binary -r requirements.txt`
 - `--prefer-binary` es obligatorio: evita compilar `pydantic-core` desde Rust (Cargo no tiene permisos en Render free)
 - `render.yaml` solo aplica al CREAR el servicio — cambios posteriores van por Render Settings UI
+- Variables de entorno activas esperadas: `SUPABASE_URL`, `SUPABASE_KEY`, `ALLOWED_ORIGINS`, `OPENAI_API_KEY`
 
 ## Tablas creadas (Sprint 0)
 | Tabla | Descripción |
@@ -49,34 +50,60 @@ Todas tienen RLS con `org_id IN (SELECT public.get_my_org_ids())`.
 - Deploy live en Render: `https://presupuestador-backend-adm1.onrender.com`
 - Health check OK: `{"status":"OK","timestamp":"2026-03-18T04:46:23.677665"}`
 - 6 tablas migradas en Supabase con RLS
-- Endpoints base: `/health`, `/budget/import-excel`, `/budget/tree/{id}`, `/budget/{id}/item/update`
+- Endpoints base: `/health`
 - Python 3.11.9 + Dockerfile en repo (build exitoso)
 
 ### Sprint 1 — Núcleo + Árbol + Edición ✅ CERRADO (2026-03-18)
-- CRUD budgets, árbol jerárquico con parent_id, parser Excel Las Heras
-
-### Sprint 1 — Núcleo + Árbol + Edición (pendiente)
-- CRUD real de presupuestos (`budgets` + `budget_items`)
-- Parser de Excel → árbol jerárquico
-- Endpoints: `POST /budget`, `GET /budgets`, `GET /budget/{id}/tree`, `POST /budget/{id}/items`
+- CRUD budgets, árbol jerárquico con parent_id, carga de ítems y parser inicial de Excel
+- Endpoints implementados: `POST /budgets`, `GET /budgets`, `GET /budget/{id}`, `DELETE /budget/{id}`, `POST /budget/{id}/items`, `GET /budget/{id}/tree`, `POST /budget/import-excel`
 
 ### Sprint 2 — IA + Lectura de Planos ✅ CERRADO (2026-03-18)
 - GPT-4o Vision para planos, indirectos ponderados, vista análisis
 - Columnas `indirecto` y `total_con_indirecto` agregadas a `budget_items`
 - Variable `OPENAI_API_KEY` en Render
 
-### Sprint 2 — IA + Lectura de Planos (pendiente)
-- GPT-4o vision para leer planos (PDF, foto, CAD)
+### Sprint 2 — IA + Lectura de Planos (alcance pendiente)
+- Robustecer lectura de PDF real y formatos CAD
 - Parametría automática por IA
+- Validación con archivos reales de cliente
 
-### Sprint 3 — Análisis + Export + Integración Frontend (pendiente)
-- Vista análisis (MAT / MO / Equipos / Indirectos)
-- Export PDF y Excel
-- Página `/presupuestos` en la app React+Vite
+### Sprint 3 — Análisis + Export + Versionado (parcial)
+- Implementado en backend: `GET /budget/{id}/export/excel`, `POST /budget/{id}/version`, `GET /budget/{id}/versions`, `GET /budget/{id}/version/{version_id}`
+- Pendiente: export PDF
+- Pendiente: análisis desagregado real por MAT / MO / Equipos / Indirectos
+- Pendiente: integración React+Vite
 
 ### Sprint 4 — Pruebas + Pulido (pendiente)
 - Validar con Excel real "Las Heras"
 - Onboarding IA para nuevos clientes
+- Pruebas automatizadas backend
+
+## Estado actual del backend
+
+Endpoints principales disponibles hoy:
+- `GET /health`
+- `POST /budgets`
+- `GET /budgets`
+- `GET /budget/{budget_id}`
+- `DELETE /budget/{budget_id}`
+- `POST /budget/{budget_id}/items`
+- `PATCH /budget/{budget_id}/item/{item_id}`
+- `GET /budget/{budget_id}/tree`
+- `POST /budget/import-excel`
+- `POST /budget/{budget_id}/analyze-plan`
+- `POST /budget/{budget_id}/items/from-ai`
+- `POST /budget/{budget_id}/indirects`
+- `GET /budget/{budget_id}/analysis`
+- `GET /budget/{budget_id}/export/excel`
+- `POST /budget/{budget_id}/version`
+- `GET /budget/{budget_id}/versions`
+- `GET /budget/{budget_id}/version/{version_id}`
+
+Pendientes importantes para próximas iteraciones:
+- Import Excel que persista árbol jerárquico real en `budget_items`
+- Export PDF
+- Análisis por categorías reales
+- Pruebas automatizadas y validación end-to-end contra datos reales
 
 ## Problemas resueltos (para no repetir)
 
