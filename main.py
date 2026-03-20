@@ -365,12 +365,34 @@ def index():
                 <button class="btn-primary" id="createBudgetBtn">Crear presupuesto</button>
               </div>
 
+              <hr style="margin: 14px 0; border: 0; border-top: 1px solid var(--line);" />
+              <h3 style="margin: 0 0 8px;">Importar Excel</h3>
+              <p style="margin: 0 0 8px;">Subi un Excel de computo para crear presupuesto e items.</p>
+              <input id="excelFileInput" type="file" accept=".xlsx,.xls" />
+              <div class="row">
+                <button class="btn-secondary" id="uploadExcelBtn">Subir Excel</button>
+              </div>
+              <div id="excelResult" class="meta"></div>
+
+              <hr style="margin: 14px 0; border: 0; border-top: 1px solid var(--line);" />
+              <h3 style="margin: 0 0 8px;">Analizar plano</h3>
+              <p style="margin: 0 0 8px;">Primero selecciona un presupuesto y despues subi imagen o PDF.</p>
+              <div class="meta" id="selectedBudgetMeta">Presupuesto seleccionado: ninguno</div>
+              <input id="planFileInput" type="file" accept=".png,.jpg,.jpeg,.pdf" />
+              <div class="row">
+                <button class="btn-secondary" id="analyzePlanBtn">Subir y analizar plano</button>
+              </div>
+              <div id="planResult" class="meta"></div>
+
               <div class="budget-list" id="budgetList"></div>
             </article>
 
             <article class="card">
               <h2>Detalle de presupuesto</h2>
               <div id="budgetDetail" class="empty">Selecciona un presupuesto para ver resumen y arbol.</div>
+              <hr style="margin: 14px 0; border: 0; border-top: 1px solid var(--line);" />
+              <h3 style="margin: 0 0 8px;">Sugerencias del plano</h3>
+              <div id="aiSuggestions" class="empty">Aca vas a ver los items sugeridos por IA despues de subir un plano.</div>
             </article>
           </section>
         </div>
@@ -385,9 +407,19 @@ def index():
           const createBudgetBtn = document.getElementById("createBudgetBtn");
           const budgetNameInput = document.getElementById("budgetName");
           const budgetDescInput = document.getElementById("budgetDesc");
+          const excelFileInput = document.getElementById("excelFileInput");
+          const uploadExcelBtn = document.getElementById("uploadExcelBtn");
+          const excelResult = document.getElementById("excelResult");
+          const planFileInput = document.getElementById("planFileInput");
+          const analyzePlanBtn = document.getElementById("analyzePlanBtn");
+          const planResult = document.getElementById("planResult");
+          const selectedBudgetMeta = document.getElementById("selectedBudgetMeta");
           const budgetList = document.getElementById("budgetList");
           const budgetDetail = document.getElementById("budgetDetail");
+          const aiSuggestions = document.getElementById("aiSuggestions");
           const statusBox = document.getElementById("statusBox");
+          let selectedBudgetId = null;
+          let selectedBudgetName = null;
 
           function showStatus(message, type) {
             statusBox.textContent = message;
@@ -419,15 +451,33 @@ def index():
             }
             const headers = options.headers || {};
             headers["Authorization"] = "Bearer " + token;
-            if (!headers["Content-Type"] && options.body) {
+            if (!headers["Content-Type"] && options.body && !(options.body instanceof FormData)) {
               headers["Content-Type"] = "application/json";
             }
             const response = await fetch(path, { ...options, headers });
             if (!response.ok) {
-              const text = await response.text();
-              throw new Error(text || ("HTTP " + response.status));
+              throw new Error(await parseErrorResponse(response));
             }
             return response.json();
+          }
+
+          async function parseErrorResponse(response) {
+            const raw = await response.text();
+            if (!raw) {
+              return "HTTP " + response.status;
+            }
+            try {
+              const parsed = JSON.parse(raw);
+              if (parsed.detail && typeof parsed.detail === "string") {
+                return parsed.detail;
+              }
+              if (parsed.detail && typeof parsed.detail === "object" && parsed.detail.message) {
+                return parsed.detail.message;
+              }
+              return raw;
+            } catch (_) {
+              return raw;
+            }
           }
 
           async function login() {
@@ -515,6 +565,26 @@ def index():
               "<div class='tree'>" + renderTree(data.tree || []) + "</div>";
           }
 
+          function renderSuggestions(items) {
+            if (!items || !items.length) {
+              aiSuggestions.innerHTML = "<div class='empty'>No hubo sugerencias para este plano.</div>";
+              return;
+            }
+            const html = items.map((item) => {
+              const code = safeText(item.code || "-");
+              const desc = safeText(item.description || "Sin descripcion");
+              const unidad = safeText(item.unidad || "u");
+              const cantidad = safeText(item.cantidad_estimada || item.cantidad || "-");
+              return (
+                "<div class='pill' style='margin-bottom:8px;'>" +
+                  "<small>Codigo: " + code + " | Unidad: " + unidad + " | Cantidad: " + cantidad + "</small>" +
+                  "<span>" + desc + "</span>" +
+                "</div>"
+              );
+            }).join("");
+            aiSuggestions.innerHTML = html;
+          }
+
           async function loadBudgets() {
             try {
               const data = await apiFetch("/budgets");
@@ -556,12 +626,71 @@ def index():
             try {
               const data = await apiFetch("/budget/" + id + "/full");
               renderFullBudget(data);
+              selectedBudgetId = id;
+              selectedBudgetName = data.budget && data.budget.name ? data.budget.name : id;
+              selectedBudgetMeta.textContent = "Presupuesto seleccionado: " + selectedBudgetName + " (" + id + ")";
               showStatus("Detalle cargado.", "ok");
             } catch (err) {
               if (String(err.message || "").includes("missing_token")) {
                 return;
               }
               showStatus("No se pudo cargar el detalle: " + err.message, "error");
+            }
+          }
+
+          async function uploadExcel() {
+            const file = excelFileInput.files && excelFileInput.files[0];
+            if (!file) {
+              showStatus("Selecciona un archivo Excel antes de subir.", "error");
+              return;
+            }
+            try {
+              const form = new FormData();
+              form.append("file", file);
+              const data = await apiFetch("/budget/import-excel", { method: "POST", body: form });
+              const budgetId = data.budget_id || "-";
+              const budgetName = data.budget_name || "Sin nombre";
+              excelResult.textContent = "Importado OK. Presupuesto: " + budgetName + " (" + budgetId + ").";
+              selectedBudgetId = budgetId !== "-" ? budgetId : selectedBudgetId;
+              selectedBudgetName = budgetName;
+              if (selectedBudgetId) {
+                selectedBudgetMeta.textContent = "Presupuesto seleccionado: " + selectedBudgetName + " (" + selectedBudgetId + ")";
+                await openBudget(selectedBudgetId);
+              }
+              await loadBudgets();
+              showStatus("Excel procesado correctamente.", "ok");
+            } catch (err) {
+              if (String(err.message || "").includes("missing_token")) {
+                return;
+              }
+              excelResult.textContent = "";
+              showStatus("No se pudo subir el Excel: " + err.message, "error");
+            }
+          }
+
+          async function analyzePlanFile() {
+            if (!selectedBudgetId) {
+              showStatus("Primero selecciona un presupuesto para analizar el plano.", "error");
+              return;
+            }
+            const file = planFileInput.files && planFileInput.files[0];
+            if (!file) {
+              showStatus("Selecciona una imagen o PDF del plano antes de subir.", "error");
+              return;
+            }
+            try {
+              const form = new FormData();
+              form.append("file", file);
+              const data = await apiFetch("/budget/" + selectedBudgetId + "/analyze-plan", { method: "POST", body: form });
+              planResult.textContent = data.message || "Plano analizado.";
+              renderSuggestions(data.suggestions || []);
+              showStatus("Plano analizado con exito.", "ok");
+            } catch (err) {
+              if (String(err.message || "").includes("missing_token")) {
+                return;
+              }
+              planResult.textContent = "";
+              showStatus("No se pudo analizar el plano: " + err.message, "error");
             }
           }
 
@@ -578,6 +707,8 @@ def index():
           loginBtn.addEventListener("click", login);
           loadBudgetsBtn.addEventListener("click", loadBudgets);
           createBudgetBtn.addEventListener("click", createBudget);
+          uploadExcelBtn.addEventListener("click", uploadExcel);
+          analyzePlanBtn.addEventListener("click", analyzePlanFile);
 
           budgetList.addEventListener("click", (event) => {
             const target = event.target.closest("button[data-id]");
