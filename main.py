@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Body, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
 from pydantic import BaseModel
 import pandas as pd
 from utils.supabase_client import supabase, get_current_user
@@ -128,6 +128,37 @@ async def analyze_plan_with_vision(file_content: bytes, filename: str, prompt: s
                 for line in suggestions_text.split("\n") if line.strip()]
 
 # ========================= SPRINT 0+1 =========================
+
+@app.get("/", response_class=HTMLResponse)
+def index():
+    return """
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Presupuestador Backend</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.5; }
+          h1 { margin-bottom: 8px; }
+          p { max-width: 720px; }
+          ul { margin-top: 10px; }
+          a { color: #0b5fff; text-decoration: none; }
+          a:hover { text-decoration: underline; }
+          .note { margin-top: 16px; color: #444; }
+        </style>
+      </head>
+      <body>
+        <h1>Presupuestador Backend API</h1>
+        <p>This service is a backend API. It is meant to be consumed by apps and tools, not used as a visual app.</p>
+        <ul>
+          <li><a href="/health">Health check</a></li>
+          <li><a href="/docs">Interactive API docs</a></li>
+        </ul>
+        <p class="note">Note: most business routes are protected and require authentication.</p>
+      </body>
+    </html>
+    """
 
 @app.get("/health")
 def health_check():
@@ -394,6 +425,37 @@ async def get_analysis(budget_id: UUID, current_user: Dict = Depends(get_current
     gran_total = sum(i.get("total_con_indirecto") or 0 for i in items)
     return {"budget_id": str(budget_id), "total_directo": total_directo,
             "total_indirectos": total_indirectos, "gran_total": gran_total, "items_count": len(items)}
+
+@app.get("/budget/{budget_id}/full")
+async def get_budget_full(budget_id: UUID, current_user: Dict = Depends(get_current_user)):
+    budget_id_str = str(budget_id)
+    org_id = current_user["tenant_id"]
+    budget = supabase.table("budgets").select("*") \
+        .eq("id", budget_id_str).eq("org_id", org_id).single().execute()
+    if not budget.data:
+        raise HTTPException(404, "Presupuesto no encontrado")
+
+    items = get_budget_items(budget_id_str, org_id)
+    tree = build_tree(items)
+    total_directo = sum((i["cantidad"] or 0) * (i["precio_unitario"] or 0) for i in items)
+    total_indirectos = sum(i.get("indirecto") or 0 for i in items)
+    gran_total = sum(i.get("total_con_indirecto") or 0 for i in items)
+
+    versions = supabase.table("budget_versions").select("id") \
+        .eq("budget_id", budget_id_str).eq("org_id", org_id).execute()
+
+    return {
+        "budget": budget.data,
+        "tree": tree,
+        "analysis": {
+            "budget_id": budget_id_str,
+            "total_directo": total_directo,
+            "total_indirectos": total_indirectos,
+            "gran_total": gran_total,
+            "items_count": len(items)
+        },
+        "versions_count": len(versions.data or [])
+    }
 
 # ========================= SPRINT 3 =========================
 
