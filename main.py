@@ -42,6 +42,15 @@ class BudgetItemCreate(BaseModel):
     precio_unitario: Optional[float] = None
     notas: Optional[str] = None
 
+class BudgetItemUpdate(BaseModel):
+    parent_id: Optional[UUID] = None
+    code: Optional[str] = None
+    description: Optional[str] = None
+    unidad: Optional[str] = None
+    cantidad: Optional[float] = None
+    precio_unitario: Optional[float] = None
+    notas: Optional[str] = None
+
 class IndirectApplyRequest(BaseModel):
     config_id: Optional[UUID] = None
 
@@ -136,6 +145,60 @@ async def create_items(budget_id: UUID, items: List[BudgetItemCreate], current_u
     } for item in items]
     result = supabase.table("budget_items").insert(to_insert).execute()
     return {"inserted": len(result.data)}
+
+@app.patch("/budget/{budget_id}/item/{item_id}")
+async def update_item(
+    budget_id: UUID,
+    item_id: UUID,
+    payload: BudgetItemUpdate,
+    current_user: Dict = Depends(get_current_user)
+):
+    org_id = current_user["tenant_id"]
+    budget_id_str = str(budget_id)
+    item_id_str = str(item_id)
+
+    budget = supabase.table("budgets").select("id") \
+        .eq("id", budget_id_str).eq("org_id", org_id).single().execute()
+    if not budget.data:
+        raise HTTPException(404, "Presupuesto no encontrado")
+
+    existing = supabase.table("budget_items").select("*") \
+        .eq("id", item_id_str).eq("budget_id", budget_id_str).eq("org_id", org_id) \
+        .single().execute()
+    if not existing.data:
+        raise HTTPException(404, "Item no encontrado")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    if "parent_id" in update_data:
+        update_data["parent_id"] = str(update_data["parent_id"]) if update_data["parent_id"] else None
+
+    changes = {}
+    for field, new_value in update_data.items():
+        old_value = existing.data.get(field)
+        if old_value != new_value:
+            changes[field] = {"before": old_value, "after": new_value}
+
+    if not changes:
+        return {"message": "Sin cambios para aplicar", "item": existing.data}
+
+    supabase.table("budget_items").update(update_data) \
+        .eq("id", item_id_str).eq("budget_id", budget_id_str).eq("org_id", org_id).execute()
+
+    updated = supabase.table("budget_items").select("*") \
+        .eq("id", item_id_str).eq("budget_id", budget_id_str).eq("org_id", org_id) \
+        .single().execute()
+
+    supabase.table("audit_logs").insert({
+        "org_id": org_id,
+        "user_id": current_user["user_id"],
+        "budget_id": budget_id_str,
+        "item_id": item_id_str,
+        "action": "update",
+        "changes": changes,
+        "timestamp": datetime.utcnow().isoformat()
+    }).execute()
+
+    return {"message": "Item actualizado", "item": updated.data}
 
 @app.get("/budget/{budget_id}/tree")
 async def get_tree(budget_id: UUID, current_user: Dict = Depends(get_current_user)):
