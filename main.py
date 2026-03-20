@@ -117,6 +117,55 @@ def read_obj_value(obj: object, key: str) -> object:
         return obj.get(key)
     return getattr(obj, key, None)
 
+def extract_structured_suggestions(raw_content: object) -> List[Dict]:
+    if raw_content is None:
+        return []
+
+    if isinstance(raw_content, list):
+        parts = []
+        for item in raw_content:
+            if isinstance(item, dict) and item.get("type") == "text":
+                parts.append(str(item.get("text", "")))
+            else:
+                parts.append(str(item))
+        text = "\n".join(parts).strip()
+    else:
+        text = str(raw_content).strip()
+
+    if not text:
+        return []
+
+    candidates = [text]
+
+    fence_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", text, re.IGNORECASE)
+    if fence_match:
+        candidates.append(fence_match.group(1).strip())
+
+    array_match = re.search(r"\[[\s\S]*\]", text)
+    if array_match:
+        candidates.append(array_match.group(0).strip())
+
+    object_match = re.search(r"\{[\s\S]*\}", text)
+    if object_match:
+        candidates.append(object_match.group(0).strip())
+
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+
+        if isinstance(parsed, list):
+            return [item for item in parsed if isinstance(item, dict)]
+
+        if isinstance(parsed, dict):
+            for key in ["items", "suggestions", "data", "results"]:
+                value = parsed.get(key)
+                if isinstance(value, list):
+                    return [item for item in value if isinstance(item, dict)]
+
+    return []
+
 async def analyze_plan_with_vision(file_content: bytes, filename: str, prompt: str) -> List[Dict]:
     base64_image = base64.b64encode(file_content).decode('utf-8')
     name_lower = filename.lower()
@@ -130,13 +179,7 @@ async def analyze_plan_with_vision(file_content: bytes, filename: str, prompt: s
         max_tokens=2000,
         temperature=0.4
     )
-    try:
-        suggestions_text = response.choices[0].message.content
-        suggestions = json.loads(suggestions_text)
-        return suggestions if isinstance(suggestions, list) else []
-    except Exception:
-        return [{"description": line.strip(), "cantidad_estimada": 1.0}
-                for line in suggestions_text.split("\n") if line.strip()]
+    return extract_structured_suggestions(response.choices[0].message.content)
 
 # ========================= SPRINT 0+1 =========================
 
@@ -970,7 +1013,11 @@ async def analyze_plan(budget_id: UUID, file: UploadFile = File(...),
     if not budget.data:
         raise HTTPException(404, "Presupuesto no encontrado")
     content = await file.read()
-    default_prompt = "Analiza este plano y extrae ítems de construcción en JSON: lista con code, description, unidad, cantidad_estimada."
+    default_prompt = (
+        "Analiza este plano y extrae items de construccion. "
+        "Responde SOLO con un JSON array valido, sin markdown, sin texto extra y sin ejemplos. "
+        "Cada item debe tener: code, description, unidad, cantidad_estimada."
+    )
     suggestions = await analyze_plan_with_vision(content, file.filename, prompt or default_prompt)
     return {"budget_id": str(budget_id), "suggestions": suggestions, "message": f"{len(suggestions)} ítems sugeridos"}
 
