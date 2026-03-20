@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 import json
 from datetime import datetime
 import os
+import re
 from uuid import UUID
 from io import BytesIO
 from openai import AsyncOpenAI
@@ -77,6 +78,33 @@ def get_budget_items(budget_id: str, org_id: str) -> List[Dict]:
         .eq("org_id", org_id) \
         .execute()
     return result.data or []
+
+def normalize_item_code(value: object) -> str:
+    if value is None or pd.isna(value):
+        return ""
+    raw = str(value).strip().replace(",", ".")
+    raw = re.sub(r"\s+", "", raw)
+    return raw.strip(".")
+
+def safe_float(value: object) -> Optional[float]:
+    if value is None or pd.isna(value):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        cleaned = str(value).strip().replace(".", "").replace(",", ".")
+        try:
+            return float(cleaned)
+        except (TypeError, ValueError):
+            return None
+
+def get_parent_candidates(code: str) -> List[str]:
+    if not code:
+        return []
+    parts = [part for part in code.split(".") if part]
+    if len(parts) > 1:
+        return [".".join(parts[:i]) for i in range(len(parts) - 1, 0, -1)]
+    return []
 
 async def analyze_plan_with_vision(file_content: bytes, filename: str, prompt: str) -> List[Dict]:
     base64_image = base64.b64encode(file_content).decode('utf-8')
@@ -209,25 +237,96 @@ async def get_tree(budget_id: UUID, current_user: Dict = Depends(get_current_use
 async def import_excel(file: UploadFile = File(...), current_user: Dict = Depends(get_current_user)):
     contents = await file.read()
     df_dict = pd.read_excel(contents, sheet_name=None)
-    precios = {}
+    precios: Dict[str, float] = {}
     if "00_Mat" in df_dict:
         for _, row in df_dict["00_Mat"].iterrows():
-            if pd.notna(row.get("CODIGO")):
-                precios[str(row["CODIGO"])] = row.get("PRECIO CON IVA") or row.get("PRECIO SIN IVA")
-    items = []
+            code = normalize_item_code(row.get("CODIGO"))
+            if code:
+                price = row.get("PRECIO CON IVA")
+                if price is None or pd.isna(price):
+                    price = row.get("PRECIO SIN IVA")
+                parsed_price = safe_float(price)
+                if parsed_price is not None:
+                    precios[code] = parsed_price
+
+    parsed_items: List[Dict] = []
     if "01_C&P" in df_dict:
         for _, row in df_dict["01_C&P"].iterrows():
             desc = str(row.get("DESCRIPCIÓN", "")).strip()
-            if desc and desc != "nan":
-                items.append({"code": str(row.get("ITEM", "")).strip(), "description": desc,
-                              "unidad": row.get("UNIDAD"), "parent_id": None,
-                              "cantidad": float(row.get("CANTIDAD")) if pd.notna(row.get("CANTIDAD")) else None,
-                              "precio_unitario": None})
+            if not desc or desc == "nan":
+                continue
+            item_code = normalize_item_code(row.get("ITEM"))
+            parsed_items.append({
+                "code": item_code or None,
+                "normalized_code": item_code,
+                "description": desc,
+                "unidad": row.get("UNIDAD"),
+                "cantidad": safe_float(row.get("CANTIDAD")),
+                "precio_unitario": precios.get(item_code) if item_code else None,
+                "notas": "Importado desde Excel"
+            })
+
     snapshot = supabase.table("price_snapshots").insert({
         "org_id": current_user["tenant_id"], "user_id": current_user["user_id"],
         "file_name": file.filename, "data": json.dumps({"precios": precios})
     }).execute()
-    return {"message": "Excel procesado", "snapshot_id": snapshot.data[0]["id"], "items_detected": len(items)}
+
+    items_detected = len(parsed_items)
+    if items_detected == 0:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "Excel procesado sin items utilizables en hoja 01_C&P",
+                "snapshot_id": snapshot.data[0]["id"],
+                "items_detected": 0
+            }
+        )
+
+    base_name = os.path.splitext(os.path.basename(file.filename or "presupuesto"))[0].strip()
+    budget_name = base_name if base_name else f"Presupuesto {datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+    budget = supabase.table("budgets").insert({
+        "org_id": current_user["tenant_id"],
+        "name": budget_name,
+        "description": f"Importado desde {file.filename}",
+        "status": "draft"
+    }).execute()
+    budget_id = budget.data[0]["id"]
+
+    code_to_id: Dict[str, str] = {}
+    items_inserted = 0
+    for row in parsed_items:
+        parent_id = None
+        for candidate in get_parent_candidates(row["normalized_code"]):
+            if candidate in code_to_id:
+                parent_id = code_to_id[candidate]
+                break
+
+        inserted = supabase.table("budget_items").insert({
+            "budget_id": budget_id,
+            "org_id": current_user["tenant_id"],
+            "parent_id": parent_id,
+            "code": row["code"],
+            "description": row["description"],
+            "unidad": row["unidad"],
+            "cantidad": row["cantidad"],
+            "precio_unitario": row["precio_unitario"],
+            "notas": row["notas"]
+        }).execute()
+
+        if inserted.data:
+            inserted_id = inserted.data[0]["id"]
+            items_inserted += 1
+            if row["normalized_code"]:
+                code_to_id[row["normalized_code"]] = inserted_id
+
+    return {
+        "message": "Excel procesado e importado",
+        "snapshot_id": snapshot.data[0]["id"],
+        "budget_id": budget_id,
+        "budget_name": budget_name,
+        "items_detected": items_detected,
+        "items_inserted": items_inserted
+    }
 
 # ========================= SPRINT 2 =========================
 
