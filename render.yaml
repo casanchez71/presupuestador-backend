@@ -6,10 +6,22 @@ services:
     buildCommand: pip install --upgrade pip && pip install --prefer-binary -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
+      # Legacy fallback (mantener hasta completar migracion)
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
         sync: false
+      # Modelo C: Auth (EOS)
+      - key: AUTH_SUPABASE_URL
+        sync: false
+      - key: AUTH_SUPABASE_KEY
+        sync: false
+      # Modelo C: Data (Presupuestador)
+      - key: DATA_SUPABASE_URL
+        sync: false
+      - key: DATA_SUPABASE_KEY
+        sync: false
+      # Otros
       - key: ALLOWED_ORIGINS
         sync: false
       - key: OPENAI_API_KEY

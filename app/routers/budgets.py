@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app.auth import get_current_user
-from app.db import get_supabase
+from app.db import get_data_db
 from app.schemas import BudgetCreate, BudgetItemCreate, BudgetItemUpdate
 from app.tree import build_tree
 
@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 def _get_items(budget_id: str, org_id: str) -> list[dict]:
-    db = get_supabase()
+    db = get_data_db()
     result = (
         db.table("budget_items")
         .select("*")
@@ -31,7 +31,7 @@ def _get_items(budget_id: str, org_id: str) -> list[dict]:
 
 @router.post("")
 async def create_budget(budget: BudgetCreate, user: dict = Depends(get_current_user)):
-    db = get_supabase()
+    db = get_data_db()
     result = db.table("budgets").insert({
         "org_id": user["org_id"],
         "name": budget.name,
@@ -43,7 +43,7 @@ async def create_budget(budget: BudgetCreate, user: dict = Depends(get_current_u
 
 @router.get("")
 async def list_budgets(user: dict = Depends(get_current_user)):
-    db = get_supabase()
+    db = get_data_db()
     result = (
         db.table("budgets")
         .select("*")
@@ -56,7 +56,7 @@ async def list_budgets(user: dict = Depends(get_current_user)):
 
 @router.get("/{budget_id}")
 async def get_budget(budget_id: UUID, user: dict = Depends(get_current_user)):
-    db = get_supabase()
+    db = get_data_db()
     result = (
         db.table("budgets")
         .select("*")
@@ -72,7 +72,7 @@ async def get_budget(budget_id: UUID, user: dict = Depends(get_current_user)):
 
 @router.delete("/{budget_id}")
 async def delete_budget(budget_id: UUID, user: dict = Depends(get_current_user)):
-    db = get_supabase()
+    db = get_data_db()
     result = (
         db.table("budgets")
         .delete()
@@ -92,7 +92,7 @@ async def create_items(
     items: list[BudgetItemCreate],
     user: dict = Depends(get_current_user),
 ):
-    db = get_supabase()
+    db = get_data_db()
     to_insert = []
     for i, item in enumerate(items):
         to_insert.append({
@@ -125,7 +125,7 @@ async def update_item(
     payload: BudgetItemUpdate,
     user: dict = Depends(get_current_user),
 ):
-    db = get_supabase()
+    db = get_data_db()
     org_id = user["org_id"]
     bid = str(budget_id)
     iid = str(item_id)
@@ -190,7 +190,7 @@ async def get_tree(budget_id: UUID, user: dict = Depends(get_current_user)):
 
 @router.get("/{budget_id}/full")
 async def get_budget_full(budget_id: UUID, user: dict = Depends(get_current_user)):
-    db = get_supabase()
+    db = get_data_db()
     bid = str(budget_id)
     org_id = user["org_id"]
 

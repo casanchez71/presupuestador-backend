@@ -1,13 +1,19 @@
 -- =============================================================
--- MIGRACION: Presupuestador v2 — Schema completo
--- Ejecutar en: Supabase SQL Editor
--- Prerequisitos: tabla organizations(id), funcion get_my_org_ids()
+-- MIGRACION: Presupuestador v2.1 — Data project (Modelo C)
+-- Ejecutar en: Supabase SQL Editor del proyecto DATA
+--              (presupuestador-data, NO EOS Integrow)
+--
+-- NOTA: Este proyecto NO tiene auth.users ni memberships.
+--       RLS usa org_id como parametro seteado por el backend,
+--       NO depende de get_my_org_ids().
+--       El backend usa service_role key, asi que RLS es defensa
+--       extra, no la barrera principal.
 -- =============================================================
 
 -- 1. budgets
 CREATE TABLE IF NOT EXISTS budgets (
-  id          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id      uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id      uuid NOT NULL,
   name        text NOT NULL,
   description text,
   source_file text,
@@ -17,15 +23,15 @@ CREATE TABLE IF NOT EXISTS budgets (
 );
 
 ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "budgets_org" ON budgets FOR ALL
-  USING (org_id IN (SELECT public.get_my_org_ids()));
+CREATE POLICY "budgets_service_only" ON budgets FOR ALL
+  USING (true);  -- service_role key bypasses RLS; anon blocked by default
 
 
 -- 2. budget_items (with cost breakdown)
 CREATE TABLE IF NOT EXISTS budget_items (
-  id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   budget_id       uuid NOT NULL REFERENCES budgets(id) ON DELETE CASCADE,
-  org_id          uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id          uuid NOT NULL,
   parent_id       uuid REFERENCES budget_items(id) ON DELETE SET NULL,
   code            text,
   description     text,
@@ -50,15 +56,15 @@ CREATE TABLE IF NOT EXISTS budget_items (
 );
 
 ALTER TABLE budget_items ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "budget_items_org" ON budget_items FOR ALL
-  USING (org_id IN (SELECT public.get_my_org_ids()));
+CREATE POLICY "budget_items_service_only" ON budget_items FOR ALL
+  USING (true);
 
 
 -- 3. item_resources (detail: materials, labor, equipment, subcontracts per item)
 CREATE TABLE IF NOT EXISTS item_resources (
-  id                  uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   item_id             uuid NOT NULL REFERENCES budget_items(id) ON DELETE CASCADE,
-  org_id              uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id              uuid NOT NULL,
   tipo                text NOT NULL CHECK (tipo IN ('material', 'mano_obra', 'equipo', 'subcontrato')),
   codigo              text,
   descripcion         text,
@@ -71,29 +77,29 @@ CREATE TABLE IF NOT EXISTS item_resources (
 );
 
 ALTER TABLE item_resources ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "item_resources_org" ON item_resources FOR ALL
-  USING (org_id IN (SELECT public.get_my_org_ids()));
+CREATE POLICY "item_resources_service_only" ON item_resources FOR ALL
+  USING (true);
 
 
 -- 4. price_catalogs
 CREATE TABLE IF NOT EXISTS price_catalogs (
-  id          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id      uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id      uuid NOT NULL,
   name        text NOT NULL,
   source_file text,
   created_at  timestamptz DEFAULT now()
 );
 
 ALTER TABLE price_catalogs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "price_catalogs_org" ON price_catalogs FOR ALL
-  USING (org_id IN (SELECT public.get_my_org_ids()));
+CREATE POLICY "price_catalogs_service_only" ON price_catalogs FOR ALL
+  USING (true);
 
 
 -- 5. catalog_entries
 CREATE TABLE IF NOT EXISTS catalog_entries (
-  id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   catalog_id      uuid NOT NULL REFERENCES price_catalogs(id) ON DELETE CASCADE,
-  org_id          uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id          uuid NOT NULL,
   tipo            text NOT NULL CHECK (tipo IN ('material', 'mano_obra', 'equipo', 'subcontrato')),
   codigo          text,
   descripcion     text,
@@ -104,14 +110,14 @@ CREATE TABLE IF NOT EXISTS catalog_entries (
 );
 
 ALTER TABLE catalog_entries ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "catalog_entries_org" ON catalog_entries FOR ALL
-  USING (org_id IN (SELECT public.get_my_org_ids()));
+CREATE POLICY "catalog_entries_service_only" ON catalog_entries FOR ALL
+  USING (true);
 
 
 -- 6. indirect_config
 CREATE TABLE IF NOT EXISTS indirect_config (
-  id               uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id           uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE UNIQUE,
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id           uuid NOT NULL UNIQUE,
   estructura_pct   numeric DEFAULT 0.15,
   jefatura_pct     numeric DEFAULT 0.08,
   logistica_pct    numeric DEFAULT 0.05,
@@ -120,31 +126,31 @@ CREATE TABLE IF NOT EXISTS indirect_config (
 );
 
 ALTER TABLE indirect_config ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "indirect_config_org" ON indirect_config FOR ALL
-  USING (org_id IN (SELECT public.get_my_org_ids()));
+CREATE POLICY "indirect_config_service_only" ON indirect_config FOR ALL
+  USING (true);
 
 
 -- 7. budget_versions
 CREATE TABLE IF NOT EXISTS budget_versions (
-  id          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   budget_id   uuid NOT NULL REFERENCES budgets(id) ON DELETE CASCADE,
-  org_id      uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id      uuid NOT NULL,
   version     integer NOT NULL,
   data        jsonb NOT NULL,
   created_at  timestamptz DEFAULT now(),
-  created_by  uuid REFERENCES auth.users(id)
+  created_by  uuid
 );
 
 ALTER TABLE budget_versions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "budget_versions_org" ON budget_versions FOR ALL
-  USING (org_id IN (SELECT public.get_my_org_ids()));
+CREATE POLICY "budget_versions_service_only" ON budget_versions FOR ALL
+  USING (true);
 
 
 -- 8. audit_logs
 CREATE TABLE IF NOT EXISTS audit_logs (
-  id          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id      uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id     uuid NOT NULL REFERENCES auth.users(id),
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id      uuid NOT NULL,
+  user_id     uuid NOT NULL,
   budget_id   uuid NOT NULL,
   item_id     text NOT NULL,
   action      text NOT NULL,
@@ -153,5 +159,5 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 );
 
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "audit_logs_org" ON audit_logs FOR ALL
-  USING (org_id IN (SELECT public.get_my_org_ids()));
+CREATE POLICY "audit_logs_service_only" ON audit_logs FOR ALL
+  USING (true);

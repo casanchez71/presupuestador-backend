@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWKClient
 
 from app.config import get_settings
-from app.db import get_supabase
+from app.db import get_auth_db
 
 security = HTTPBearer()
 
@@ -17,7 +17,7 @@ def _get_jwks_client() -> PyJWKClient:
     global _jwks_client
     if _jwks_client is None:
         settings = get_settings()
-        url = f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json"
+        url = f"{settings.auth_url}/auth/v1/.well-known/jwks.json"
         _jwks_client = PyJWKClient(url, cache_keys=True)
     return _jwks_client
 
@@ -25,7 +25,7 @@ def _get_jwks_client() -> PyJWKClient:
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> dict:
-    """Validate Supabase JWT and return {user_id, org_id}."""
+    """Validate Supabase JWT via auth DB and return {user_id, org_id}."""
     token = credentials.credentials
     try:
         signing_key = _get_jwks_client().get_signing_key_from_jwt(token)
@@ -39,9 +39,10 @@ def get_current_user(
         if not user_id:
             raise HTTPException(401, "Token sin sub")
 
-        db = get_supabase()
+        # Auth DB (EOS) — resolve org_id from memberships
+        auth_db = get_auth_db()
         membership = (
-            db.table("memberships")
+            auth_db.table("memberships")
             .select("org_id")
             .eq("user_id", user_id)
             .limit(1)
