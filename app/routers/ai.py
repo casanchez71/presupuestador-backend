@@ -10,7 +10,7 @@ from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile
 
 from app.auth import get_current_user
 from app.config import get_settings
-from app.db import get_supabase
+from app.db import get_data_db
 
 router = APIRouter()
 
@@ -58,7 +58,7 @@ async def analyze_plan(
         )
 
     # Validate budget exists
-    db = get_supabase()
+    db = get_data_db()
     budget = (
         db.table("budgets")
         .select("id")
@@ -131,7 +131,7 @@ async def insert_ai_suggestions(
     user: dict = Depends(get_current_user),
 ):
     """Insert AI-suggested items into budget_items."""
-    db = get_supabase()
+    db = get_data_db()
     org_id = user["org_id"]
 
     if not db.table("budgets").select("id").eq("id", str(budget_id)).eq("org_id", org_id).execute().data:

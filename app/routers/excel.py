@@ -19,7 +19,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
 from app.auth import get_current_user
-from app.db import get_supabase
+from app.db import get_data_db
 from app.tree import get_parent_candidates, normalize_item_code, safe_float
 
 router = APIRouter()
@@ -296,7 +296,7 @@ async def import_excel(
     contents = await file.read()
     df_dict = pd.read_excel(BytesIO(contents), sheet_name=None, header=None)
 
-    db = get_supabase()
+    db = get_data_db()
     org_id = user["org_id"]
 
     # 1. Create price catalog
@@ -397,7 +397,7 @@ async def export_budget_excel(
     user: dict = Depends(get_current_user),
 ):
     """Export a budget to Excel with cost breakdown."""
-    db = get_supabase()
+    db = get_data_db()
     bid = str(budget_id)
     org_id = user["org_id"]
 

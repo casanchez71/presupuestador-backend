@@ -1,10 +1,48 @@
-# Presupuestador Backend v2
+# Presupuestador Backend v2.1
 
 Backend para estimacion de presupuestos de obra de construccion.
 
+## Arquitectura: Modelo C (Auth compartida + Data separada)
+
+```
+┌─────────────────────────┐
+│   Frontend (React/Vite)  │
+│   Login via EOS Supabase │
+└───────────┬─────────────┘
+            │ JWT
+            ▼
+┌───────────────────────────────────────────┐
+│        FastAPI Backend (Render)            │
+│                                           │
+│  auth.py ──→ AUTH Supabase (EOS)          │
+│              - auth.users                 │
+│              - memberships → org_id       │
+│              - organizations              │
+│                                           │
+│  routers ──→ DATA Supabase (Presupuest.)  │
+│              - budgets                    │
+│              - budget_items               │
+│              - item_resources             │
+│              - price_catalogs             │
+│              - catalog_entries            │
+│              - indirect_config            │
+│              - budget_versions            │
+│              - audit_logs                 │
+└───────────────────────────────────────────┘
+```
+
+**Por que Modelo C:**
+- Un solo login (SSO real, sin doble autenticacion)
+- Datos de presupuestos aislados (no ensucian EOS)
+- Crecimiento del presupuestador no impacta CRM/Bot
+- Se puede vender/escalar por separado
+
+**Fallback:** Si `AUTH_SUPABASE_*` / `DATA_SUPABASE_*` no estan seteadas,
+el backend usa `SUPABASE_URL/KEY` para todo (modo single-project).
+
 ## Stack
 - Python 3.11 + FastAPI
-- Supabase (PostgreSQL + RLS)
+- Supabase x2: Auth (EOS) + Data (Presupuestador)
 - Deploy: Render (free tier)
 - Frontend: React 18 + Vite (repo aparte)
 
@@ -14,7 +52,7 @@ app/
   config.py       # Env vars tipadas (pydantic-settings)
   main.py         # App factory, CORS, routers
   auth.py         # JWT JWKS (ES256/HS256)
-  db.py           # Supabase client
+  db.py           # Dual Supabase: get_auth_db() + get_data_db()
   schemas.py      # Modelos Pydantic (request/response)
   tree.py         # Utilidades: arbol, normalizacion, parseo
   routers/
@@ -41,7 +79,7 @@ tests/
 | `budget_versions` | Snapshots completos |
 | `audit_logs` | Registro de cambios en items |
 
-Todas con RLS: `org_id IN (SELECT public.get_my_org_ids())`
+RLS: `USING (true)` en data project (service_role key bypasea RLS; el backend filtra por org_id en codigo)
 
 ## Formato Excel soportado (Las Heras)
 
@@ -74,10 +112,11 @@ El import lee todas estas hojas:
 - CORS: `ALLOWED_ORIGINS` env var, nunca `"*"` en produccion
 - `.env` nunca en git
 
-### Supabase
-- Tenant = `org_id` en `memberships`
-- RLS: `IN (SELECT public.get_my_org_ids())` — NO `= ANY(...)`
-- Todas las queries filtran por `org_id`
+### Supabase (Modelo C)
+- Auth DB (EOS): `memberships` → resuelve `org_id` desde JWT
+- Data DB (Presupuestador): todas las tablas de negocio
+- Queries SIEMPRE filtran por `org_id` en codigo (defensa principal)
+- RLS en data project es defensa extra (service_role key la bypasea)
 
 ### Python
 - Pydantic v2: `model_dump()` (no `dict()`)
@@ -91,13 +130,21 @@ El import lee todas estas hojas:
 
 ## Variables de entorno
 
-| Key | Requerida | Default |
-|-----|-----------|---------|
-| `SUPABASE_URL` | Si | — |
-| `SUPABASE_KEY` | Si | — |
-| `ALLOWED_ORIGINS` | Si | `http://localhost:5173` |
-| `OPENAI_API_KEY` | No | — (endpoints IA devuelven 503) |
-| `PORT` | No | `8000` |
+| Key | Requerida | Default | Funcion |
+|-----|-----------|---------|---------|
+| `SUPABASE_URL` | Si | — | Fallback para auth y data |
+| `SUPABASE_KEY` | Si | — | Fallback para auth y data |
+| `AUTH_SUPABASE_URL` | No | `SUPABASE_URL` | URL de EOS Supabase (auth) |
+| `AUTH_SUPABASE_KEY` | No | `SUPABASE_KEY` | Key de EOS Supabase (auth) |
+| `DATA_SUPABASE_URL` | No | `SUPABASE_URL` | URL del proyecto data |
+| `DATA_SUPABASE_KEY` | No | `SUPABASE_KEY` | Key del proyecto data |
+| `ALLOWED_ORIGINS` | Si | `http://localhost:5173` | CORS |
+| `OPENAI_API_KEY` | No | — | Endpoints IA (503 si falta) |
+| `PORT` | No | `8000` | Puerto del server |
+
+### Rollback
+Si algo falla con Modelo C: borrar `AUTH_SUPABASE_*` y `DATA_SUPABASE_*` de Render.
+El fallback a `SUPABASE_URL/KEY` hace que todo vuelva a single-project.
 
 ## Endpoints
 

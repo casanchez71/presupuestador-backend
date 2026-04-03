@@ -9,14 +9,14 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app.auth import get_current_user
-from app.db import get_supabase
+from app.db import get_data_db
 from app.schemas import AnalysisResponse, IndirectApplyRequest, VersionCreate
 
 router = APIRouter()
 
 
 def _get_items(budget_id: str, org_id: str) -> list[dict]:
-    db = get_supabase()
+    db = get_data_db()
     return (
         db.table("budget_items")
         .select("*")
@@ -37,7 +37,7 @@ async def apply_indirects(
     user: dict = Depends(get_current_user),
 ):
     """Apply indirect cost percentages to all items in a budget."""
-    db = get_supabase()
+    db = get_data_db()
     org_id = user["org_id"]
     bid = str(budget_id)
 
@@ -126,7 +126,7 @@ async def create_version(
     user: dict = Depends(get_current_user),
 ):
     """Create a snapshot of the current budget state."""
-    db = get_supabase()
+    db = get_data_db()
     bid = str(budget_id)
     org_id = user["org_id"]
 
@@ -178,7 +178,7 @@ async def list_versions(
     budget_id: UUID,
     user: dict = Depends(get_current_user),
 ):
-    db = get_supabase()
+    db = get_data_db()
     result = (
         db.table("budget_versions")
         .select("id, version, created_at, created_by")
@@ -196,7 +196,7 @@ async def get_version(
     version_id: UUID,
     user: dict = Depends(get_current_user),
 ):
-    db = get_supabase()
+    db = get_data_db()
     result = (
         db.table("budget_versions")
         .select("*")
