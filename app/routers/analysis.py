@@ -9,6 +9,7 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app.auth import get_current_user
+from app.calculations import calc_budget_summary, calc_item_totals
 from app.db import get_data_db
 from app.schemas import AnalysisResponse, IndirectApplyRequest, VersionCreate
 
@@ -63,16 +64,18 @@ async def apply_indirects(
 
     total_directo = sum(i.get("directo_total") or 0 for i in items)
 
-    # Build batch of updates
+    # Build batch of updates — set indirecto_total, then recalculate neto_total
     updates = []
     for item in items:
         directo = item.get("directo_total") or 0
-        indirecto = directo * pct_total
-        neto = directo + indirecto + (item.get("beneficio_total") or 0)
+        indirecto = round(directo * pct_total, 2)
+        # Merge the new indirecto_total into the item and recalculate
+        merged = {**item, "indirecto_total": indirecto}
+        recalculated = calc_item_totals(merged)
         updates.append({
             "id": item["id"],
-            "indirecto_total": round(indirecto, 2),
-            "neto_total": round(neto, 2),
+            "indirecto_total": recalculated["indirecto_total"],
+            "neto_total": recalculated["neto_total"],
         })
 
     # Update in batches (Supabase doesn't support bulk UPDATE, so we batch)
@@ -104,16 +107,8 @@ async def get_analysis(
     if not items:
         raise HTTPException(404, "Presupuesto vacio o sin acceso")
 
-    return AnalysisResponse(
-        budget_id=str(budget_id),
-        mat_total=sum(i.get("mat_total") or 0 for i in items),
-        mo_total=sum(i.get("mo_total") or 0 for i in items),
-        directo_total=sum(i.get("directo_total") or 0 for i in items),
-        indirecto_total=sum(i.get("indirecto_total") or 0 for i in items),
-        beneficio_total=sum(i.get("beneficio_total") or 0 for i in items),
-        neto_total=sum(i.get("neto_total") or 0 for i in items),
-        items_count=len(items),
-    )
+    summary = calc_budget_summary(items)
+    return AnalysisResponse(budget_id=str(budget_id), **summary)
 
 
 # ── Versions ─────────────────────────────────────────────────────────────────

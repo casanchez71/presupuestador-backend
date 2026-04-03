@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import ai, analysis, budgets, excel, health
+from app.routers import ai, analysis, budgets, catalogs, excel, health
 
 
 def create_app() -> FastAPI:
@@ -23,6 +23,7 @@ def create_app() -> FastAPI:
     app.include_router(excel.router, prefix="/budgets", tags=["Excel"])
     app.include_router(ai.router, prefix="/budgets", tags=["IA"])
     app.include_router(analysis.router, prefix="/budgets", tags=["Analisis"])
+    app.include_router(catalogs.router, prefix="/catalogs", tags=["Catalogos"])
 
     return app
 
