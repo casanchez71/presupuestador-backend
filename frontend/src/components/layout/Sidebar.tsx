@@ -1,9 +1,12 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
-  LayoutGrid, Clock, Edit3, ClipboardList, BarChart2, Layers,
+  LayoutGrid, Edit3, BarChart2, Layers,
   Download, Upload, Settings, BookOpen, RefreshCw, LogOut, Plus,
+  ArrowLeft,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useEffect, useState } from 'react'
+import { budgetApi } from '../../lib/api'
 
 const SOLE_LOGO = (
   <svg width="28" height="28" viewBox="0 0 512 512" fill="none">
@@ -56,6 +59,23 @@ function NavItem({
 export default function Sidebar() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Detect if we're inside a budget
+  const budgetMatch = location.pathname.match(/\/app\/budgets\/([^/]+)/)
+  const currentBudgetId = budgetMatch ? budgetMatch[1] : null
+
+  // Fetch budget name when inside a budget
+  const [budgetName, setBudgetName] = useState<string | null>(null)
+  useEffect(() => {
+    if (!currentBudgetId) {
+      setBudgetName(null)
+      return
+    }
+    budgetApi.get(currentBudgetId)
+      .then((b) => setBudgetName(b.name || 'Proyecto actual'))
+      .catch(() => setBudgetName('Proyecto actual'))
+  }, [currentBudgetId])
 
   const handleSignOut = async () => {
     await signOut()
@@ -76,38 +96,57 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Operación Semanal */}
-      <div className="px-3 pt-3 pb-1">
-        <div className="text-[10px] font-bold text-gray-400 tracking-wider mb-1.5">OPERACIÓN SEMANAL</div>
-      </div>
-      <nav className="px-2 space-y-0.5">
-        <NavItem to="#" icon={<LayoutGrid size={15} />} label="Iniciar" />
-        <NavItem to="#" icon={<Clock size={15} />} label="SOLE HQ" />
-      </nav>
-
-      {/* Presupuestador PRO */}
+      {/* PRESUPUESTADOR PRO — always visible */}
       <div className="px-3 pt-4 pb-1">
         <div className="text-[10px] font-bold text-[#2D8D68] tracking-wider mb-1.5 flex items-center gap-1">
           <span className="w-1.5 h-1.5 bg-[#2D8D68] rounded-full" />
           PRESUPUESTADOR PRO
         </div>
       </div>
-      <nav className="px-2 space-y-0.5 text-[13px] flex-1 overflow-y-auto">
+      <nav className="px-2 space-y-0.5 text-[13px]">
         <NavItem to="/app/dashboard" end icon={<LayoutGrid size={15} />} label="Mis Presupuestos" />
-        <NavItem to="/app/new-project" icon={<Plus size={15} />} label="Nuevo Presupuesto" />
-        <NavItem to="/app/budgets/1/editor" icon={<Edit3 size={15} />} label="Editor de Obra" />
-        <NavItem to="/app/budgets/1/item/1" icon={<ClipboardList size={15} />} label="Detalle de Ítem" />
-        <NavItem to="/app/budgets/1/analysis" icon={<BarChart2 size={15} />} label="Análisis" />
-        <NavItem to="/app/budgets/1/ai" icon={<Layers size={15} />} label="IA + Planos" />
+        <NavItem to="/app/new-project" icon={<Plus size={15} />} label="+ Nuevo Presupuesto" />
         <NavItem to="/app/import" icon={<Upload size={15} />} label="Importar Excel" />
-        <NavItem to="/app/budgets/1/export" icon={<Download size={15} />} label="Exportar" />
-
-        <div className="border-t my-2 mx-1" />
-        <div className="text-[10px] font-bold text-gray-400 tracking-wider mb-1 px-1">CONFIGURACIÓN</div>
-        <NavItem to="/app/settings/markups" icon={<Settings size={15} />} label="Cadena de Markups" />
-        <NavItem to="/app/catalogs" icon={<BookOpen size={15} />} label="Catálogos" />
-        <NavItem to="/app/budgets/1/versions" icon={<RefreshCw size={15} />} label="Versiones" />
       </nav>
+
+      {/* PROYECTO ACTUAL — only when inside a budget */}
+      {currentBudgetId && (
+        <div className="mx-2 mt-3 mb-1 rounded-lg bg-[#F0FAF5] border-l-[3px] border-l-[#E0A33A]">
+          <div className="px-3 pt-3 pb-1">
+            <button
+              onClick={() => navigate('/app/dashboard')}
+              className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-[#2D8D68] transition-colors mb-1.5"
+            >
+              <ArrowLeft size={10} />
+              Volver
+            </button>
+            <div className="text-[10px] font-bold text-[#E0A33A] tracking-wider mb-1 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-[#E0A33A] rounded-full" />
+              PROYECTO ACTUAL
+            </div>
+            <div className="text-[12px] font-semibold text-[#143D34] truncate mb-2" title={budgetName || 'Proyecto actual'}>
+              {budgetName || 'Proyecto actual'}
+            </div>
+          </div>
+          <nav className="px-1 pb-2 space-y-0.5 text-[13px]">
+            <NavItem to={`/app/budgets/${currentBudgetId}/editor`} icon={<Edit3 size={15} />} label="Editor de Obra" />
+            <NavItem to={`/app/budgets/${currentBudgetId}/analysis`} icon={<BarChart2 size={15} />} label="Analisis" />
+            <NavItem to={`/app/budgets/${currentBudgetId}/ai`} icon={<Layers size={15} />} label="IA + Planos" />
+            <NavItem to={`/app/budgets/${currentBudgetId}/export`} icon={<Download size={15} />} label="Exportar" />
+            <NavItem to={`/app/budgets/${currentBudgetId}/versions`} icon={<RefreshCw size={15} />} label="Versiones" />
+          </nav>
+        </div>
+      )}
+
+      {/* CONFIGURACIÓN — always visible */}
+      <div className="px-2 flex-1 overflow-y-auto">
+        <div className="border-t my-2 mx-1" />
+        <div className="text-[10px] font-bold text-gray-400 tracking-wider mb-1 px-1">CONFIGURACION</div>
+        <nav className="space-y-0.5 text-[13px]">
+          <NavItem to="/app/settings/markups" icon={<Settings size={15} />} label="Cadena de Markups" />
+          <NavItem to="/app/catalogs" icon={<BookOpen size={15} />} label="Catalogos" />
+        </nav>
+      </div>
 
       {/* User */}
       <div className="p-3 border-t flex items-center gap-2">
@@ -124,7 +163,7 @@ export default function Sidebar() {
         className="px-4 py-2 text-[11px] text-gray-400 hover:text-gray-600 flex items-center gap-1.5 border-t transition-colors"
       >
         <LogOut size={13} />
-        CERRAR SESIÓN
+        CERRAR SESION
       </button>
     </aside>
   )
