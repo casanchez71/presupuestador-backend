@@ -83,6 +83,10 @@ export const budgetApi = {
   update: (id: string, data: Partial<Budget>) => patch<Budget>(`/budgets/${id}`, data),
   remove: (id: string) => del<void>(`/budgets/${id}`),
 
+  // Sections
+  createSection: (id: string, data: { codigo: string; nombre: string }) =>
+    post<BudgetItem>(`/budgets/${id}/sections`, data),
+
   // Items
   getItems: (id: string) => get<BudgetItem[]>(`/budgets/${id}/items`),
   createItem: (id: string, data: Partial<BudgetItem>) =>

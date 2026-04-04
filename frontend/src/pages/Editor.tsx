@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Edit3, ChevronRight, Plus, CheckCircle, AlertCircle, X } from 'lucide-react'
+import { Edit3, ChevronRight, Plus, CheckCircle, AlertCircle, X, Loader2, LayoutGrid, MousePointerClick, Command } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency, fmtNumber } from '../lib/format'
 import type { Budget, TreeNode, BudgetItem } from '../types'
@@ -9,6 +9,7 @@ import DataTable from '../components/ui/DataTable'
 import CostSummaryBar from '../components/ui/CostSummaryBar'
 import MarkupChainDisplay from '../components/ui/MarkupChainDisplay'
 import ViewModeSelector from '../components/ui/ViewModeSelector'
+import AddItemForm from '../components/ui/AddItemForm'
 import { regroupItems } from '../lib/viewModes'
 import type { ViewMode } from '../lib/viewModes'
 
@@ -47,6 +48,14 @@ export default function Editor() {
   const [toasts, setToasts] = useState<Toast[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('rubro')
   const [originalTree, setOriginalTree] = useState<TreeNode[]>([])
+  const [showAddForm, setShowAddForm] = useState(false)
+
+  // Section CRUD state
+  const [showSectionForm, setShowSectionForm] = useState(false)
+  const [sectionCodigo, setSectionCodigo] = useState('')
+  const [sectionNombre, setSectionNombre] = useState('')
+  const [sectionSaving, setSectionSaving] = useState(false)
+  const sectionCodigoRef = useRef<HTMLInputElement>(null)
 
   // Regroup items when view mode changes
   const displayTree = useMemo(
@@ -54,31 +63,19 @@ export default function Editor() {
     [viewMode, originalTree, allItems],
   )
 
-  /** Return items that belong to a given tree node.
-   *  If the node has children (nested tree), use parent_id matching.
-   *  If the tree is flat, use code-prefix matching to group section items.
-   */
+  /** Return items that belong to a given tree node. */
   const getItemsForNode = useCallback((node: TreeNode, all: BudgetItem[]): BudgetItem[] => {
-    // Virtual nodes (from alternate view modes) carry their children directly
     if (node.id.startsWith('__virtual_') && node.children.length > 0) {
       return node.children as BudgetItem[]
     }
-
-    // First try parent_id matching (works when tree is properly nested)
     const byParent = all.filter((i) => i.parent_id === node.id)
     if (byParent.length > 0) return byParent
-
-    // For flat trees: if the node looks like a section header (code has no dot),
-    // find items whose code starts with the section number prefix
     const code = node.code ?? ''
-    // Extract leading number from codes like "1- TAREAS PRELIMINARES" or "3-ESTRUCTURA"
     const sectionMatch = code.match(/^(\d+)\s*[-.]/)
     if (sectionMatch) {
       const prefix = sectionMatch[1] + '.'
       return all.filter((i) => i.code?.startsWith(prefix) && i.id !== node.id)
     }
-
-    // Fallback: just return the node itself
     return all.filter((i) => i.id === node.id)
   }, [])
 
@@ -94,27 +91,34 @@ export default function Editor() {
     setToasts((prev) => prev.filter((t) => t.id !== tid))
   }, [])
 
-  useEffect(() => {
+  /** Refresh tree and items from the API */
+  const refreshData = useCallback(async () => {
     if (!id) return
-    Promise.all([
+    const [{ budget: b, tree: t }, fetchedItems] = await Promise.all([
       budgetApi.getFull(id),
       budgetApi.getItems(id),
     ])
-      .then(([{ budget: b, tree: t }, fetchedItems]) => {
-        setBudget(b)
-        setTree(t)
-        setOriginalTree(t)
-        setAllItems(fetchedItems)
-        // Auto-select first section node and show its items
-        const firstNode = t[0] ?? null
+    setBudget(b)
+    setTree(t)
+    setOriginalTree(t)
+    setAllItems(fetchedItems)
+    return { tree: t, items: fetchedItems }
+  }, [id])
+
+  useEffect(() => {
+    if (!id) return
+    refreshData()
+      .then((data) => {
+        if (!data) return
+        const firstNode = data.tree[0] ?? null
         if (firstNode) {
           setSelectedNode(firstNode)
-          setItems(getItemsForNode(firstNode, fetchedItems))
+          setItems(getItemsForNode(firstNode, data.items))
         }
       })
       .catch(() => {/* keep empty state */})
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, refreshData, getItemsForNode])
 
   // Handle inline cell edit
   const handleEditItem = useCallback(async (itemId: string, field: string, oldValue: number, newValue: number) => {
@@ -123,14 +127,10 @@ export default function Editor() {
     const fieldLabel = FIELD_LABELS[field] ?? field
     const formatVal = field === 'cantidad' ? (v: number) => fmtNumber(v, 2) : fmtCurrency
 
-    // Call the API
     const result = await budgetApi.updateItem(id, itemId, { [field]: newValue })
-
-    // The API returns { message, item } — extract the updated item
     const updatedItem = (result as unknown as { item: BudgetItem }).item
     if (!updatedItem) throw new Error('No updated item in response')
 
-    // Update allItems and current items with recalculated values
     setAllItems((prev) =>
       prev.map((item) => (item.id === itemId ? { ...item, ...updatedItem } : item)),
     )
@@ -141,9 +141,141 @@ export default function Editor() {
     addToast(`${fieldLabel} actualizado: ${formatVal(oldValue)} → ${formatVal(newValue)}`)
   }, [id, addToast])
 
+  /** Suggest next section code */
+  const suggestNextSectionCode = useCallback((): string => {
+    let maxCode = 0
+    for (const node of originalTree) {
+      const m = (node.code ?? '').match(/^(\d+)/)
+      if (m) maxCode = Math.max(maxCode, parseInt(m[1], 10))
+    }
+    return String(maxCode + 1)
+  }, [originalTree])
+
+  /** Create a new section */
+  const handleCreateSection = useCallback(async () => {
+    if (!id || !sectionCodigo.trim() || !sectionNombre.trim()) return
+    setSectionSaving(true)
+    try {
+      await budgetApi.createSection(id, {
+        codigo: sectionCodigo.trim(),
+        nombre: sectionNombre.trim(),
+      })
+      const data = await refreshData()
+      if (data) {
+        // Select the newly created section (last in tree)
+        const newNode = data.tree[data.tree.length - 1]
+        if (newNode) {
+          setSelectedNode(newNode)
+          setItems(getItemsForNode(newNode, data.items))
+        }
+      }
+      addToast(`Seccion creada: ${sectionCodigo} - ${sectionNombre}`)
+      setShowSectionForm(false)
+      setSectionCodigo('')
+      setSectionNombre('')
+    } catch (err) {
+      addToast(`Error al crear seccion: ${err instanceof Error ? err.message : 'desconocido'}`, 'error')
+    } finally {
+      setSectionSaving(false)
+    }
+  }, [id, sectionCodigo, sectionNombre, refreshData, getItemsForNode, addToast])
+
+  /** Edit a section name */
+  const handleEditSection = useCallback(async (node: TreeNode, newName: string) => {
+    if (!id) return
+    try {
+      await budgetApi.updateItem(id, node.id, { description: newName })
+      const data = await refreshData()
+      if (data) {
+        // Re-select the same node if it was selected
+        if (selectedNode?.id === node.id) {
+          const updatedNode = data.tree.find((n) => n.id === node.id)
+          if (updatedNode) {
+            setSelectedNode(updatedNode)
+            setItems(getItemsForNode(updatedNode, data.items))
+          }
+        }
+      }
+      addToast(`Seccion renombrada: ${newName}`)
+    } catch (err) {
+      addToast(`Error al editar seccion: ${err instanceof Error ? err.message : 'desconocido'}`, 'error')
+    }
+  }, [id, selectedNode, refreshData, getItemsForNode, addToast])
+
+  /** Delete an empty section */
+  const handleDeleteSection = useCallback(async (node: TreeNode) => {
+    if (!id) return
+    try {
+      await budgetApi.deleteItem(id, node.id)
+      const data = await refreshData()
+      if (data) {
+        // If deleted node was selected, select first available
+        if (selectedNode?.id === node.id) {
+          const firstNode = data.tree[0] ?? null
+          setSelectedNode(firstNode)
+          setItems(firstNode ? getItemsForNode(firstNode, data.items) : [])
+        }
+      }
+      addToast(`Seccion eliminada: ${node.description}`)
+    } catch (err) {
+      addToast(`Error al eliminar seccion: ${err instanceof Error ? err.message : 'desconocido'}`, 'error')
+    }
+  }, [id, selectedNode, refreshData, getItemsForNode, addToast])
+
+  /** Suggest next item code based on existing items in section */
+  const suggestNextCode = useCallback((): string => {
+    if (!selectedNode) return ''
+    const sectionCode = selectedNode.code ?? ''
+    const sectionMatch = sectionCode.match(/^(\d+)\s*[-.]?/)
+    if (!sectionMatch) return ''
+    const prefix = sectionMatch[1] + '.'
+    let maxSub = 0
+    for (const item of items) {
+      const m = (item.code ?? '').match(new RegExp(`^${sectionMatch[1]}\\.(\\d+)`))
+      if (m) maxSub = Math.max(maxSub, parseInt(m[1], 10))
+    }
+    return `${prefix}${maxSub + 1}`
+  }, [selectedNode, items])
+
+  /** Handle adding a new item */
+  const handleAddItem = useCallback(async (data: {
+    code: string
+    description: string
+    unidad: string
+    cantidad: number
+    mat_unitario: number
+    mo_unitario: number
+  }) => {
+    if (!id || !selectedNode) throw new Error('No budget/section selected')
+
+    const newItem = await budgetApi.createItem(id, {
+      code: data.code,
+      description: data.description,
+      unidad: data.unidad,
+      cantidad: data.cantidad,
+      mat_unitario: data.mat_unitario,
+      mo_unitario: data.mo_unitario,
+      parent_id: selectedNode.id,
+    })
+
+    const refreshedItems = await budgetApi.getItems(id)
+    setAllItems(refreshedItems)
+    setItems(getItemsForNode(selectedNode, refreshedItems))
+    setShowAddForm(false)
+    addToast(`Item agregado: ${newItem.code ?? data.code} ${data.description}`)
+  }, [id, selectedNode, addToast, getItemsForNode])
+
+  // Open section form with suggested code
+  const openSectionForm = useCallback(() => {
+    setSectionCodigo(suggestNextSectionCode())
+    setSectionNombre('')
+    setShowSectionForm(true)
+    setTimeout(() => sectionCodigoRef.current?.focus(), 50)
+  }, [suggestNextSectionCode])
+
   const selectedLabel = selectedNode
     ? `${selectedNode.code ? selectedNode.code + ' ' : ''}${selectedNode.description ?? ''}`
-    : '—'
+    : '\u2014'
 
   const mat = items.reduce((s, i) => s + i.mat_total, 0)
   const mo = items.reduce((s, i) => s + i.mo_total, 0)
@@ -158,10 +290,10 @@ export default function Editor() {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg text-xs font-medium animate-slide-in ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-lg text-xs font-medium animate-slide-in backdrop-blur-sm ${
               toast.type === 'success'
-                ? 'bg-[#E8F5EE] text-[#1B5E4B] border border-[#2D8D68]/30'
-                : 'bg-red-50 text-red-700 border border-red-200'
+                ? 'bg-[#E8F5EE]/95 text-[#1B5E4B] border border-[#2D8D68]/20'
+                : 'bg-red-50/95 text-red-700 border border-red-200'
             }`}
           >
             {toast.type === 'success' ? (
@@ -170,35 +302,53 @@ export default function Editor() {
               <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
             )}
             <span>{toast.message}</span>
-            <button onClick={() => removeToast(toast.id)} className="ml-1 opacity-50 hover:opacity-100">
+            <button onClick={() => removeToast(toast.id)} className="ml-1 opacity-50 hover:opacity-100 transition-opacity">
               <X size={12} />
             </button>
           </div>
         ))}
       </div>
 
-      {/* Slide-in animation for toasts */}
+      {/* Animations */}
       <style>{`
         @keyframes slideIn {
           from { transform: translateX(100%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
         .animate-slide-in { animation: slideIn 0.3s ease-out; }
+        @keyframes treeEnter {
+          from { opacity: 0; max-height: 0; }
+          to { opacity: 1; max-height: 500px; }
+        }
+        .tree-children-enter {
+          animation: treeEnter 0.2s ease-out;
+          overflow: hidden;
+        }
+        .editable-cell {
+          border-bottom: 1px dashed #CBD5E1;
+          transition: all 0.15s ease;
+        }
+        .editable-cell:hover {
+          border-bottom-color: #2D8D68;
+          background: #FEFCE8;
+          border-radius: 2px;
+          padding: 1px 2px;
+        }
       `}</style>
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-xs mb-1">
         <span
-          className="text-gray-400 cursor-pointer hover:text-[#2D8D68]"
+          className="text-gray-400 cursor-pointer hover:text-[#2D8D68] transition-colors"
           onClick={() => navigate('/app/dashboard')}
         >
           Presupuestos
         </span>
         <ChevronRight size={12} className="text-gray-300" />
         <span className="font-semibold text-gray-900">
-          {budget?.name ?? 'Edificio Las Heras — Obra Gris'}
+          {budget?.name ?? 'Edificio Las Heras \u2014 Obra Gris'}
         </span>
-        <span className="bg-[#E8F5EE] text-[#1B5E4B] text-[10px] font-medium px-1.5 py-0.5 rounded">v3</span>
+        <span className="bg-[#E8F5EE] text-[#1B5E4B] text-[10px] font-medium px-1.5 py-0.5 rounded-full">v3</span>
       </div>
 
       {/* Section label */}
@@ -207,9 +357,9 @@ export default function Editor() {
       </div>
 
       {/* Title bar */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
+          <div className="w-1 h-7 bg-gradient-to-b from-[#2D8D68] to-[#2D8D68]/40 rounded-full" />
           <h1 className="text-xl font-extrabold text-gray-900">
             {budget?.name?.toUpperCase() ?? 'PRESUPUESTO'}
           </h1>
@@ -217,19 +367,19 @@ export default function Editor() {
         <div className="flex gap-2">
           <button
             onClick={() => navigate(`/app/budgets/${id ?? '1'}/ai`)}
-            className="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors"
+            className="bg-white border border-gray-200 text-gray-700 px-3.5 py-1.5 rounded-xl text-xs font-medium hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
           >
             IA + Plano
           </button>
           <button
             onClick={() => navigate(`/app/budgets/${id ?? '1'}/export`)}
-            className="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors"
+            className="bg-white border border-gray-200 text-gray-700 px-3.5 py-1.5 rounded-xl text-xs font-medium hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
           >
             Exportar
           </button>
           <button
             onClick={() => id && budgetApi.createVersion(id)}
-            className="bg-[#2D8D68] hover:bg-[#1B5E4B] text-white font-semibold px-4 py-1.5 rounded-lg text-xs transition-colors"
+            className="bg-gradient-to-r from-[#2D8D68] to-[#1B5E4B] hover:from-[#1B5E4B] hover:to-[#143D34] text-white font-semibold px-5 py-1.5 rounded-xl text-xs transition-all duration-200 shadow-sm hover:shadow-md"
           >
             Guardar version
           </button>
@@ -243,16 +393,68 @@ export default function Editor() {
         </div>
       )}
 
-      <div className="flex gap-3">
-        {/* Tree */}
-        <div className="w-60 bg-white rounded-xl border flex-shrink-0 overflow-hidden">
-          <div className="bg-[#2D8D68] text-white px-3 py-2 flex justify-between items-center">
-            <span className="font-semibold text-xs">Estructura de Obra</span>
-            <button className="text-[#E0A33A] text-xs font-medium flex items-center gap-0.5">
+      <div className="flex gap-4">
+        {/* Tree Panel */}
+        <div className="w-64 bg-white rounded-2xl shadow-sm border border-gray-200/80 flex-shrink-0 overflow-hidden">
+          {/* Gradient header */}
+          <div className="bg-gradient-to-r from-[#143D34] to-[#2D8D68] text-white px-4 py-3 flex justify-between items-center">
+            <span className="font-semibold text-xs tracking-wide">Estructura de Obra</span>
+            <button
+              onClick={openSectionForm}
+              className="text-[#E0A33A] text-xs font-medium flex items-center gap-0.5 hover:text-yellow-200 transition-colors"
+            >
               <Plus size={12} /> Seccion
             </button>
           </div>
-          <div className="px-1.5 pt-1.5 pb-1">
+
+          {/* Inline section creation form */}
+          {showSectionForm && (
+            <div className="px-2.5 py-2.5 border-b bg-gradient-to-b from-[#F8FBF9] to-white">
+              <div className="flex gap-1.5 mb-1.5">
+                <input
+                  ref={sectionCodigoRef}
+                  type="text"
+                  placeholder="Cod"
+                  value={sectionCodigo}
+                  onChange={(e) => setSectionCodigo(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleCreateSection()
+                    if (e.key === 'Escape') setShowSectionForm(false)
+                  }}
+                  className="w-12 px-1.5 py-1 text-xs border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-[#2D8D68] focus:ring-2 focus:ring-[#2D8D68]/20"
+                />
+                <input
+                  type="text"
+                  placeholder="Nombre de seccion"
+                  value={sectionNombre}
+                  onChange={(e) => setSectionNombre(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleCreateSection()
+                    if (e.key === 'Escape') setShowSectionForm(false)
+                  }}
+                  className="flex-1 px-1.5 py-1 text-xs border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-[#2D8D68] focus:ring-2 focus:ring-[#2D8D68]/20"
+                />
+              </div>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={handleCreateSection}
+                  disabled={sectionSaving || !sectionCodigo.trim() || !sectionNombre.trim()}
+                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-gradient-to-r from-[#2D8D68] to-[#1B5E4B] hover:from-[#1B5E4B] hover:to-[#143D34] disabled:from-gray-300 disabled:to-gray-300 text-white text-[11px] font-medium rounded-lg transition-all duration-200"
+                >
+                  {sectionSaving ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
+                  Crear
+                </button>
+                <button
+                  onClick={() => setShowSectionForm(false)}
+                  className="px-2 py-1 bg-white border border-gray-200 text-gray-500 text-[11px] font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="px-2 pt-2.5 pb-1.5">
             <ViewModeSelector
               mode={viewMode}
               onChange={(m) => {
@@ -262,7 +464,7 @@ export default function Editor() {
               }}
             />
           </div>
-          <div className="px-1.5 pb-1.5 max-h-[480px] overflow-y-auto">
+          <div className="px-2 pb-2 max-h-[480px] overflow-y-auto">
             <TreeView
               nodes={displayTree}
               selectedId={selectedNode?.id}
@@ -270,48 +472,93 @@ export default function Editor() {
                 setSelectedNode(node)
                 setItems(getItemsForNode(node, allItems))
               }}
+              onEditSection={handleEditSection}
+              onDeleteSection={handleDeleteSection}
             />
           </div>
         </div>
 
-        {/* Table */}
-        <div className="flex-1 bg-white rounded-xl border overflow-hidden">
-          <div className="bg-gray-50 border-b px-4 py-2.5 flex justify-between items-center">
+        {/* Main Content Panel */}
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
+          {/* Section header */}
+          <div className="bg-gradient-to-r from-gray-50 to-white border-b px-5 py-3 flex justify-between items-center">
             <div>
               <h2 className="font-bold text-gray-900 text-sm">{selectedLabel}</h2>
-              <p className="text-[10px] text-gray-400 mt-0.5">
-                {items.length} items · {fmtCurrency(directo)} costo directo
+              <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2D8D68] inline-block" />
+                  {items.length} items
+                </span>
+                <span className="text-gray-300">|</span>
+                <span>{fmtCurrency(directo)} costo directo</span>
               </p>
             </div>
-            {items.length === 1 ? (
-              <button
-                onClick={() => navigate(`/app/budgets/${id ?? '1'}/item/${items[0].id}`)}
-                className="text-xs bg-[#2D8D68] hover:bg-[#1B5E4B] text-white px-2.5 py-1 rounded font-medium transition-colors"
-              >
-                Ver detalle
-              </button>
-            ) : selectedNode && (!selectedNode.children || selectedNode.children.length === 0) ? (
-              <button
-                onClick={() => navigate(`/app/budgets/${id ?? '1'}/item/${selectedNode.id}`)}
-                className="text-xs bg-[#2D8D68] hover:bg-[#1B5E4B] text-white px-2.5 py-1 rounded font-medium transition-colors"
-              >
-                Ver detalle
-              </button>
-            ) : null}
+            <div className="flex items-center gap-2">
+              {selectedNode && (
+                <button
+                  onClick={() => setShowAddForm((v) => !v)}
+                  className="text-xs border border-[#2D8D68]/30 text-[#2D8D68] hover:bg-[#E8F5EE] px-3 py-1.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-1 hover:shadow-sm"
+                >
+                  <Plus size={12} /> Item
+                </button>
+              )}
+              {items.length === 1 ? (
+                <button
+                  onClick={() => navigate(`/app/budgets/${id ?? '1'}/item/${items[0].id}`)}
+                  className="text-xs bg-gradient-to-r from-[#2D8D68] to-[#1B5E4B] hover:from-[#1B5E4B] hover:to-[#143D34] text-white px-3 py-1.5 rounded-xl font-medium transition-all duration-200 shadow-sm"
+                >
+                  Ver detalle
+                </button>
+              ) : selectedNode && (!selectedNode.children || selectedNode.children.length === 0) ? (
+                <button
+                  onClick={() => navigate(`/app/budgets/${id ?? '1'}/item/${selectedNode.id}`)}
+                  className="text-xs bg-gradient-to-r from-[#2D8D68] to-[#1B5E4B] hover:from-[#1B5E4B] hover:to-[#143D34] text-white px-3 py-1.5 rounded-xl font-medium transition-all duration-200 shadow-sm"
+                >
+                  Ver detalle
+                </button>
+              ) : null}
+            </div>
           </div>
 
           <CostSummaryBar mat={mat} mo={mo} directo={directo} indirecto={indirecto} neto={neto} indirectoPct={31} />
           <MarkupChainDisplay directo={directo} neto={neto} links={MARKUP_LINKS} />
 
+          {showAddForm && selectedNode && (
+            <AddItemForm
+              suggestedCode={suggestNextCode()}
+              onSubmit={handleAddItem}
+              onCancel={() => setShowAddForm(false)}
+            />
+          )}
+
           {items.length === 0 ? (
-            <div className="p-8 text-center text-gray-400 text-sm">
-              Selecciona una seccion para ver sus items.
+            <div className="py-16 px-8 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-100 mb-4">
+                <LayoutGrid size={28} className="text-gray-300" />
+              </div>
+              <h3 className="text-sm font-semibold text-gray-500 mb-1">
+                Selecciona una seccion del arbol
+              </h3>
+              <p className="text-xs text-gray-400 mb-4 max-w-xs mx-auto">
+                Hace click en cualquier seccion del panel izquierdo para ver y editar sus items de presupuesto.
+              </p>
+              <div className="flex items-center justify-center gap-4 text-[10px] text-gray-400">
+                <span className="flex items-center gap-1">
+                  <MousePointerClick size={12} />
+                  Click para seleccionar
+                </span>
+                <span className="flex items-center gap-1">
+                  <Command size={12} />
+                  Editar celdas inline
+                </span>
+              </div>
             </div>
           ) : (
             <DataTable items={items} onEditItem={handleEditItem} />
           )}
 
-          <div className="p-2 bg-[#E8F5EE] text-[10px] text-[#1B5E4B] border-t">
+          <div className="px-5 py-2.5 bg-gradient-to-r from-[#E8F5EE] to-[#E8F5EE]/50 text-[10px] text-[#1B5E4B] border-t flex items-center gap-1.5">
+            <span className="w-1 h-1 rounded-full bg-[#2D8D68] inline-block" />
             Click en celdas punteadas para editar. Totales se recalculan automaticamente por la cadena de markups.
           </div>
         </div>
