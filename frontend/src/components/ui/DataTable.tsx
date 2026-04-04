@@ -98,11 +98,13 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
 
   const totals = items.reduce(
     (acc, item) => ({
+      mat: acc.mat + (item.mat_total ?? 0),
+      mo: acc.mo + (item.mo_total ?? 0),
       directo: acc.directo + item.directo_total,
       indirecto: acc.indirecto + item.indirecto_total,
       neto: acc.neto + item.neto_total,
     }),
-    { directo: 0, indirecto: 0, neto: 0 },
+    { mat: 0, mo: 0, directo: 0, indirecto: 0, neto: 0 },
   )
 
   function renderEditableCell(item: BudgetItem, field: EditableField, format: (v: number) => string) {
@@ -167,7 +169,7 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-auto max-h-full">
       {/* Save flash animation */}
       <style>{`
         @keyframes saveFlash {
@@ -180,7 +182,7 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
         }
       `}</style>
       <table className="w-full text-xs">
-        <thead>
+        <thead className="sticky top-0 z-10">
           <tr className="bg-[#E8F5EE] text-[#143D34]">
             <th className="px-3 py-2 text-left font-semibold text-[11px] tracking-wide">Codigo</th>
             <th className="px-3 py-2 text-left font-semibold text-[11px] tracking-wide">Descripcion</th>
@@ -272,9 +274,11 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
           ))}
         </tbody>
         {items.length > 0 && (
-          <tfoot>
+          <tfoot className="sticky bottom-0 z-10">
             <tr className="bg-[#E8F5EE]/50 font-semibold text-xs border-t border-[#2D8D68]/20">
-              <td colSpan={6} className="px-3 py-2.5 text-right text-[#2D8D68] uppercase text-[10px] tracking-wider font-bold">Total seccion</td>
+              <td colSpan={4} className="px-3 py-2.5 text-right text-[#2D8D68] uppercase text-[10px] tracking-wider font-bold">Total seccion</td>
+              <td className="px-3 py-2.5 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.mat)}</td>
+              <td className="px-3 py-2.5 cost-cell text-purple-700 font-bold">{fmtCurrency(totals.mo)}</td>
               <td className="px-3 py-2.5 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.directo)}</td>
               <td className="px-3 py-2.5 cost-cell text-[#E8663C] font-bold">{fmtCurrency(totals.indirecto)}</td>
               <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.neto)}</td>
