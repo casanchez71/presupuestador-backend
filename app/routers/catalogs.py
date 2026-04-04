@@ -291,7 +291,75 @@ async def apply_catalog_to_budget(
         all_resources.extend(res.data or [])
 
     if not all_resources:
-        raise HTTPException(404, "Presupuesto sin recursos en items")
+        # Fallback: match catalog entries to budget_items directly by description text
+        items_full = (
+            db.table("budget_items")
+            .select("*")
+            .eq("budget_id", bid)
+            .eq("org_id", org_id)
+            .execute()
+        )
+        if not items_full.data:
+            raise HTTPException(404, "Presupuesto sin items")
+
+        entries_full = (
+            db.table("catalog_entries")
+            .select("*")
+            .eq("catalog_id", cid)
+            .execute()
+        )
+        if not entries_full.data:
+            raise HTTPException(404, "Catalogo sin entradas")
+
+        # Get catalog tipo
+        catalog_tipo_result = (
+            db.table("price_catalogs")
+            .select("tipo")
+            .eq("id", cid)
+            .execute()
+        )
+        catalog_tipo = (
+            catalog_tipo_result.data[0].get("tipo", "material")
+            if catalog_tipo_result.data
+            else "material"
+        )
+
+        # Build lookup by description (lowercase)
+        entry_lookup: dict[str, float] = {}
+        for e in entries_full.data:
+            desc = (e.get("descripcion") or "").lower().strip()
+            if desc:
+                price_val = e.get("precio_sin_iva") or e.get("precio_unitario") or 0
+                entry_lookup[desc] = float(price_val)
+
+        updated = 0
+        for item in items_full.data:
+            item_desc = (item.get("description") or "").lower().strip()
+            # Try exact match first, then partial
+            price = entry_lookup.get(item_desc)
+            if price is None:
+                for entry_desc, entry_price in entry_lookup.items():
+                    if entry_desc in item_desc or item_desc in entry_desc:
+                        price = entry_price
+                        break
+
+            if price is not None and price > 0:
+                update_data: dict = {}
+                if catalog_tipo in ("material", "equipo"):
+                    update_data["mat_unitario"] = price
+                elif catalog_tipo == "mano_obra":
+                    update_data["mo_unitario"] = price
+                else:
+                    update_data["mat_unitario"] = price  # default to material
+
+                if update_data:
+                    db.table("budget_items").update(update_data).eq("id", item["id"]).execute()
+                    updated += 1
+
+        return {
+            "message": f"Catalogo aplicado directamente a {updated} items (sin recursos)",
+            "updated": updated,
+        }
 
     matched = 0
     unmatched = 0
