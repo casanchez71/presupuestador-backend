@@ -393,6 +393,18 @@ export default function Editor() {
         </div>
       )}
 
+      {/* View Mode Selector - top level tabs */}
+      <div className="mb-3">
+        <ViewModeSelector
+          mode={viewMode}
+          onChange={(m) => {
+            setViewMode(m)
+            setSelectedNode(null)
+            setItems([])
+          }}
+        />
+      </div>
+
       <div className="flex gap-4">
         {/* Tree Panel */}
         <div className="w-64 bg-white rounded-2xl shadow-sm border border-gray-200/80 flex-shrink-0 overflow-hidden">
@@ -454,17 +466,7 @@ export default function Editor() {
             </div>
           )}
 
-          <div className="px-2 pt-2.5 pb-1.5">
-            <ViewModeSelector
-              mode={viewMode}
-              onChange={(m) => {
-                setViewMode(m)
-                setSelectedNode(null)
-                setItems([])
-              }}
-            />
-          </div>
-          <div className="px-2 pb-2 max-h-[480px] overflow-y-auto">
+          <div className="px-2 pt-2.5 pb-2 max-h-[480px] overflow-y-auto">
             <TreeView
               nodes={displayTree}
               selectedId={selectedNode?.id}
@@ -521,7 +523,7 @@ export default function Editor() {
           </div>
 
           <CostSummaryBar mat={mat} mo={mo} directo={directo} indirecto={indirecto} neto={neto} indirectoPct={31} />
-          <MarkupChainDisplay directo={directo} neto={neto} links={MARKUP_LINKS} />
+          <MarkupChainDisplay directo={directo} neto={neto} links={MARKUP_LINKS} budgetId={id} />
 
           {showAddForm && selectedNode && (
             <AddItemForm
