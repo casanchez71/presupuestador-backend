@@ -47,14 +47,14 @@ async def get_indirects(
         .execute()
     )
     if not result.data:
-        # Return defaults
+        # Return defaults (whole numbers: 15 means 15%)
         return {
             "org_id": org_id,
-            "estructura_pct": 0.15,
-            "jefatura_pct": 0.08,
-            "logistica_pct": 0.05,
-            "herramientas_pct": 0.03,
-            "beneficio_pct": 0.10,
+            "estructura_pct": 15,
+            "jefatura_pct": 8,
+            "logistica_pct": 5,
+            "herramientas_pct": 3,
+            "beneficio_pct": 10,
         }
     return result.data[0]
 
@@ -125,13 +125,14 @@ async def apply_indirects(
     if not items:
         raise HTTPException(404, "Presupuesto sin items")
 
+    # DB stores whole numbers (15 = 15%), divide by 100 to get the multiplier
     pct_total = sum([
         config.get("estructura_pct") or 0,
         config.get("jefatura_pct") or 0,
         config.get("logistica_pct") or 0,
         config.get("herramientas_pct") or 0,
         config.get("beneficio_pct") or 0,
-    ])
+    ]) / 100
 
     total_directo = sum(i.get("directo_total") or 0 for i in items)
 
@@ -159,7 +160,7 @@ async def apply_indirects(
     return {
         "total_directo": total_directo,
         "total_indirectos": round(total_indirecto, 2),
-        "pct_applied": pct_total,
+        "pct_applied": round(pct_total * 100, 2),
         "items_updated": len(updates),
         "config_id": config["id"],
     }

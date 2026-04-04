@@ -371,14 +371,14 @@ export default function Editor() {
   const neto = items.reduce((s, i) => s + i.neto_total, 0)
 
   const indirectoPct = indirectConfig
-    ? Math.round((indirectConfig.estructura_pct + indirectConfig.jefatura_pct + indirectConfig.logistica_pct + indirectConfig.herramientas_pct) * 100)
+    ? Math.round(indirectConfig.estructura_pct + indirectConfig.jefatura_pct + indirectConfig.logistica_pct + indirectConfig.herramientas_pct)
     : null
 
   const markupLinks = indirectConfig ? [
-    { label: 'Estructura', pct: Math.round(indirectConfig.estructura_pct * 100) },
-    { label: 'Jefatura', pct: Math.round(indirectConfig.jefatura_pct * 100) },
-    { label: 'Logística', pct: Math.round(indirectConfig.logistica_pct * 100) },
-    { label: 'Herramientas', pct: Math.round(indirectConfig.herramientas_pct * 100) },
+    { label: 'Estructura', pct: Math.round(indirectConfig.estructura_pct) },
+    { label: 'Jefatura', pct: Math.round(indirectConfig.jefatura_pct) },
+    { label: 'Logística', pct: Math.round(indirectConfig.logistica_pct) },
+    { label: 'Herramientas', pct: Math.round(indirectConfig.herramientas_pct) },
   ] : MARKUP_LINKS
 
   return (
