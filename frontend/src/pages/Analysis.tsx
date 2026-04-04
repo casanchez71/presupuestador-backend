@@ -69,20 +69,25 @@ export default function Analysis() {
   const [budget, setBudget] = useState<Budget | null>(null)
   const [allItems, setAllItems] = useState<BudgetItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
+    setLoading(true)
+    setError(null)
     Promise.all([
-      budgetApi.getAnalysis(id),
       budgetApi.get(id),
-      budgetApi.getItems(id),
+      budgetApi.getItems(id).catch(() => [] as BudgetItem[]),
+      budgetApi.getAnalysis(id).catch(() => null),
     ])
-      .then(([analysis, b, items]) => {
-        setData(analysis)
+      .then(([b, items, analysis]) => {
         setBudget(b)
         setAllItems(items)
+        setData(analysis)
       })
-      .catch(() => {/* keep empty state */})
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Error al cargar el presupuesto')
+      })
       .finally(() => setLoading(false))
   }, [id])
 
@@ -120,6 +125,13 @@ export default function Analysis() {
         <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
           <div className="w-4 h-4 border-2 border-[#2D8D68] border-t-transparent rounded-full animate-spin" />
           Cargando análisis...
+        </div>
+      )
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-sm text-red-700">
+          <p className="font-semibold mb-1">Error al cargar el análisis</p>
+          <p className="text-xs">{error}</p>
         </div>
       )}
 
