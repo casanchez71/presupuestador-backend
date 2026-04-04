@@ -126,28 +126,29 @@ async def apply_indirects(
         raise HTTPException(404, "Presupuesto sin items")
 
     # DB stores whole numbers (15 = 15%), divide by 100 to get the multiplier
-    pct_total = sum([
+    pct_indirecto = sum([
         config.get("estructura_pct") or 0,
         config.get("jefatura_pct") or 0,
         config.get("logistica_pct") or 0,
         config.get("herramientas_pct") or 0,
-        config.get("beneficio_pct") or 0,
     ]) / 100
+
+    pct_beneficio = (config.get("beneficio_pct") or 0) / 100
 
     total_directo = sum(i.get("directo_total") or 0 for i in items)
 
-    # Build batch of updates — set indirecto_total, then recalculate neto_total
+    # Build batch of updates — indirecto and beneficio calculated separately
     updates = []
     for item in items:
         directo = item.get("directo_total") or 0
-        indirecto = round(directo * pct_total, 2)
-        # Merge the new indirecto_total into the item and recalculate
-        merged = {**item, "indirecto_total": indirecto}
-        recalculated = calc_item_totals(merged)
+        indirecto = round(directo * pct_indirecto, 2)
+        beneficio = round(directo * pct_beneficio, 2)
+        neto = directo + indirecto + beneficio
         updates.append({
             "id": item["id"],
-            "indirecto_total": recalculated["indirecto_total"],
-            "neto_total": recalculated["neto_total"],
+            "indirecto_total": indirecto,
+            "beneficio_total": beneficio,
+            "neto_total": neto,
         })
 
     # Update in batches (Supabase doesn't support bulk UPDATE, so we batch)
@@ -155,14 +156,13 @@ async def apply_indirects(
         item_id = upd.pop("id")
         db.table("budget_items").update(upd).eq("id", item_id).execute()
 
-    total_indirecto = sum(u.get("indirecto_total", 0) for u in updates)
-
     return {
         "total_directo": total_directo,
-        "total_indirectos": round(total_indirecto, 2),
-        "pct_applied": round(pct_total * 100, 2),
+        "total_indirectos": sum(u["indirecto_total"] for u in updates),
+        "total_beneficio": sum(u["beneficio_total"] for u in updates),
+        "pct_indirecto": round(pct_indirecto * 100, 2),
+        "pct_beneficio": round(pct_beneficio * 100, 2),
         "items_updated": len(updates),
-        "config_id": config["id"],
     }
 
 
