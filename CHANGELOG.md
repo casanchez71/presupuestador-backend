@@ -4,19 +4,33 @@ Todas las versiones notables del proyecto se documentan aca.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 Versionado segun [Semantic Versioning](https://semver.org/).
 
-## [2.1.0] — En desarrollo
+## [3.0.0] — 2026-04-04
 
 ### Agregado
+- **Frontend completo**: React 19 + Vite + Tailwind + TypeScript (10 pantallas)
+- **Wizard nuevo proyecto**: 5 pasos (datos, precios, estructura, indirectos, resultado)
+- **IA + Planos**: GPT-4o Vision analiza planos arquitectonicos y sugiere items automaticamente
+- **Lista generica de tareas**: 42 tareas comunes de construccion en 6 categorias (obrador, estructura, albanileria, instalaciones, terminaciones, especiales)
+- **4 vistas multiples en Editor**: por rubro, por piso/planta, por material, por tipo de trabajo
+- **Edicion inline**: click en celdas punteadas, recalculo automatico de totales
+- **Audit trail**: tabla item_audits registra cada cambio manual (campo, valor viejo/nuevo, usuario)
+- **Sidebar contextual**: detecta si estas dentro de un presupuesto y muestra links relevantes
+- **Exportar PDF/Excel**: botones conectados al backend con manejo de errores
+- **Catalogos**: aplicar lista de precios a presupuesto desde frontend
+- **Actividad reciente**: Dashboard muestra ultimos presupuestos reales con timestamps
+- **Deploy**: Vercel (frontend) + Render (backend) con CORS configurado
+
+### Cambiado
+- Analysis.tsx usa datos reales del API (no hardcodeados)
+- Editor.tsx agrupa items por codigo de seccion para arboles planos
+- ItemDetail.tsx muestra costos del item directamente (no solo de recursos)
+- Todas las paginas limpiadas de datos demo "Las Heras"
+
+### Infraestructura
 - Modelo C: auth compartida (EOS Supabase) + data separada (Supabase propio)
 - Dual Supabase client: `AUTH_SUPABASE_*` y `DATA_SUPABASE_*`
 - Fallback automatico a `SUPABASE_URL/KEY` si no estan las nuevas variables
-- Migracion SQL sin dependencia de `get_my_org_ids()`
-
-### Cambiado
-- `app/config.py` — 4 variables nuevas con fallback
-- `app/db.py` — dos clientes: `get_auth_db()` y `get_data_db()`
-- `app/auth.py` — usa cliente auth
-- Todos los routers — usan cliente data
+- DEMO_ORG_ID mode para desarrollo sin JWT
 
 ## [2.0.0] — 2026-04-03
 
