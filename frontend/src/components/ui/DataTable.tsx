@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Eye, Pencil, Loader2 } from 'lucide-react'
+import { Eye, Pencil, Loader2, Trash2 } from 'lucide-react'
 import type { BudgetItem } from '../../types'
 import { fmtCurrency, fmtNumber } from '../../lib/format'
 
@@ -7,6 +7,7 @@ interface Props {
   items: BudgetItem[]
   onEditItem?: (itemId: string, field: string, oldValue: number, newValue: number) => Promise<void>
   onViewDetail?: (itemId: string) => void
+  onDeleteItem?: (itemId: string, description: string) => void
 }
 
 type EditableField = 'cantidad' | 'mat_unitario' | 'mo_unitario'
@@ -20,7 +21,8 @@ interface CellState {
   hasAudit: boolean
 }
 
-export default function DataTable({ items, onEditItem, onViewDetail }: Props) {
+export default function DataTable({ items, onEditItem, onViewDetail, onDeleteItem }: Props) {
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editing, setEditing] = useState<{ id: string; field: EditableField } | null>(null)
   const [editValue, setEditValue] = useState('')
   const [cellStates, setCellStates] = useState<Record<string, CellState>>({})
@@ -179,34 +181,34 @@ export default function DataTable({ items, onEditItem, onViewDetail }: Props) {
       `}</style>
       <table className="w-full text-xs">
         <thead>
-          <tr className="bg-gray-50 text-gray-600 border-b">
-            <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Codigo</th>
-            <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Descripcion</th>
-            <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Unidad</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
+          <tr className="bg-[#E8F5EE] text-[#143D34]">
+            <th className="px-3 py-2 text-left font-semibold text-[11px] tracking-wide">Codigo</th>
+            <th className="px-3 py-2 text-left font-semibold text-[11px] tracking-wide">Descripcion</th>
+            <th className="px-3 py-2 text-left font-semibold text-[11px] tracking-wide">Unidad</th>
+            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">
               Cant.
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-gray-400" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#2D8D68]/50" /> : null}
             </th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
+            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">
               MAT Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-gray-400" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#2D8D68]/50" /> : null}
             </th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
+            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">
               MO Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-gray-400" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#2D8D68]/50" /> : null}
             </th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">Directo</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">Indirecto</th>
-            <th className="px-3 py-2.5 text-right font-bold text-[11px] tracking-wide">Neto</th>
-            <th className="px-3 py-2.5 w-6" />
+            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Directo</th>
+            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Indirecto</th>
+            <th className="px-3 py-2 text-right font-bold text-[11px] tracking-wide">Neto</th>
+            <th className="px-3 py-2 w-16" />
           </tr>
         </thead>
         <tbody>
           {items.map((item, idx) => (
             <tr
               key={item.id}
-              className={`border-b border-gray-100 hover:bg-[#E8F5EE]/30 transition-colors duration-150 ${
-                idx % 2 === 1 ? 'bg-gray-50/50' : 'bg-white'
+              className={`hover:bg-[#E8F5EE]/20 transition-colors duration-150 ${
+                idx % 2 === 1 ? 'bg-gray-50/30' : 'bg-white'
               }`}
             >
               <td className="px-3 py-2.5 font-mono text-[10px] text-gray-400">{item.code}</td>
@@ -227,27 +229,55 @@ export default function DataTable({ items, onEditItem, onViewDetail }: Props) {
               <td className="px-3 py-2.5 cost-cell font-bold text-[#143D34]">
                 {fmtCurrency(item.neto_total)}
               </td>
-              <td className="px-3 py-2.5 text-center">
-                {onViewDetail ? (
-                  <button
-                    onClick={() => onViewDetail(item.id)}
-                    className="text-gray-300 hover:text-[#2D8D68] transition-colors"
-                    title="Ver detalle"
-                  >
-                    <Eye size={14} />
-                  </button>
-                ) : null}
+              <td className="px-3 py-2.5">
+                <div className="flex items-center justify-end gap-1">
+                  {onViewDetail ? (
+                    <button
+                      onClick={() => onViewDetail(item.id)}
+                      className="p-1 text-gray-300 hover:text-[#2D8D68] transition-colors rounded hover:bg-[#E8F5EE]"
+                      title="Ver detalle"
+                    >
+                      <Eye size={13} />
+                    </button>
+                  ) : null}
+                  {onDeleteItem ? (
+                    deletingId === item.id ? (
+                      <div className="flex items-center gap-0.5">
+                        <button
+                          onClick={() => { onDeleteItem(item.id, item.description ?? ''); setDeletingId(null) }}
+                          className="px-1.5 py-0.5 text-[9px] bg-red-500 text-white rounded font-medium hover:bg-red-600"
+                        >
+                          Si
+                        </button>
+                        <button
+                          onClick={() => setDeletingId(null)}
+                          className="px-1.5 py-0.5 text-[9px] bg-gray-200 text-gray-600 rounded font-medium hover:bg-gray-300"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setDeletingId(item.id)}
+                        className="p-1 text-gray-300 hover:text-red-500 transition-colors rounded hover:bg-red-50"
+                        title="Eliminar item"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )
+                  ) : null}
+                </div>
               </td>
             </tr>
           ))}
         </tbody>
         {items.length > 0 && (
           <tfoot>
-            <tr className="bg-gradient-to-r from-gray-50 to-white font-semibold text-xs border-t-2 border-gray-200">
-              <td colSpan={6} className="px-3 py-3 text-right text-gray-400 uppercase text-[10px] tracking-wider">Total seccion</td>
-              <td className="px-3 py-3 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.directo)}</td>
-              <td className="px-3 py-3 cost-cell text-[#E8663C] font-bold">{fmtCurrency(totals.indirecto)}</td>
-              <td className="px-3 py-3 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.neto)}</td>
+            <tr className="bg-[#E8F5EE]/50 font-semibold text-xs border-t border-[#2D8D68]/20">
+              <td colSpan={6} className="px-3 py-2.5 text-right text-[#2D8D68] uppercase text-[10px] tracking-wider font-bold">Total seccion</td>
+              <td className="px-3 py-2.5 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.directo)}</td>
+              <td className="px-3 py-2.5 cost-cell text-[#E8663C] font-bold">{fmtCurrency(totals.indirecto)}</td>
+              <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.neto)}</td>
               <td />
             </tr>
           </tfoot>

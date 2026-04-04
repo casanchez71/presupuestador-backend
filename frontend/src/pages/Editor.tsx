@@ -576,7 +576,23 @@ export default function Editor() {
               </div>
             </div>
           ) : (
-            <DataTable items={items} onEditItem={handleEditItem} onViewDetail={(itemId) => navigate(`/app/budgets/${id}/item/${itemId}`)} />
+            <DataTable
+              items={items}
+              onEditItem={handleEditItem}
+              onViewDetail={(itemId) => navigate(`/app/budgets/${id}/item/${itemId}`)}
+              onDeleteItem={async (itemId, desc) => {
+                if (!id) return
+                try {
+                  await budgetApi.deleteItem(id, itemId)
+                  const refreshedItems = await budgetApi.getItems(id)
+                  setAllItems(refreshedItems)
+                  if (selectedNode) setItems(getItemsForNode(selectedNode, refreshedItems))
+                  addToast(`Item eliminado: ${desc}`)
+                } catch (err) {
+                  addToast(`Error al eliminar: ${err instanceof Error ? err.message : 'desconocido'}`, 'error')
+                }
+              }}
+            />
           )}
 
           </div>
