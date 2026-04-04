@@ -149,5 +149,5 @@ export const catalogApi = {
   search: (id: string, q: string) =>
     get<CatalogEntry[]>(`/catalogs/${id}/search?q=${encodeURIComponent(q)}`),
   apply: (budgetId: string, catalogId: string) =>
-    post<{ updated: number }>(`/catalogs/apply/${budgetId}/${catalogId}`),
+    post<{ items_matched: number; items_unmatched: number; total_updated: number }>(`/catalogs/apply/${budgetId}/${catalogId}`),
 }

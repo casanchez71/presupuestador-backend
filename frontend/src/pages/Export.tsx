@@ -17,6 +17,7 @@ export default function Export() {
   const { id } = useParams<{ id: string }>()
   const [loading, setLoading] = useState<string | null>(null)
   const [done, setDone] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   async function downloadBlob(blob: Blob, filename: string) {
     const url = URL.createObjectURL(blob)
@@ -89,8 +90,10 @@ export default function Export() {
       await opt.action()
       setDone(opt.id)
       setTimeout(() => setDone(null), 3000)
-    } catch {
-      // ignore for demo
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error al exportar'
+      setError(msg)
+      setTimeout(() => setError(null), 5000)
     }
     setLoading(null)
   }
@@ -135,6 +138,13 @@ export default function Export() {
           </button>
         ))}
       </div>
+
+      {error && (
+        <div className="mt-4 max-w-2xl bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+          <p className="font-semibold mb-1">Error al exportar</p>
+          <p className="text-xs">{error}</p>
+        </div>
+      )}
 
       <div className="mt-6 max-w-2xl bg-[#E8F5EE] rounded-xl border border-green-200 p-4 text-xs text-[#143D34]">
         <p className="font-semibold mb-1">Nota sobre formatos</p>

@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, ChevronDown, ChevronRight, Plus } from 'lucide-react'
-import { catalogApi } from '../lib/api'
+import { BookOpen, Check, ChevronDown, ChevronRight, Plus, Zap } from 'lucide-react'
+import { budgetApi, catalogApi } from '../lib/api'
 import { fmtCurrency } from '../lib/format'
-import type { PriceCatalog, CatalogEntry } from '../types'
+import type { Budget, PriceCatalog, CatalogEntry } from '../types'
 import { useNavigate } from 'react-router-dom'
 
-function CatalogRow({ catalog }: { catalog: PriceCatalog }) {
+function CatalogRow({ catalog, budgets }: { catalog: PriceCatalog; budgets: Budget[] }) {
   const [open, setOpen] = useState(false)
   const [entries, setEntries] = useState<CatalogEntry[]>([])
   const [loading, setLoading] = useState(false)
+  const [applying, setApplying] = useState(false)
+  const [applyResult, setApplyResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [selectedBudgetId, setSelectedBudgetId] = useState<string>('')
 
   function toggle() {
     setOpen(!open)
@@ -18,6 +21,26 @@ function CatalogRow({ catalog }: { catalog: PriceCatalog }) {
         .then(setEntries)
         .catch(() => {/* no entries */})
         .finally(() => setLoading(false))
+    }
+  }
+
+  async function handleApply() {
+    if (!selectedBudgetId) return
+    setApplying(true)
+    setApplyResult(null)
+    try {
+      const result = await catalogApi.apply(selectedBudgetId, catalog.id)
+      setApplyResult({
+        success: true,
+        message: `Catalogo aplicado: ${result.items_matched} recursos actualizados, ${result.items_unmatched} sin coincidencia`,
+      })
+      setTimeout(() => setApplyResult(null), 5000)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error al aplicar catalogo'
+      setApplyResult({ success: false, message: msg })
+      setTimeout(() => setApplyResult(null), 5000)
+    } finally {
+      setApplying(false)
     }
   }
 
@@ -84,6 +107,57 @@ function CatalogRow({ catalog }: { catalog: PriceCatalog }) {
           ) : (
             <div className="p-4 text-xs text-gray-400 italic">Sin entradas para este catalogo</div>
           )}
+
+          {/* Apply to budget section */}
+          <div className="border-t p-4 bg-gray-50">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap size={14} className="text-[#2D8D68]" />
+              <span className="text-xs font-semibold text-gray-700">Aplicar a presupuesto</span>
+            </div>
+            {budgets.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedBudgetId}
+                  onChange={(e) => setSelectedBudgetId(e.target.value)}
+                  className="flex-1 text-xs border rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#2D8D68] focus:border-transparent"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <option value="">Seleccionar presupuesto...</option>
+                  {budgets.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleApply() }}
+                  disabled={!selectedBudgetId || applying}
+                  className="bg-[#2D8D68] hover:bg-[#1B5E4B] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5"
+                >
+                  {applying ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Aplicando...
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={12} /> Aplicar
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">No hay presupuestos disponibles. Crea uno primero.</p>
+            )}
+            {applyResult && (
+              <div className={`mt-2 text-xs px-3 py-2 rounded-lg flex items-center gap-1.5 ${
+                applyResult.success
+                  ? 'bg-[#E8F5EE] text-[#166534] border border-green-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}>
+                {applyResult.success && <Check size={12} />}
+                {applyResult.message}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -93,13 +167,20 @@ function CatalogRow({ catalog }: { catalog: PriceCatalog }) {
 export default function Catalogs() {
   const navigate = useNavigate()
   const [catalogs, setCatalogs] = useState<PriceCatalog[]>([])
+  const [budgets, setBudgets] = useState<Budget[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
-    catalogApi.list()
-      .then(setCatalogs)
+    Promise.all([
+      catalogApi.list(),
+      budgetApi.list(),
+    ])
+      .then(([cats, buds]) => {
+        setCatalogs(cats)
+        setBudgets(buds)
+      })
       .catch((err) => {
         setError(err instanceof Error ? err.message : 'Error al cargar catalogos')
       })
@@ -143,7 +224,7 @@ export default function Catalogs() {
         )}
 
         {catalogs.map((c) => (
-          <CatalogRow key={c.id} catalog={c} />
+          <CatalogRow key={c.id} catalog={c} budgets={budgets} />
         ))}
 
         <button

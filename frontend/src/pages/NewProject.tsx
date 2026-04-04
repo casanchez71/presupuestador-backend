@@ -15,10 +15,13 @@ import {
   FileJson,
   Sparkles,
   ArrowRight,
+  ClipboardList,
 } from 'lucide-react'
 import { budgetApi, catalogApi } from '../lib/api'
-import type { Budget, PriceCatalog } from '../types'
+import type { Budget, PriceCatalog, AIAnalysisResult } from '../types'
 import FileUpload from '../components/ui/FileUpload'
+import GenericTaskSelector from '../components/ui/GenericTaskSelector'
+import type { SelectedTask } from '../components/ui/GenericTaskSelector'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -51,7 +54,7 @@ interface IndirectCosts {
 }
 
 type PriceOption = 'csv' | 'catalog' | 'skip'
-type StructureOption = 'plan' | 'manual' | 'json'
+type StructureOption = 'template' | 'plan' | 'manual' | 'json'
 
 const STEPS = [
   { label: 'Datos', icon: FileText },
@@ -90,8 +93,13 @@ export default function NewProject() {
   const [catalogsLoaded, setCatalogsLoaded] = useState(false)
 
   // Step 3
-  const [structureOption, setStructureOption] = useState<StructureOption>('manual')
+  const [structureOption, setStructureOption] = useState<StructureOption>('template')
+  const [templateTasks, setTemplateTasks] = useState<SelectedTask[]>([])
   const [planFile, setPlanFile] = useState<File | null>(null)
+  const [aiResult, setAiResult] = useState<AIAnalysisResult | null>(null)
+  const [aiSections, setAiSections] = useState<Section[]>([])
+  const [aiAnalyzing, setAiAnalyzing] = useState(false)
+  const [aiError, setAiError] = useState('')
   const [sections, setSections] = useState<Section[]>([
     { id: uid(), nombre: '', items: [] },
   ])
@@ -275,16 +283,53 @@ export default function NewProject() {
 
       const budgetId = budget.id
 
-      // 2. Determine which sections/items to use
-      const finalSections =
-        structureOption === 'json' && jsonSections.length > 0
-          ? jsonSections
-          : structureOption === 'manual'
-            ? sections.filter((s) => s.nombre.trim())
-            : []
+      // 2. Determine which sections/items to use (combine all sources)
+      const allSections: Section[] = []
+
+      // Template tasks grouped by category
+      if (templateTasks.length > 0) {
+        const grouped = new Map<string, { name: string; tasks: SelectedTask[] }>()
+        for (const t of templateTasks) {
+          if (!grouped.has(t.categoryCode)) {
+            grouped.set(t.categoryCode, { name: t.categoryName, tasks: [] })
+          }
+          grouped.get(t.categoryCode)!.tasks.push(t)
+        }
+        for (const [, group] of grouped) {
+          allSections.push({
+            id: uid(),
+            nombre: group.name,
+            items: group.tasks.map((t) => ({
+              id: uid(),
+              descripcion: t.descripcion,
+              unidad: t.unidad,
+              cantidad: String(t.cantidad),
+            })),
+          })
+        }
+      }
+
+      // JSON sections
+      if (jsonSections.length > 0) {
+        allSections.push(...jsonSections)
+      }
+
+      // Manual sections
+      const manualFiltered = sections.filter((s) => s.nombre.trim())
+      if (manualFiltered.length > 0) {
+        allSections.push(...manualFiltered)
+      }
+
+      // AI plan sections (if user pre-analyzed in step 3)
+      if (aiSections.length > 0) {
+        allSections.push(...aiSections)
+      }
+
+      const finalSections = allSections
 
       // 3. Create items (sections as parent, then children)
       let totalItems = 0
+      let totalSections = finalSections.length
       for (let si = 0; si < finalSections.length; si++) {
         const sec = finalSections[si]
         // Create parent/section item
@@ -312,6 +357,37 @@ export default function NewProject() {
         }
       }
 
+      // 3b. If plan mode with file but no pre-analyzed AI sections, analyze now
+      if (structureOption === 'plan' && planFile && aiSections.length === 0) {
+        try {
+          const formData = new FormData()
+          formData.append('file', planFile)
+          const aiRes = await budgetApi.analyzePlan(budgetId, formData)
+
+          if (aiRes.secciones.length > 0) {
+            // Flatten AI sections into items and insert via from-ai endpoint
+            const payload = aiRes.secciones.flatMap((sec) =>
+              sec.items.map((item) => ({
+                seccion_nombre: sec.nombre,
+                seccion_codigo: sec.codigo,
+                codigo: item.codigo,
+                descripcion: item.descripcion,
+                unidad: item.unidad,
+                cantidad: item.cantidad,
+                notas: item.notas,
+              }))
+            )
+            const insertRes = await budgetApi.addItemsFromAI(budgetId, payload)
+            totalItems += insertRes.inserted
+            totalSections += insertRes.sections_created
+          }
+        } catch (aiErr) {
+          // AI analysis failed -- budget created but without AI items.
+          // User can re-analyze from the AI page later.
+          console.warn('AI plan analysis failed during wizard:', aiErr)
+        }
+      }
+
       // 4. Set indirect costs
       try {
         await budgetApi.updateIndirects(budgetId, {
@@ -335,7 +411,7 @@ export default function NewProject() {
 
       setResult({
         budgetId,
-        sectionsCount: finalSections.length,
+        sectionsCount: totalSections,
         itemsCount: totalItems,
       })
       setStep(4)
@@ -446,6 +522,8 @@ export default function NewProject() {
             jsonFile={jsonFile}
             jsonSections={jsonSections}
             onJsonFile={handleJsonFile}
+            templateTasks={templateTasks}
+            onTemplateTasks={setTemplateTasks}
           />
         )}
         {step === 3 && (
@@ -475,7 +553,9 @@ export default function NewProject() {
               )}
               {step === 3
                 ? creating
-                  ? 'Creando...'
+                  ? structureOption === 'plan' && planFile
+                    ? 'Analizando plano con IA...'
+                    : 'Creando...'
                   : 'Crear Presupuesto'
                 : 'Siguiente'}
               {!creating && step < 3 && <ChevronRight size={16} />}
@@ -724,16 +804,25 @@ function StepEstructura({
   jsonFile: File | null
   jsonSections: Section[]
   onJsonFile: (f: File) => void
+  templateTasks: SelectedTask[]
+  onTemplateTasks: (tasks: SelectedTask[]) => void
 }) {
   return (
     <div className="fade-in space-y-4">
       <div className="bg-white rounded-xl border p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-1">Estructura de Obra</h2>
         <p className="text-sm text-gray-500 mb-6">
-          Define las secciones e items de tu presupuesto.
+          Define las secciones e items de tu presupuesto. Podes combinar varias fuentes.
         </p>
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-4 gap-3 mb-6">
+          <OptionCard
+            active={structureOption === 'template'}
+            onClick={() => setStructureOption('template')}
+            icon={<ClipboardList size={20} />}
+            title="Plantilla obra"
+            description="Tareas tipicas de obra"
+          />
           <OptionCard
             active={structureOption === 'plan'}
             onClick={() => setStructureOption('plan')}
@@ -757,6 +846,22 @@ function StepEstructura({
           />
         </div>
 
+        {/* Combined sources indicator */}
+        {templateTasks.length > 0 && structureOption !== 'template' && (
+          <div className="mb-4 bg-[#E8F5EE] rounded-lg px-4 py-2.5 border border-green-200 flex items-center gap-2 text-sm text-[#143D34]">
+            <ClipboardList size={14} className="text-[#2D8D68]" />
+            <span className="font-medium">{templateTasks.length} items de plantilla</span>
+            <span className="text-gray-500">se van a combinar con esta fuente.</span>
+          </div>
+        )}
+
+        {/* Template selector */}
+        {structureOption === 'template' && (
+          <div className="fade-in">
+            <GenericTaskSelector onSelectionChange={onTemplateTasks} />
+          </div>
+        )}
+
         {/* Plan upload */}
         {structureOption === 'plan' && (
           <div className="fade-in">
@@ -771,10 +876,10 @@ function StepEstructura({
               <div className="mt-4 bg-[#FEF9EE] rounded-lg p-4 border border-[#E0A33A]/30 flex items-start gap-3">
                 <Sparkles size={20} className="text-[#E0A33A] flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-800">IA va a analizar este plano</p>
+                  <p className="text-sm font-medium text-gray-800">IA va a analizar este plano automaticamente</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Una vez creado el presupuesto, vas a poder ir a la seccion IA para que analice
-                    el plano y sugiera items automaticamente.
+                    Al crear el presupuesto, la IA va a analizar el plano y generar las secciones
+                    e items automaticamente. Esto puede tardar unos segundos.
                   </p>
                 </div>
               </div>

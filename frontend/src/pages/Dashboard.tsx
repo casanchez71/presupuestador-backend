@@ -6,11 +6,20 @@ import { fmtCurrency } from '../lib/format'
 import type { Budget, AnalysisResponse } from '../types'
 import BudgetCard from '../components/ui/BudgetCard'
 
-const ACTIVITY = [
-  { text: 'Las Heras — Catálogo Mar-2026 aplicado: 108 ítems recalculados', time: 'hace 2 hs' },
-  { text: 'El Encuentro — IA analizó plano exterior: 23 ítems sugeridos', time: 'hace 3 días' },
-  { text: 'Casa Lugones — Importación Excel completada: 72 ítems, 297 materiales', time: '15 mar' },
-]
+function timeAgo(dateStr: string): string {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffMins < 1) return 'ahora'
+  if (diffMins < 60) return `hace ${diffMins} min`
+  if (diffHours < 24) return `hace ${diffHours} hs`
+  if (diffDays < 7) return `hace ${diffDays} días`
+  return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
+}
 
 export default function Dashboard() {
   const [budgets, setBudgets] = useState<Budget[]>([])
@@ -119,26 +128,36 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Activity */}
-      <div className="bg-white rounded-xl border p-5">
-        <h3 className="font-semibold text-gray-900 text-sm mb-3">ACTIVIDAD RECIENTE</h3>
-        <div className="space-y-2 text-sm">
-          {ACTIVITY.map((a, i) => (
-            <div
-              key={i}
-              className={`flex justify-between py-2 ${i < ACTIVITY.length - 1 ? 'border-b border-gray-50' : ''}`}
-            >
-              <span
-                className="text-gray-600"
-                dangerouslySetInnerHTML={{
-                  __html: a.text.replace(/^([^—]+)/, '<strong class="text-gray-900">$1</strong>'),
-                }}
-              />
-              <span className="text-gray-400 text-xs whitespace-nowrap ml-4">{a.time}</span>
-            </div>
-          ))}
+      {/* Activity — real recent budgets */}
+      {budgets.length > 0 && (
+        <div className="bg-white rounded-xl border p-5">
+          <h3 className="font-semibold text-gray-900 text-sm mb-3">ACTIVIDAD RECIENTE</h3>
+          <div className="space-y-2 text-sm">
+            {budgets.slice(0, 5).map((b, i) => {
+              const a = analyses[b.id]
+              const dateStr = b.updated_at || b.created_at
+              const itemsText = a ? `${a.items_count} items` : ''
+              const statusText = b.status === 'draft' ? 'Borrador' : b.status === 'approved' ? 'Aprobado' : (b.status || '')
+              const detail = [statusText, itemsText].filter(Boolean).join(' - ')
+              return (
+                <div
+                  key={b.id}
+                  className={`flex justify-between items-center py-2 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors ${i < Math.min(budgets.length, 5) - 1 ? 'border-b border-gray-50' : ''}`}
+                  onClick={() => navigate(`/app/budget/${b.id}`)}
+                >
+                  <div>
+                    <span className="font-semibold text-gray-900">{b.name}</span>
+                    {detail && <span className="text-gray-500 ml-2">{detail}</span>}
+                  </div>
+                  <span className="text-gray-400 text-xs whitespace-nowrap ml-4">
+                    {dateStr ? timeAgo(dateStr) : ''}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

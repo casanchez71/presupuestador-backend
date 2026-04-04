@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Edit3, ChevronRight, Plus, CheckCircle, AlertCircle, X } from 'lucide-react'
 import { budgetApi } from '../lib/api'
@@ -8,6 +8,9 @@ import TreeView from '../components/ui/TreeView'
 import DataTable from '../components/ui/DataTable'
 import CostSummaryBar from '../components/ui/CostSummaryBar'
 import MarkupChainDisplay from '../components/ui/MarkupChainDisplay'
+import ViewModeSelector from '../components/ui/ViewModeSelector'
+import { regroupItems } from '../lib/viewModes'
+import type { ViewMode } from '../lib/viewModes'
 
 
 const MARKUP_LINKS = [
