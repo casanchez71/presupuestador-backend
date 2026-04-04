@@ -9,43 +9,6 @@ import DataTable from '../components/ui/DataTable'
 import CostSummaryBar from '../components/ui/CostSummaryBar'
 import MarkupChainDisplay from '../components/ui/MarkupChainDisplay'
 
-// Demo tree for fallback
-const DEMO_TREE: TreeNode[] = [
-  {
-    id: 'root', budget_id: '1', org_id: 'demo', description: 'Edificio Las Heras',
-    code: '', mat_unitario: 0, mo_unitario: 0, mat_total: 142_200_000, mo_total: 85_300_000,
-    directo_total: 284_500_000, indirecto_total: 88_200_000, beneficio_total: 0, neto_total: 372_700_000, sort_order: 0,
-    children: [
-      {
-        id: 's0', budget_id: '1', org_id: 'demo', parent_id: 'root',
-        code: '0', description: '0. Tareas Preliminares',
-        mat_unitario: 0, mo_unitario: 0, mat_total: 3_200_000, mo_total: 2_100_000,
-        directo_total: 7_100_000, indirecto_total: 2_200_000, beneficio_total: 700_000, neto_total: 10_000_000, sort_order: 0,
-        children: [
-          { id: 'i01', budget_id: '1', org_id: 'demo', parent_id: 's0', code: '0.1', description: 'Obrador', unidad: 'mes', cantidad: 16, mat_unitario: 700_000, mo_unitario: 0, mat_total: 11_200_000, mo_total: 0, directo_total: 11_200_000, indirecto_total: 3_472_000, beneficio_total: 0, neto_total: 14_672_000, sort_order: 1, children: [] },
-          { id: 'i02', budget_id: '1', org_id: 'demo', parent_id: 's0', code: '0.2', description: 'Baños Químicos', unidad: 'mes', cantidad: 16, mat_unitario: 150_000, mo_unitario: 0, mat_total: 2_400_000, mo_total: 0, directo_total: 2_400_000, indirecto_total: 744_000, beneficio_total: 0, neto_total: 3_144_000, sort_order: 2, children: [] },
-        ],
-      },
-      {
-        id: 's1', budget_id: '1', org_id: 'demo', parent_id: 'root',
-        code: '1', description: '1. Subsuelo',
-        mat_unitario: 0, mo_unitario: 0, mat_total: 18_500_000, mo_total: 9_200_000,
-        directo_total: 31_300_000, indirecto_total: 9_700_000, beneficio_total: 3_100_000, neto_total: 44_100_000, sort_order: 1,
-        children: [
-          { id: 'i11', budget_id: '1', org_id: 'demo', parent_id: 's1', code: '1.1', description: 'Columnas y Tabiques', unidad: 'm³', cantidad: 85, mat_unitario: 99_588, mo_unitario: 37_647, mat_total: 8_465_000, mo_total: 3_200_000, directo_total: 11_650_500, indirecto_total: 3_611_655, beneficio_total: 0, neto_total: 15_262_155, sort_order: 1, children: [] },
-          { id: 'i12', budget_id: '1', org_id: 'demo', parent_id: 's1', code: '1.2', description: 'Vigas', unidad: 'm³', cantidad: 42, mat_unitario: 95_000, mo_unitario: 32_000, mat_total: 3_990_000, mo_total: 1_344_000, directo_total: 5_334_000, indirecto_total: 1_653_540, beneficio_total: 0, neto_total: 6_987_540, sort_order: 2, children: [] },
-          { id: 'i13', budget_id: '1', org_id: 'demo', parent_id: 's1', code: '1.3', description: 'Losa', unidad: 'm²', cantidad: 410, mat_unitario: 18_000, mo_unitario: 6_500, mat_total: 7_380_000, mo_total: 2_665_000, directo_total: 10_045_000, indirecto_total: 3_113_950, beneficio_total: 0, neto_total: 13_158_950, sort_order: 3, children: [] },
-        ],
-      },
-    ],
-  },
-]
-
-const DEFAULT_ITEMS: BudgetItem[] = [
-  { id: 'i11', budget_id: '1', org_id: 'demo', parent_id: 's1', code: '1.1.1', description: 'Hormigón H-30 elaborado', unidad: 'm³', cantidad: 42.5, mat_unitario: 85_000, mo_unitario: 32_000, mat_total: 3_612_500, mo_total: 1_360_000, directo_total: 4_972_500, indirecto_total: 1_541_475, beneficio_total: 0, neto_total: 6_513_975, sort_order: 1 },
-  { id: 'i12', budget_id: '1', org_id: 'demo', parent_id: 's1', code: '1.1.2', description: 'Acero ADN 420 ø12', unidad: 'kg', cantidad: 3200, mat_unitario: 1_250, mo_unitario: 380, mat_total: 4_000_000, mo_total: 1_216_000, directo_total: 5_216_000, indirecto_total: 1_616_960, beneficio_total: 0, neto_total: 6_832_960, sort_order: 2 },
-  { id: 'i13', budget_id: '1', org_id: 'demo', parent_id: 's1', code: '1.1.3', description: 'Encofrado metálico', unidad: 'm²', cantidad: 85, mat_unitario: 12_000, mo_unitario: 5_200, mat_total: 1_020_000, mo_total: 442_000, directo_total: 1_462_000, indirecto_total: 453_220, beneficio_total: 0, neto_total: 1_915_220, sort_order: 3 },
-]
 
 const MARKUP_LINKS = [
   { label: 'Estr', pct: 15 },
@@ -59,20 +22,30 @@ export default function Editor() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [budget, setBudget] = useState<Budget | null>(null)
-  const [tree, setTree] = useState<TreeNode[]>(DEMO_TREE)
-  const [selectedNode, setSelectedNode] = useState<TreeNode | null>(DEMO_TREE[0]?.children?.[1] ?? null)
-  const [items, setItems] = useState<BudgetItem[]>(DEFAULT_ITEMS)
+  const [tree, setTree] = useState<TreeNode[]>([])
+  const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null)
+  const [allItems, setAllItems] = useState<BudgetItem[]>([])
+  const [items, setItems] = useState<BudgetItem[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!id) return
-    budgetApi.getFull(id)
-      .then(({ budget, tree }) => {
+    Promise.all([
+      budgetApi.getFull(id),
+      budgetApi.getItems(id),
+    ])
+      .then(([{ budget, tree }, fetchedItems]) => {
         setBudget(budget)
         setTree(tree)
-        if (tree[0]) setSelectedNode(tree[0])
+        setAllItems(fetchedItems)
+        // Auto-select first child node and filter its items
+        const firstNode = tree[0]?.children?.[0] ?? tree[0] ?? null
+        if (firstNode) {
+          setSelectedNode(firstNode)
+          setItems(fetchedItems.filter((i) => i.parent_id === firstNode.id || i.id === firstNode.id))
+        }
       })
-      .catch(() => {/* use demo data */})
+      .catch(() => {/* keep empty state */})
       .finally(() => setLoading(false))
   }, [id])
 
@@ -160,12 +133,8 @@ export default function Editor() {
               selectedId={selectedNode?.id}
               onSelect={(node) => {
                 setSelectedNode(node)
-                // Load items for this node
-                if (id && node.id !== 'root') {
-                  budgetApi.getItems(id)
-                    .then((all) => setItems(all.filter((i) => i.parent_id === node.id || i.id === node.id)))
-                    .catch(() => setItems(DEFAULT_ITEMS))
-                }
+                // Filter items for this node from cached list
+                setItems(allItems.filter((i) => i.parent_id === node.id || i.id === node.id))
               }}
             />
           </div>

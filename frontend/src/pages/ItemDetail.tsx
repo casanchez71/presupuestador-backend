@@ -3,18 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronRight, ClipboardList } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency, fmtNumber, fmtPercent } from '../lib/format'
-import type { ItemResource } from '../types'
+import type { ItemResource, BudgetItem, Budget } from '../types'
 
-const DEMO_RESOURCES: ItemResource[] = [
-  { id: 'r1', item_id: 'i11', org_id: 'demo', tipo: 'material', codigo: 'H-30', descripcion: 'Hormigón H-30', unidad: 'm³', cantidad: 366.36, desperdicio_pct: 10, cantidad_efectiva: 403, precio_unitario: 95_000, subtotal: 38_285_000 },
-  { id: 'r2', item_id: 'i11', org_id: 'demo', tipo: 'material', codigo: 'HADN12', descripcion: 'Hierro ADN 420 ø12', unidad: 'u', cantidad: 206, desperdicio_pct: 10, cantidad_efectiva: 227, precio_unitario: 12_800, subtotal: 2_905_600 },
-  { id: 'r3', item_id: 'i11', org_id: 'demo', tipo: 'material', codigo: 'F-MIR', descripcion: 'Fenólico 18mm Miraluz', unidad: 'u', cantidad: 52, desperdicio_pct: 10, cantidad_efectiva: 58, precio_unitario: 18_500, subtotal: 1_073_000 },
-  { id: 'r4', item_id: 'i11', org_id: 'demo', tipo: 'material', codigo: 'H-PL-m', descripcion: 'Bomba Pluma m³', unidad: 'm³', cantidad: 9, desperdicio_pct: 10, cantidad_efectiva: 10, precio_unitario: 45_000, subtotal: 450_000 },
-  { id: 'r5', item_id: 'i11', org_id: 'demo', tipo: 'mano_obra', codigo: 'MO-CA', descripcion: 'Capataz', unidad: 'jornal', cantidad: 5, desperdicio_pct: 10, cantidad_efectiva: 5.5, precio_unitario: 120_000, subtotal: 660_000 },
-  { id: 'r6', item_id: 'i11', org_id: 'demo', tipo: 'mano_obra', codigo: 'MO-OF', descripcion: 'Oficial', unidad: 'jornal', cantidad: 15, desperdicio_pct: 10, cantidad_efectiva: 16.5, precio_unitario: 90_000, subtotal: 1_485_000 },
-  { id: 'r7', item_id: 'i11', org_id: 'demo', tipo: 'mano_obra', codigo: 'MO-AY', descripcion: 'Ayudante', unidad: 'jornal', cantidad: 15, desperdicio_pct: 10, cantidad_efectiva: 16.5, precio_unitario: 60_000, subtotal: 990_000 },
-  { id: 'r8', item_id: 'i11', org_id: 'demo', tipo: 'equipo', codigo: 'E-RC', descripcion: 'Retroexcavadora', unidad: 'día', cantidad: 8, desperdicio_pct: 0, cantidad_efectiva: 8, precio_unitario: 85_000, subtotal: 680_000 },
-]
 
 type Tipo = ItemResource['tipo']
 
@@ -84,20 +74,28 @@ function ResourceTable({ recursos, tipo }: { recursos: ItemResource[]; tipo: Tip
 export default function ItemDetail() {
   const { id, itemId } = useParams<{ id: string; itemId: string }>()
   const navigate = useNavigate()
-  const [recursos, setRecursos] = useState<ItemResource[]>(DEMO_RESOURCES)
+  const [budget, setBudget] = useState<Budget | null>(null)
+  const [item, setItem] = useState<BudgetItem | null>(null)
+  const [recursos, setRecursos] = useState<ItemResource[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!id || !itemId) return
-    budgetApi.getItemResources(id, itemId)
-      .then(setRecursos)
-      .catch(() => {/* use demo */})
-      .finally(() => setLoading(false))
+    // Load budget, item info, and resources in parallel
+    Promise.all([
+      budgetApi.get(id).catch(() => null),
+      budgetApi.getItems(id).then((items) => items.find((i) => i.id === itemId) ?? null).catch(() => null),
+      budgetApi.getItemResources(id, itemId).catch(() => [] as ItemResource[]),
+    ]).then(([b, it, res]) => {
+      if (b) setBudget(b)
+      if (it) setItem(it)
+      setRecursos(res)
+    }).finally(() => setLoading(false))
   }, [id, itemId])
 
   const totalMat = recursos.filter((r) => r.tipo === 'material').reduce((s, r) => s + r.subtotal, 0)
   const totalMO = recursos.filter((r) => r.tipo === 'mano_obra').reduce((s, r) => s + r.subtotal, 0)
-  const cantidad = 366.36
+  const cantidad = item?.cantidad ?? 0
   const desperdicio = 10
 
   return (
@@ -106,9 +104,9 @@ export default function ItemDetail() {
       <div className="flex items-center gap-1.5 text-xs mb-2">
         <span className="text-gray-400 cursor-pointer hover:text-[#2D8D68]" onClick={() => navigate('/app/dashboard')}>Presupuestos</span>
         <ChevronRight size={12} className="text-gray-300" />
-        <span className="text-gray-400 cursor-pointer hover:text-[#2D8D68]" onClick={() => navigate(`/app/budgets/${id ?? '1'}/editor`)}>Las Heras</span>
+        <span className="text-gray-400 cursor-pointer hover:text-[#2D8D68]" onClick={() => navigate(`/app/budgets/${id ?? '1'}/editor`)}>{budget?.name ?? 'Presupuesto'}</span>
         <ChevronRight size={12} className="text-gray-300" />
-        <span className="font-semibold text-gray-900">0.9 Excavación Bases y Troncos</span>
+        <span className="font-semibold text-gray-900">{item ? `${item.code ?? ''} ${item.description ?? ''}`.trim() : 'Ítem'}</span>
       </div>
 
       {/* Section label */}
@@ -117,7 +115,7 @@ export default function ItemDetail() {
       </div>
       <div className="flex items-center gap-3 mb-4">
         <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
-        <h1 className="text-xl font-extrabold text-gray-900">0.9 EXCAVACIÓN BASES Y TRONCOS</h1>
+        <h1 className="text-xl font-extrabold text-gray-900">{item ? `${item.code ?? ''} ${item.description ?? ''}`.trim().toUpperCase() : 'DETALLE DE ÍTEM'}</h1>
       </div>
 
       {loading && (
@@ -131,7 +129,7 @@ export default function ItemDetail() {
       <div className="bg-white rounded-xl border p-4 mb-4 flex items-center gap-8 flex-wrap">
         <div>
           <div className="text-[10px] text-gray-400">Unidad</div>
-          <div className="font-bold text-gray-800">m³</div>
+          <div className="font-bold text-gray-800">{item?.unidad ?? '—'}</div>
         </div>
         <div>
           <div className="text-[10px] text-gray-400">Cantidad</div>
@@ -143,13 +141,13 @@ export default function ItemDetail() {
         </div>
         <div>
           <div className="text-[10px] text-gray-400">Cantidad Efectiva</div>
-          <div className="font-bold text-[#2D8D68]">{fmtNumber(cantidad * (1 + desperdicio / 100), 0)} m³</div>
+          <div className="font-bold text-[#2D8D68]">{fmtNumber(cantidad * (1 + desperdicio / 100), 0)} {item?.unidad ?? ''}</div>
         </div>
         <div className="ml-auto text-right">
           <div className="text-[10px] text-gray-400">Fórmula</div>
           <div className="font-mono text-xs text-gray-600">
             {fmtNumber(cantidad, 2)} × (1 + 0.{desperdicio}) ={' '}
-            <strong>{fmtNumber(cantidad * (1 + desperdicio / 100), 0)} m³</strong>
+            <strong>{fmtNumber(cantidad * (1 + desperdicio / 100), 0)} {item?.unidad ?? ''}</strong>
           </div>
         </div>
       </div>

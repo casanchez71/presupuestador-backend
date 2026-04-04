@@ -46,7 +46,7 @@ function TreeItem({ node, selectedId, onSelect, depth }: ItemProps) {
         {depth > 0 && node.code && (
           <span className="font-mono text-[10px] text-gray-400 mr-1">{node.code}</span>
         )}
-        <span className="truncate">{node.description}</span>
+        <span className="truncate">{node.description ?? '(sin descripción)'}</span>
       </div>
       {hasChildren && open && (
         <div>

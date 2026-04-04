@@ -3,33 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { LayoutGrid, Clock, TrendingUp, DollarSign, Plus } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency } from '../lib/format'
-import type { Budget } from '../types'
+import type { Budget, AnalysisResponse } from '../types'
 import BudgetCard from '../components/ui/BudgetCard'
-
-// Static demo data used when there are no budgets yet
-const DEMO_BUDGETS: (Budget & { directTotal: number; netoTotal: number; subtitle: string; tags: string[] })[] = [
-  {
-    id: '1', org_id: 'demo', name: 'Edificio Las Heras', status: 'Activo',
-    created_at: '2026-03-20', updated_at: '2026-04-03',
-    directTotal: 284_500_000, netoTotal: 372_700_000,
-    subtitle: 'Obra gris · 10 pisos · 108 ítems · 325 materiales',
-    tags: ['44 hojas detalle', '5 catálogos'],
-  },
-  {
-    id: '2', org_id: 'demo', name: 'Casa Lugones', status: 'Borrador',
-    created_at: '2026-03-10', updated_at: '2026-03-28',
-    directTotal: 198_200_000, netoTotal: 259_600_000,
-    subtitle: 'Refacción · 2 pisos · 72 ítems · 297 materiales',
-    tags: ['56 hojas detalle', '12 meses'],
-  },
-  {
-    id: '3', org_id: 'demo', name: 'El Encuentro', status: 'Presentado',
-    created_at: '2026-02-15', updated_at: '2026-03-15',
-    directTotal: 258_800_000, netoTotal: 409_000_000,
-    subtitle: 'Paisajismo · Pilar · 30 ítems · 279 materiales',
-    tags: ['14 hojas detalle', '+ Cronograma'],
-  },
-]
 
 const ACTIVITY = [
   { text: 'Las Heras — Catálogo Mar-2026 aplicado: 108 ítems recalculados', time: 'hace 2 hs' },
@@ -39,19 +14,38 @@ const ACTIVITY = [
 
 export default function Dashboard() {
   const [budgets, setBudgets] = useState<Budget[]>([])
+  const [analyses, setAnalyses] = useState<Record<string, AnalysisResponse>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
     budgetApi.list()
-      .then(setBudgets)
+      .then((list) => {
+        setBudgets(list)
+        // Fetch analysis (totals) for each budget
+        return Promise.allSettled(
+          list.map((b) =>
+            budgetApi.getAnalysis(b.id).then((a) => ({ id: b.id, analysis: a }))
+          )
+        )
+      })
+      .then((results) => {
+        const map: Record<string, AnalysisResponse> = {}
+        for (const r of results) {
+          if (r.status === 'fulfilled') {
+            map[r.value.id] = r.value.analysis
+          }
+        }
+        setAnalyses(map)
+      })
       .catch(() => setError('No se pudieron cargar los presupuestos.'))
       .finally(() => setLoading(false))
   }, [])
 
-  const displayBudgets = budgets.length > 0 ? budgets : DEMO_BUDGETS
-  const total = DEMO_BUDGETS.reduce((s, b) => s + b.netoTotal, 0)
+  const totalItems = Object.values(analyses).reduce((s, a) => s + (a.items_count ?? 0), 0)
+  const totalNeto = Object.values(analyses).reduce((s, a) => s + (a.neto_total ?? 0), 0)
+  const pendingCount = budgets.filter((b) => b.status?.toLowerCase() === 'borrador').length
 
   return (
     <div className="p-6 fade-in">
@@ -65,7 +59,7 @@ export default function Dashboard() {
           <div className="w-1 h-8 bg-[#2D8D68] rounded-full" />
           <h1 className="text-2xl font-extrabold text-gray-900">MIS PRESUPUESTOS</h1>
           <span className="bg-[#E8F5EE] text-[#1B5E4B] text-xs font-medium px-2 py-0.5 rounded-full">
-            {displayBudgets.length} obras
+            {budgets.length} obras
           </span>
         </div>
         <button
@@ -79,10 +73,10 @@ export default function Dashboard() {
       {/* KPI cards */}
       <div className="text-[10px] font-bold text-gray-400 tracking-wider mb-2">RESUMEN GENERAL</div>
       <div className="grid grid-cols-4 gap-3 mb-6">
-        <KpiCard icon={<LayoutGrid size={16} strokeWidth={1.5} className="text-[#2D8D68]" />} bg="bg-[#E8F5EE]" value={String(displayBudgets.length)} label="OBRAS ACTIVAS" />
-        <KpiCard icon={<Clock size={16} strokeWidth={1.5} className="text-orange-500" />} bg="bg-orange-50" value="1" label="PENDIENTE REVISIÓN" valueClass="text-orange-600" />
-        <KpiCard icon={<TrendingUp size={16} strokeWidth={1.5} className="text-blue-600" />} bg="bg-blue-50" value="210" label="ÍTEMS TOTALES" valueClass="text-blue-600" />
-        <KpiCard icon={<DollarSign size={16} strokeWidth={1.5} className="text-[#2D8D68]" />} bg="bg-[#E8F5EE]" value={fmtCurrency(total)} label="NETO TOTAL CARTERA" />
+        <KpiCard icon={<LayoutGrid size={16} strokeWidth={1.5} className="text-[#2D8D68]" />} bg="bg-[#E8F5EE]" value={String(budgets.length)} label="OBRAS ACTIVAS" />
+        <KpiCard icon={<Clock size={16} strokeWidth={1.5} className="text-orange-500" />} bg="bg-orange-50" value={String(pendingCount)} label="PENDIENTE REVISIÓN" valueClass="text-orange-600" />
+        <KpiCard icon={<TrendingUp size={16} strokeWidth={1.5} className="text-blue-600" />} bg="bg-blue-50" value={String(totalItems)} label="ÍTEMS TOTALES" valueClass="text-blue-600" />
+        <KpiCard icon={<DollarSign size={16} strokeWidth={1.5} className="text-[#2D8D68]" />} bg="bg-[#E8F5EE]" value={totalNeto > 0 ? fmtCurrency(totalNeto) : '$0'} label="NETO TOTAL CARTERA" />
       </div>
 
       {/* Loading / error */}
@@ -99,22 +93,30 @@ export default function Dashboard() {
       )}
 
       {/* Budget cards */}
+      {!loading && budgets.length === 0 && !error && (
+        <div className="mb-6 text-center py-12 bg-white rounded-xl border">
+          <p className="text-gray-500 text-sm mb-2">No hay presupuestos todavía.</p>
+          <button
+            onClick={() => navigate('/app/import')}
+            className="bg-[#2D8D68] hover:bg-[#1B5E4B] text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors"
+          >
+            Importar Excel
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        {budgets.length > 0
-          ? budgets.map((b) => (
-              <BudgetCard key={b.id} budget={b} />
-            ))
-          : DEMO_BUDGETS.map((b) => (
-              <BudgetCard
-                key={b.id}
-                budget={b}
-                directTotal={b.directTotal}
-                netoTotal={b.netoTotal}
-                subtitle={b.subtitle}
-                tags={b.tags}
-              />
-            ))
-        }
+        {budgets.map((b) => {
+          const a = analyses[b.id]
+          return (
+            <BudgetCard
+              key={b.id}
+              budget={b}
+              directTotal={a?.directo_total}
+              netoTotal={a?.neto_total}
+              subtitle={a ? `${a.items_count} ítems` : undefined}
+            />
+          )
+        })}
       </div>
 
       {/* Activity */}
