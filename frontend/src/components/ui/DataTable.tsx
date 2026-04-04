@@ -98,13 +98,12 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
 
   const totals = items.reduce(
     (acc, item) => ({
-      mat: acc.mat + (item.mat_total ?? 0),
-      mo: acc.mo + (item.mo_total ?? 0),
       directo: acc.directo + item.directo_total,
       indirecto: acc.indirecto + item.indirecto_total,
+      beneficio: acc.beneficio + (item.beneficio_total ?? 0),
       neto: acc.neto + item.neto_total,
     }),
-    { mat: 0, mo: 0, directo: 0, indirecto: 0, neto: 0 },
+    { directo: 0, indirecto: 0, beneficio: 0, neto: 0 },
   )
 
   function renderEditableCell(item: BudgetItem, field: EditableField, format: (v: number) => string) {
@@ -201,6 +200,7 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
             </th>
             <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Directo</th>
             <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Indirecto</th>
+            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Beneficio</th>
             <th className="px-3 py-2 text-right font-bold text-[11px] tracking-wide">Neto</th>
             <th className="px-3 py-2 w-16" />
           </tr>
@@ -227,6 +227,9 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
               </td>
               <td className="px-3 py-2.5 cost-cell text-gray-400">
                 {fmtCurrency(item.indirecto_total)}
+              </td>
+              <td className="px-3 py-2.5 cost-cell text-gray-400">
+                {fmtCurrency(item.beneficio_total)}
               </td>
               <td className="px-3 py-2.5 cost-cell font-bold text-[#143D34]">
                 {fmtCurrency(item.neto_total)}
@@ -276,11 +279,10 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
         {items.length > 0 && (
           <tfoot className="sticky bottom-0 z-10">
             <tr className="bg-[#E8F5EE] font-semibold text-xs border-t border-[#2D8D68]/20">
-              <td colSpan={4} className="px-3 py-2.5 text-right text-[#2D8D68] uppercase text-[10px] tracking-wider font-bold">Total seccion</td>
-              <td className="px-3 py-2.5 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.mat)}</td>
-              <td className="px-3 py-2.5 cost-cell text-purple-700 font-bold">{fmtCurrency(totals.mo)}</td>
+              <td colSpan={6} className="px-3 py-2.5 text-right text-[#2D8D68] uppercase text-[10px] tracking-wider font-bold">Total seccion</td>
               <td className="px-3 py-2.5 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.directo)}</td>
               <td className="px-3 py-2.5 cost-cell text-[#E8663C] font-bold">{fmtCurrency(totals.indirecto)}</td>
+              <td className="px-3 py-2.5 cost-cell text-gray-600 font-bold">{fmtCurrency(totals.beneficio)}</td>
               <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.neto)}</td>
               <td />
             </tr>
