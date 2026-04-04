@@ -200,22 +200,22 @@ export default function Analysis() {
 
       {/* Scrollable table area */}
       <div className="flex-1 min-h-0 bg-white rounded-xl border overflow-hidden flex flex-col">
-        <div className="bg-gray-50 px-3 py-2 border-b flex-shrink-0">
-          <span className="text-[10px] font-bold text-gray-500 tracking-wide">
+        <div className="bg-[#E8F5EE]/30 px-3 py-2 border-b flex-shrink-0">
+          <span className="text-[10px] font-bold text-[#2D8D68] tracking-wide">
             DESGLOSE POR {VIEW_MODE_LABELS[viewMode].toUpperCase()}
           </span>
         </div>
         <div className="flex-1 overflow-y-auto">
           <table className="w-full text-xs">
-            <thead className="bg-gray-50 text-gray-600 sticky top-0">
+            <thead className="bg-[#E8F5EE] text-[#143D34] sticky top-0">
               <tr>
-                <th className="px-3 py-2 text-left font-semibold border-b">Seccion</th>
-                <th className="px-3 py-2 text-right font-semibold border-b">MAT</th>
-                <th className="px-3 py-2 text-right font-semibold border-b">MO</th>
-                <th className="px-3 py-2 text-right font-semibold border-b">Directo</th>
-                <th className="px-3 py-2 text-right font-semibold border-b">Indirecto</th>
-                <th className="px-3 py-2 text-right font-semibold border-b">Beneficio</th>
-                <th className="px-3 py-2 text-right font-bold border-b">Neto</th>
+                <th className="px-3 py-2 text-left font-semibold text-[11px] tracking-wide">Seccion</th>
+                <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">MAT</th>
+                <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">MO</th>
+                <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Directo</th>
+                <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Indirecto</th>
+                <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Beneficio</th>
+                <th className="px-3 py-2 text-right font-bold text-[11px] tracking-wide">Neto</th>
               </tr>
             </thead>
             <tbody>
@@ -227,7 +227,7 @@ export default function Analysis() {
                 </tr>
               ) : (
                 sections.map((s, i) => (
-                  <tr key={i} className="border-b hover:bg-gray-50">
+                  <tr key={i} className={`hover:bg-[#E8F5EE]/20 transition-colors duration-150 ${i % 2 === 1 ? 'bg-gray-50/30' : 'bg-white'}`}>
                     <td className="px-3 py-2 font-medium text-gray-800">{s.name}</td>
                     <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mat)}</td>
                     <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mo)}</td>
@@ -239,15 +239,15 @@ export default function Analysis() {
                 ))
               )}
             </tbody>
-            <tfoot className="bg-[#2D8D68] text-white font-semibold sticky bottom-0">
+            <tfoot className="bg-[#E8F5EE]/50 font-semibold text-xs border-t border-[#2D8D68]/20 sticky bottom-0">
               <tr>
-                <td className="px-3 py-3">TOTAL OBRA</td>
-                <td className="px-3 py-3 cost-cell">{fmtCurrency(matTotal)}</td>
-                <td className="px-3 py-3 cost-cell">{fmtCurrency(moTotal)}</td>
-                <td className="px-3 py-3 cost-cell text-green-200">{fmtCurrency(directoTotal)}</td>
-                <td className="px-3 py-3 cost-cell">{fmtCurrency(indirectoTotal)}</td>
-                <td className="px-3 py-3 cost-cell">{fmtCurrency(beneficioTotal)}</td>
-                <td className="px-3 py-3 cost-cell text-[#E0A33A] text-base font-bold">{fmtCurrency(netoTotal)}</td>
+                <td className="px-3 py-2.5 text-[#2D8D68] uppercase text-[10px] tracking-wider font-bold">TOTAL OBRA</td>
+                <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(matTotal)}</td>
+                <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(moTotal)}</td>
+                <td className="px-3 py-2.5 cost-cell text-blue-700 font-bold">{fmtCurrency(directoTotal)}</td>
+                <td className="px-3 py-2.5 cost-cell text-[#E8663C] font-bold">{fmtCurrency(indirectoTotal)}</td>
+                <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(beneficioTotal)}</td>
+                <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(netoTotal)}</td>
               </tr>
             </tfoot>
           </table>

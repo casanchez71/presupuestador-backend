@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Eye, Pencil, Loader2, Trash2 } from 'lucide-react'
+import { FileText, Pencil, Loader2, Trash2 } from 'lucide-react'
 import type { BudgetItem } from '../../types'
 import { fmtCurrency, fmtNumber } from '../../lib/format'
 
@@ -235,9 +235,9 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
                     <button
                       onClick={() => onViewDetail(item.id)}
                       className="p-1 text-gray-300 hover:text-[#2D8D68] transition-colors rounded hover:bg-[#E8F5EE]"
-                      title="Ver detalle"
+                      title="Ver detalle del ítem"
                     >
-                      <Eye size={13} />
+                      <FileText size={13} />
                     </button>
                   ) : null}
                   {onDeleteItem ? (

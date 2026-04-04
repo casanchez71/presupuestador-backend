@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronRight, ChevronDown, ClipboardList, History, Pencil, Upload, Cpu, BookOpen, Calculator, Check, X } from 'lucide-react'
+import { ChevronRight, ChevronDown, ChevronLeft, ClipboardList, History, Pencil, Upload, Cpu, BookOpen, Calculator, Check, X } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency, fmtNumber, fmtPercent } from '../lib/format'
 import type { ItemResource, BudgetItem, Budget, ItemAudit } from '../types'
@@ -265,6 +265,15 @@ export default function ItemDetail() {
         <span className="font-semibold text-gray-900">{item ? `${item.code ?? ''} ${item.description ?? ''}`.trim() : 'Item'}</span>
       </div>
 
+      {/* Back button */}
+      <button
+        onClick={() => navigate(`/app/budgets/${id ?? '1'}/editor`)}
+        className="flex items-center gap-1.5 text-sm text-[#2D8D68] hover:text-[#1B5E4B] font-medium mb-3 transition-colors"
+      >
+        <ChevronLeft size={16} />
+        Volver al editor
+      </button>
+
       {/* Section label */}
       <div className="flex items-center gap-2 text-[#2D8D68] text-[11px] font-bold tracking-wider mb-1">
         <ClipboardList size={14} /> DETALLE DE RECURSOS
@@ -273,6 +282,7 @@ export default function ItemDetail() {
         <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
         <h1 className="text-xl font-extrabold text-gray-900">{item ? `${item.code ?? ''} ${item.description ?? ''}`.trim().toUpperCase() : 'DETALLE DE ITEM'}</h1>
       </div>
+      <p className="text-xs text-gray-400 mb-4 ml-4">Vista de detalle: recursos, costos y memoria de cálculo de este ítem. La edición de cantidades y precios se hace desde el Editor.</p>
 
       {/* Item summary */}
       <div className="bg-white rounded-xl border p-4 mb-4 flex items-center gap-8 flex-wrap">
