@@ -194,7 +194,7 @@ export default function Editor() {
         <div className="flex items-center gap-3">
           <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
           <h1 className="text-xl font-extrabold text-gray-900">
-            {budget?.name?.toUpperCase() ?? 'EDIFICIO LAS HERAS'}
+            {budget?.name?.toUpperCase() ?? 'PRESUPUESTO'}
           </h1>
         </div>
         <div className="flex gap-2">

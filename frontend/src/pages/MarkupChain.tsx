@@ -11,9 +11,9 @@ interface Link {
   color: string
 }
 
-const DEMO_CONFIG: IndirectConfig = {
-  id: 'cfg1',
-  org_id: 'demo',
+const DEFAULT_CONFIG: IndirectConfig = {
+  id: '',
+  org_id: '',
   estructura_pct: 15,
   jefatura_pct: 8,
   logistica_pct: 5,
@@ -30,12 +30,12 @@ const USA_EXAMPLE = [
 
 export default function MarkupChain() {
   const { id } = useParams<{ id: string }>()
-  const [config, setConfig] = useState<IndirectConfig>(DEMO_CONFIG)
+  const [config, setConfig] = useState<IndirectConfig>(DEFAULT_CONFIG)
   const [links, setLinks] = useState<Link[]>([
-    { key: 'estructura_pct', label: 'Estructura', pct: DEMO_CONFIG.estructura_pct, color: 'orange' },
-    { key: 'jefatura_pct', label: 'Jefatura', pct: DEMO_CONFIG.jefatura_pct, color: 'orange' },
-    { key: 'logistica_pct', label: 'Logística', pct: DEMO_CONFIG.logistica_pct, color: 'orange' },
-    { key: 'herramientas_pct', label: 'Herramientas', pct: DEMO_CONFIG.herramientas_pct, color: 'orange' },
+    { key: 'estructura_pct', label: 'Estructura', pct: DEFAULT_CONFIG.estructura_pct, color: 'orange' },
+    { key: 'jefatura_pct', label: 'Jefatura', pct: DEFAULT_CONFIG.jefatura_pct, color: 'orange' },
+    { key: 'logistica_pct', label: 'Logística', pct: DEFAULT_CONFIG.logistica_pct, color: 'orange' },
+    { key: 'herramientas_pct', label: 'Herramientas', pct: DEFAULT_CONFIG.herramientas_pct, color: 'orange' },
   ])
   const [beneficio, setBeneficio] = useState(10)
   const [saving, setSaving] = useState(false)

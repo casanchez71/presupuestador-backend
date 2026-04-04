@@ -3,37 +3,45 @@ import { useParams } from 'react-router-dom'
 import { RefreshCw, Eye, GitCompare, Plus } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency } from '../lib/format'
-import type { BudgetVersion } from '../types'
+import type { Budget, BudgetVersion } from '../types'
 
-const DEMO_VERSIONS: (BudgetVersion & { neto: number; label: string; author: string; date: string })[] = [
-  { id: 'v3', budget_id: '1', version: 3, data: {}, created_at: '2026-04-03T14:30:00', neto: 372_700_000, label: 'Precios actualizados Mar-2026', author: 'Carlos', date: '03/04/2026 14:30' },
-  { id: 'v2', budget_id: '1', version: 2, data: {}, created_at: '2026-03-28T00:00:00', neto: 358_100_000, label: 'Ajuste cantidades P2-P8', author: 'Carlos', date: '28/03/2026' },
-  { id: 'v1', budget_id: '1', version: 1, data: {}, created_at: '2026-03-20T00:00:00', neto: 341_500_000, label: 'Importación inicial Excel', author: 'Carlos', date: '20/03/2026' },
-]
+type VersionRow = BudgetVersion & { neto: number; label: string; author: string; date: string }
 
 export default function Versions() {
   const { id } = useParams<{ id: string }>()
-  const [versions, setVersions] = useState(DEMO_VERSIONS)
+  const [versions, setVersions] = useState<VersionRow[]>([])
+  const [budget, setBudget] = useState<Budget | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+
+  function mapVersions(data: BudgetVersion[]): VersionRow[] {
+    return data.map((v) => ({
+      ...v,
+      neto: (v.data as Record<string, number>)?.neto_total ?? 0,
+      label: `v${v.version}`,
+      author: 'Carlos',
+      date: new Date(v.created_at).toLocaleDateString('es-AR'),
+    }))
+  }
 
   useEffect(() => {
     if (!id) return
-    budgetApi.getVersions(id)
-      .then((data) => {
+    setLoading(true)
+    setError(null)
+    Promise.all([
+      budgetApi.get(id),
+      budgetApi.getVersions(id),
+    ])
+      .then(([b, data]) => {
+        setBudget(b)
         if (data.length > 0) {
-          // map to display format (neto comes from data blob)
-          const mapped = data.map((v) => ({
-            ...v,
-            neto: (v.data as Record<string, number>)?.neto_total ?? 0,
-            label: `v${v.version}`,
-            author: 'Carlos',
-            date: new Date(v.created_at).toLocaleDateString('es-AR'),
-          }))
-          setVersions(mapped as typeof DEMO_VERSIONS)
+          setVersions(mapVersions(data))
         }
       })
-      .catch(() => {/* use demo */})
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Error al cargar versiones')
+      })
       .finally(() => setLoading(false))
   }, [id])
 
@@ -43,19 +51,14 @@ export default function Versions() {
     try {
       await budgetApi.createVersion(id)
       const data = await budgetApi.getVersions(id)
-      setVersions(data.map((v) => ({
-        ...v,
-        neto: (v.data as Record<string, number>)?.neto_total ?? 0,
-        label: `v${v.version}`,
-        author: 'Carlos',
-        date: new Date(v.created_at).toLocaleDateString('es-AR'),
-      })) as typeof DEMO_VERSIONS)
+      setVersions(mapVersions(data))
     } catch {
       // ignore
     }
     setCreating(false)
   }
 
+  const budgetName = budget?.name ?? 'Presupuesto'
   const current = versions[0]
 
   return (
@@ -66,7 +69,7 @@ export default function Versions() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
-          <h1 className="text-xl font-extrabold text-gray-900">VERSIONES — LAS HERAS</h1>
+          <h1 className="text-xl font-extrabold text-gray-900">VERSIONES — {budgetName.toUpperCase()}</h1>
         </div>
         <button
           onClick={createVersion}
@@ -78,7 +81,7 @@ export default function Versions() {
           ) : (
             <Plus size={14} />
           )}
-          Guardar versión actual
+          Guardar version actual
         </button>
       </div>
 
@@ -89,11 +92,18 @@ export default function Versions() {
         </div>
       )}
 
-      {versions.length === 0 ? (
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-sm text-red-700">
+          <p className="font-semibold mb-1">Error al cargar versiones</p>
+          <p className="text-xs">{error}</p>
+        </div>
+      )}
+
+      {!loading && versions.length === 0 ? (
         <div className="max-w-2xl bg-white rounded-xl border p-8 text-center text-gray-400">
           <RefreshCw size={32} className="mx-auto mb-3 text-gray-300" />
-          <p className="text-sm">No hay versiones guardadas todavía.</p>
-          <p className="text-xs mt-1">Guardá una versión para crear un punto de restauración.</p>
+          <p className="text-sm">No hay versiones guardadas todavia.</p>
+          <p className="text-xs mt-1">Guarda una version para crear un punto de restauracion.</p>
         </div>
       ) : (
         <div className="max-w-2xl space-y-3">
@@ -147,7 +157,7 @@ export default function Versions() {
 
       <div className="mt-4 max-w-2xl bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
         <p className="font-semibold mb-1">Acerca de las versiones</p>
-        <p>Cada versión guarda una copia completa del presupuesto. Podés comparar netos entre versiones y restaurar cualquier punto anterior.</p>
+        <p>Cada version guarda una copia completa del presupuesto. Podes comparar netos entre versiones y restaurar cualquier punto anterior.</p>
       </div>
     </div>
   )
