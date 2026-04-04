@@ -179,25 +179,25 @@ export default function DataTable({ items, onEditItem, onViewDetail }: Props) {
       `}</style>
       <table className="w-full text-xs">
         <thead>
-          <tr className="bg-[#143D34] text-white">
+          <tr className="bg-gray-50 text-gray-600 border-b">
             <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Codigo</th>
             <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Descripcion</th>
             <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Unidad</th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               Cant.
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-gray-400" /> : null}
             </th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               MAT Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-gray-400" /> : null}
             </th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               MO Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-gray-400" /> : null}
             </th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Directo</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Indirecto</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Neto</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">Directo</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">Indirecto</th>
+            <th className="px-3 py-2.5 text-right font-bold text-[11px] tracking-wide">Neto</th>
             <th className="px-3 py-2.5 w-6" />
           </tr>
         </thead>

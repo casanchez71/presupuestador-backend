@@ -152,129 +152,134 @@ export default function Analysis() {
   const beneficioTotal = data?.beneficio_total ?? 0
 
   return (
-    <div className="p-6 fade-in">
-      {/* Section label */}
-      <div className="flex items-center gap-2 text-[#2D8D68] text-[11px] font-bold tracking-wider mb-1">
-        <BarChart2 size={14} /> VISTA DE ANALISIS
-      </div>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
-          <h1 className="text-xl font-extrabold text-gray-900">ANALISIS — {budgetName.toUpperCase()}</h1>
+    <div className="p-4 fade-in h-full flex flex-col">
+      {/* Fixed header area */}
+      <div className="flex-shrink-0">
+        {/* Section label */}
+        <div className="flex items-center gap-2 text-[#2D8D68] text-[11px] font-bold tracking-wider mb-1">
+          <BarChart2 size={14} /> VISTA DE ANALISIS
         </div>
-        <button
-          onClick={() => navigate(`/app/budgets/${id ?? '1'}/export`)}
-          className="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 flex items-center gap-1.5 transition-colors"
-        >
-          <Download size={13} /> Exportar
-        </button>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
+            <h1 className="text-xl font-extrabold text-gray-900">ANALISIS — {budgetName.toUpperCase()}</h1>
+          </div>
+          <button
+            onClick={() => navigate(`/app/budgets/${id ?? '1'}/export`)}
+            className="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 flex items-center gap-1.5 transition-colors"
+          >
+            <Download size={13} /> Exportar
+          </button>
+        </div>
+
+        {/* View Mode Selector */}
+        <div className="mb-3">
+          <ViewModeSelector mode={viewMode} onChange={setViewMode} />
+        </div>
+
+        {loading && (
+          <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
+            <div className="w-4 h-4 border-2 border-[#2D8D68] border-t-transparent rounded-full animate-spin" />
+            Cargando analisis...
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-3 text-sm text-red-700">
+            <p className="font-semibold mb-1">Error al cargar el analisis</p>
+            <p className="text-xs">{error}</p>
+          </div>
+        )}
+
+        {/* Summary bar */}
+        <div className="bg-white rounded-xl border mb-3 overflow-hidden">
+          <div className="flex divide-x">
+            <div className="flex-1 px-4 py-2.5">
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider">Items</div>
+              <div className="text-lg font-bold text-gray-900">{itemsCount} <span className="text-[10px] font-normal text-gray-400">en {sections.length} secciones</span></div>
+            </div>
+            <div className="flex-1 px-4 py-2.5">
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider">Materiales</div>
+              <div className="text-sm font-bold text-gray-800">{fmtCurrency(matTotal)}</div>
+            </div>
+            <div className="flex-1 px-4 py-2.5">
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider">Mano de Obra</div>
+              <div className="text-sm font-bold text-gray-800">{fmtCurrency(moTotal)}</div>
+            </div>
+            <div className="flex-1 px-4 py-2.5 bg-blue-50/50">
+              <div className="text-[10px] text-blue-500 uppercase tracking-wider">Directo</div>
+              <div className="text-sm font-bold text-blue-700">{fmtCurrency(directoTotal)}</div>
+            </div>
+            <div className="flex-1 px-4 py-2.5 bg-orange-50/50">
+              <div className="text-[10px] text-orange-500 uppercase tracking-wider">Indirecto</div>
+              <div className="text-sm font-bold text-orange-600">{fmtCurrency(indirectoTotal)}</div>
+            </div>
+            <div className="flex-1 px-4 py-2.5">
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider">Beneficio</div>
+              <div className="text-sm font-bold text-gray-800">{fmtCurrency(beneficioTotal)}</div>
+            </div>
+            <div className="px-5 py-2.5 bg-[#2D8D68] text-white min-w-[130px]">
+              <div className="text-[10px] text-[#E0A33A] uppercase tracking-wider">Neto Total</div>
+              <div className="text-lg font-bold">{fmtCurrency(netoTotal)}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* View Mode Selector */}
-      <div className="mb-4">
-        <ViewModeSelector mode={viewMode} onChange={setViewMode} />
-      </div>
-
-      {loading && (
-        <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
-          <div className="w-4 h-4 border-2 border-[#2D8D68] border-t-transparent rounded-full animate-spin" />
-          Cargando analisis...
-        </div>
-      )}
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-sm text-red-700">
-          <p className="font-semibold mb-1">Error al cargar el analisis</p>
-          <p className="text-xs">{error}</p>
-        </div>
-      )}
-
-      {/* Summary bar — single compact row */}
-      <div className="bg-white rounded-xl border mb-3 overflow-hidden">
-        <div className="flex divide-x">
-          <div className="flex-1 px-4 py-3">
-            <div className="text-[10px] text-gray-400 uppercase tracking-wider">Items</div>
-            <div className="text-xl font-bold text-gray-900">{itemsCount} <span className="text-xs font-normal text-gray-400">en {sections.length} secciones</span></div>
-          </div>
-          <div className="flex-1 px-4 py-3">
-            <div className="text-[10px] text-gray-400 uppercase tracking-wider">Materiales</div>
-            <div className="text-base font-bold text-gray-800">{fmtCurrency(matTotal)}</div>
-          </div>
-          <div className="flex-1 px-4 py-3">
-            <div className="text-[10px] text-gray-400 uppercase tracking-wider">Mano de Obra</div>
-            <div className="text-base font-bold text-gray-800">{fmtCurrency(moTotal)}</div>
-          </div>
-          <div className="flex-1 px-4 py-3 bg-blue-50/50">
-            <div className="text-[10px] text-blue-500 uppercase tracking-wider">Directo</div>
-            <div className="text-base font-bold text-blue-700">{fmtCurrency(directoTotal)}</div>
-          </div>
-          <div className="flex-1 px-4 py-3 bg-orange-50/50">
-            <div className="text-[10px] text-orange-500 uppercase tracking-wider">Indirecto</div>
-            <div className="text-base font-bold text-orange-600">{fmtCurrency(indirectoTotal)}</div>
-          </div>
-          <div className="flex-1 px-4 py-3">
-            <div className="text-[10px] text-gray-400 uppercase tracking-wider">Beneficio</div>
-            <div className="text-base font-bold text-gray-800">{fmtCurrency(beneficioTotal)}</div>
-          </div>
-          <div className="px-5 py-3 bg-[#2D8D68] text-white min-w-[140px]">
-            <div className="text-[10px] text-[#E0A33A] uppercase tracking-wider">Neto Total</div>
-            <div className="text-xl font-bold">{fmtCurrency(netoTotal)}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Section table */}
-      <div className="bg-white rounded-xl border overflow-hidden">
-        <div className="bg-gray-50 px-3 py-2 border-b">
+      {/* Scrollable table area */}
+      <div className="flex-1 min-h-0 bg-white rounded-xl border overflow-hidden flex flex-col">
+        <div className="bg-gray-50 px-3 py-2 border-b flex-shrink-0">
           <span className="text-[10px] font-bold text-gray-500 tracking-wide">
             DESGLOSE POR {VIEW_MODE_LABELS[viewMode].toUpperCase()}
           </span>
         </div>
-        <table className="w-full text-xs">
-          <thead className="bg-gray-100 text-gray-600">
-            <tr>
-              <th className="px-3 py-2 text-left font-semibold">Seccion</th>
-              <th className="px-3 py-2 text-right font-semibold">MAT</th>
-              <th className="px-3 py-2 text-right font-semibold">MO</th>
-              <th className="px-3 py-2 text-right font-semibold">Directo</th>
-              <th className="px-3 py-2 text-right font-semibold">Indirecto</th>
-              <th className="px-3 py-2 text-right font-semibold">Beneficio</th>
-              <th className="px-3 py-2 text-right font-bold">Neto</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sections.length === 0 ? (
+        <div className="flex-1 overflow-y-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50 text-gray-600 sticky top-0">
               <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-gray-400">
-                  No hay datos para agrupar con esta vista.
-                </td>
+                <th className="px-3 py-2 text-left font-semibold border-b">Seccion</th>
+                <th className="px-3 py-2 text-right font-semibold border-b">MAT</th>
+                <th className="px-3 py-2 text-right font-semibold border-b">MO</th>
+                <th className="px-3 py-2 text-right font-semibold border-b">Directo</th>
+                <th className="px-3 py-2 text-right font-semibold border-b">Indirecto</th>
+                <th className="px-3 py-2 text-right font-semibold border-b">Beneficio</th>
+                <th className="px-3 py-2 text-right font-bold border-b">Neto</th>
               </tr>
-            ) : (
-              sections.map((s, i) => (
-                <tr key={i} className="border-b hover:bg-gray-50">
-                  <td className="px-3 py-2 font-medium text-gray-800">{s.name}</td>
-                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mat)}</td>
-                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mo)}</td>
-                  <td className="px-3 py-2 cost-cell text-blue-700 font-medium">{fmtCurrency(s.directo)}</td>
-                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.indirecto)}</td>
-                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.benef)}</td>
-                  <td className="px-3 py-2 cost-cell font-bold">{fmtCurrency(s.neto)}</td>
+            </thead>
+            <tbody>
+              {sections.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-3 py-8 text-center text-gray-400">
+                    No hay datos para agrupar con esta vista.
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-          <tfoot className="bg-[#2D8D68] text-white font-semibold">
-            <tr>
-              <td className="px-3 py-3">TOTAL OBRA</td>
-              <td className="px-3 py-3 cost-cell">{fmtCurrency(matTotal)}</td>
-              <td className="px-3 py-3 cost-cell">{fmtCurrency(moTotal)}</td>
-              <td className="px-3 py-3 cost-cell text-green-200">{fmtCurrency(directoTotal)}</td>
-              <td className="px-3 py-3 cost-cell">{fmtCurrency(indirectoTotal)}</td>
-              <td className="px-3 py-3 cost-cell">{fmtCurrency(beneficioTotal)}</td>
-              <td className="px-3 py-3 cost-cell text-[#E0A33A] text-base font-bold">{fmtCurrency(netoTotal)}</td>
-            </tr>
-          </tfoot>
-        </table>
+              ) : (
+                sections.map((s, i) => (
+                  <tr key={i} className="border-b hover:bg-gray-50">
+                    <td className="px-3 py-2 font-medium text-gray-800">{s.name}</td>
+                    <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mat)}</td>
+                    <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mo)}</td>
+                    <td className="px-3 py-2 cost-cell text-blue-700 font-medium">{fmtCurrency(s.directo)}</td>
+                    <td className="px-3 py-2 cost-cell">{fmtCurrency(s.indirecto)}</td>
+                    <td className="px-3 py-2 cost-cell">{fmtCurrency(s.benef)}</td>
+                    <td className="px-3 py-2 cost-cell font-bold">{fmtCurrency(s.neto)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            <tfoot className="bg-[#2D8D68] text-white font-semibold sticky bottom-0">
+              <tr>
+                <td className="px-3 py-3">TOTAL OBRA</td>
+                <td className="px-3 py-3 cost-cell">{fmtCurrency(matTotal)}</td>
+                <td className="px-3 py-3 cost-cell">{fmtCurrency(moTotal)}</td>
+                <td className="px-3 py-3 cost-cell text-green-200">{fmtCurrency(directoTotal)}</td>
+                <td className="px-3 py-3 cost-cell">{fmtCurrency(indirectoTotal)}</td>
+                <td className="px-3 py-3 cost-cell">{fmtCurrency(beneficioTotal)}</td>
+                <td className="px-3 py-3 cost-cell text-[#E0A33A] text-base font-bold">{fmtCurrency(netoTotal)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
     </div>
   )

@@ -95,7 +95,6 @@ function TreeItem({ node, selectedId, onSelect, onEditSection, onDeleteSection, 
         onClick={() => {
           if (!editing) {
             onSelect(node)
-            if (hasChildren) setOpen(!open)
           }
         }}
       >
@@ -105,7 +104,13 @@ function TreeItem({ node, selectedId, onSelect, onEditSection, onDeleteSection, 
         )}
 
         {hasChildren ? (
-          <span className={`flex-shrink-0 transition-transform duration-200 ${isSelected ? 'text-[#2D8D68]' : 'text-gray-400'}`}>
+          <span
+            className={`flex-shrink-0 transition-transform duration-200 p-0.5 rounded hover:bg-gray-200 ${isSelected ? 'text-[#2D8D68]' : 'text-gray-400'}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              setOpen(!open)
+            }}
+          >
             {open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
           </span>
         ) : (
