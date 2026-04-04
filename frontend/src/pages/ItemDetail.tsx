@@ -276,6 +276,13 @@ export default function ItemDetail() {
 
       {/* Item summary */}
       <div className="bg-white rounded-xl border p-4 mb-4 flex items-center gap-8 flex-wrap">
+        {/* "Editado por humano" mark — visible when item has manual edits */}
+        {audits.some((a) => a.source === 'manual_edit') && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200/50">
+            <Pencil size={10} className="text-blue-500" />
+            <span className="text-[10px] font-medium text-blue-600">Editado por humano</span>
+          </div>
+        )}
         <div>
           <div className="text-[10px] text-gray-400">Unidad</div>
           <div className="font-bold text-gray-800">{item?.unidad ?? '—'}</div>

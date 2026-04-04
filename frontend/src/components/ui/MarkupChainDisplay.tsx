@@ -22,7 +22,7 @@ export default function MarkupChainDisplay({ directo, neto, links, budgetId }: P
   const totalPct = links.reduce((sum, l) => sum + l.pct, 0)
 
   return (
-    <div className="px-4 py-2.5 bg-gradient-to-r from-gray-50 to-white border-b">
+    <div className="px-4 py-2.5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
       {/* Collapsed header - always visible */}
       <div
         className="flex items-center justify-between cursor-pointer select-none group"

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { BarChart2, Download } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency } from '../lib/format'
+import CostSummaryBar from '../components/ui/CostSummaryBar'
 import ViewModeSelector from '../components/ui/ViewModeSelector'
 import { groupByFloor, groupByMaterial, groupByWorkType } from '../lib/viewModes'
 import type { ViewMode } from '../lib/viewModes'
@@ -191,38 +192,9 @@ export default function Analysis() {
           </div>
         )}
 
-        {/* Summary bar */}
-        <div className="bg-white rounded-xl border mb-3 overflow-hidden">
-          <div className="flex divide-x">
-            <div className="flex-1 px-4 py-2.5">
-              <div className="text-[10px] text-gray-400 uppercase tracking-wider">Items</div>
-              <div className="text-lg font-bold text-gray-900">{itemsCount} <span className="text-[10px] font-normal text-gray-400">en {sections.length} secciones</span></div>
-            </div>
-            <div className="flex-1 px-4 py-2.5">
-              <div className="text-[10px] text-gray-400 uppercase tracking-wider">Materiales</div>
-              <div className="text-sm font-bold text-gray-800">{fmtCurrency(matTotal)}</div>
-            </div>
-            <div className="flex-1 px-4 py-2.5">
-              <div className="text-[10px] text-gray-400 uppercase tracking-wider">Mano de Obra</div>
-              <div className="text-sm font-bold text-gray-800">{fmtCurrency(moTotal)}</div>
-            </div>
-            <div className="flex-1 px-4 py-2.5 bg-blue-50/50">
-              <div className="text-[10px] text-blue-500 uppercase tracking-wider">Directo</div>
-              <div className="text-sm font-bold text-blue-700">{fmtCurrency(directoTotal)}</div>
-            </div>
-            <div className="flex-1 px-4 py-2.5 bg-orange-50/50">
-              <div className="text-[10px] text-orange-500 uppercase tracking-wider">Indirecto</div>
-              <div className="text-sm font-bold text-orange-600">{fmtCurrency(indirectoTotal)}</div>
-            </div>
-            <div className="flex-1 px-4 py-2.5">
-              <div className="text-[10px] text-gray-400 uppercase tracking-wider">Beneficio</div>
-              <div className="text-sm font-bold text-gray-800">{fmtCurrency(beneficioTotal)}</div>
-            </div>
-            <div className="px-5 py-2.5 bg-[#2D8D68] text-white min-w-[130px]">
-              <div className="text-[10px] text-[#E0A33A] uppercase tracking-wider">Neto Total</div>
-              <div className="text-lg font-bold">{fmtCurrency(netoTotal)}</div>
-            </div>
-          </div>
+        {/* Summary bar — same CostSummaryBar as Editor */}
+        <div className="rounded-xl border mb-3 overflow-hidden">
+          <CostSummaryBar mat={matTotal} mo={moTotal} directo={directoTotal} indirecto={indirectoTotal} neto={netoTotal} />
         </div>
       </div>
 
