@@ -127,6 +127,7 @@ export const budgetApi = {
   getIndirects: (id: string) => get<IndirectConfig>(`/budgets/${id}/indirects`),
   updateIndirects: (id: string, data: Partial<IndirectConfig>) =>
     patch<IndirectConfig>(`/budgets/${id}/indirects`, data),
+  applyIndirects: (id: string) => post<{ total_directo: number; total_indirectos: number; pct_applied: number; items_updated: number }>(`/budgets/${id}/indirects`),
 
   // Analysis
   getAnalysis: (id: string) => get<AnalysisResponse>(`/budgets/${id}/analysis`),

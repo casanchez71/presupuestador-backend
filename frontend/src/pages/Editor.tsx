@@ -180,6 +180,7 @@ export default function Editor() {
     setRecalculating(true)
     try {
       await budgetApi.recalculate(id)
+      await budgetApi.applyIndirects(id)
       await refreshData()
     } catch (err) {
       console.error('Error recalculating:', err)
