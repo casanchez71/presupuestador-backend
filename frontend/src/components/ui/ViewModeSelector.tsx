@@ -15,20 +15,20 @@ const MODES: { key: ViewMode; label: string; icon: typeof Layers }[] = [
 
 export default function ViewModeSelector({ mode, onChange }: Props) {
   return (
-    <div className="flex rounded-lg border border-gray-200 overflow-hidden bg-white">
+    <div className="flex gap-1 p-1 rounded-xl bg-gray-100/80">
       {MODES.map(({ key, label, icon: Icon }) => {
         const active = mode === key
         return (
           <button
             key={key}
             onClick={() => onChange(key)}
-            className={`flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
+            className={`flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold rounded-lg transition-all duration-200 flex-1 justify-center ${
               active
-                ? 'bg-[#2D8D68] text-white'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-            } ${key !== 'rubro' ? 'border-l border-gray-200' : ''}`}
+                ? 'bg-white text-[#143D34] shadow-sm'
+                : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'
+            }`}
           >
-            <Icon size={12} />
+            <Icon size={12} className={active ? 'text-[#2D8D68]' : ''} />
             {label}
           </button>
         )

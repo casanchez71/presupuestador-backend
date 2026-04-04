@@ -109,12 +109,12 @@ export default function DataTable({ items, onEditItem }: Props) {
 
     if (isEditing) {
       return (
-        <td className="px-2 py-1">
+        <td className="px-3 py-2">
           <input
             ref={inputRef}
             type="number"
             step="any"
-            className="w-full max-w-[100px] ml-auto block border-2 border-blue-500 rounded px-1.5 py-0.5 text-right text-xs bg-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className="w-full max-w-[100px] ml-auto block border-2 border-[#2D8D68] rounded-lg px-2 py-1 text-right text-xs bg-white outline-none shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onBlur={() => commitEdit(item)}
@@ -128,11 +128,11 @@ export default function DataTable({ items, onEditItem }: Props) {
     }
 
     // Determine cell visual state
-    let cellClass = 'px-2 py-2 cost-cell relative group'
+    let cellClass = 'px-3 py-2.5 cost-cell relative group'
     let borderStyle = ''
 
     if (state.error) {
-      borderStyle = 'border border-red-400 rounded'
+      borderStyle = 'border border-red-400 rounded-lg'
     } else if (state.justSaved) {
       cellClass += ' animate-save-flash'
     }
@@ -147,17 +147,17 @@ export default function DataTable({ items, onEditItem }: Props) {
         onClick={() => startEdit(item, field)}
         title={state.error ?? undefined}
       >
-        <span className={`inline-flex items-center gap-1 ${borderStyle} ${onEditItem ? 'border-b border-dashed border-gray-300 hover:border-[#2D8D68]' : ''}`}>
+        <span className={`inline-flex items-center gap-1 ${borderStyle} ${onEditItem ? 'editable-cell' : ''}`}>
           {state.saving ? (
             <Loader2 size={10} className="animate-spin text-[#2D8D68]" />
           ) : null}
-          {value !== undefined && value !== null ? format(value) : '—'}
+          {value !== undefined && value !== null ? format(value) : '--'}
           {onEditItem && !state.saving ? (
             <Pencil size={9} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
           ) : null}
         </span>
         {state.hasAudit && !state.justSaved ? (
-          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-500" title="Editado manualmente" />
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-blue-500" title="Editado manualmente" />
         ) : null}
       </td>
     )
@@ -177,63 +177,68 @@ export default function DataTable({ items, onEditItem }: Props) {
         }
       `}</style>
       <table className="w-full text-xs">
-        <thead className="bg-gray-100 text-gray-600">
-          <tr>
-            <th className="px-2 py-2 text-left font-semibold">Codigo</th>
-            <th className="px-2 py-2 text-left font-semibold">Descripcion</th>
-            <th className="px-2 py-2 text-left font-semibold">Unidad</th>
-            <th className="px-2 py-2 text-right font-semibold">
+        <thead>
+          <tr className="bg-[#143D34] text-white">
+            <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Codigo</th>
+            <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Descripcion</th>
+            <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Unidad</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               Cant.
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-gray-400" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
             </th>
-            <th className="px-2 py-2 text-right font-semibold">
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               MAT Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-gray-400" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
             </th>
-            <th className="px-2 py-2 text-right font-semibold">
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               MO Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-gray-400" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
             </th>
-            <th className="px-2 py-2 text-right font-semibold text-gray-400">Directo</th>
-            <th className="px-2 py-2 text-right font-semibold text-gray-400">Indirecto</th>
-            <th className="px-2 py-2 text-right font-semibold text-gray-400">Neto</th>
-            <th className="px-2 py-2 w-6" />
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Directo</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Indirecto</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Neto</th>
+            <th className="px-3 py-2.5 w-6" />
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
-            <tr key={item.id} className="border-b hover:bg-gray-50">
-              <td className="px-2 py-2 font-mono text-gray-400">{item.code}</td>
-              <td className="px-2 py-2">
+          {items.map((item, idx) => (
+            <tr
+              key={item.id}
+              className={`border-b border-gray-100 hover:bg-[#E8F5EE]/30 transition-colors duration-150 ${
+                idx % 2 === 1 ? 'bg-gray-50/50' : 'bg-white'
+              }`}
+            >
+              <td className="px-3 py-2.5 font-mono text-[10px] text-gray-400">{item.code}</td>
+              <td className="px-3 py-2.5">
                 <span className="font-medium text-gray-800">{item.description}</span>
               </td>
-              <td className="px-2 py-2 text-gray-500">{item.unidad}</td>
+              <td className="px-3 py-2.5 text-gray-400 text-[10px] uppercase">{item.unidad}</td>
               {renderEditableCell(item, 'cantidad', (v) => fmtNumber(v, 0))}
               {renderEditableCell(item, 'mat_unitario', fmtCurrency)}
               {renderEditableCell(item, 'mo_unitario', fmtCurrency)}
               {/* Calculated columns — read-only */}
-              <td className="px-2 py-2 cost-cell font-medium text-blue-700 bg-gray-50/50">
+              <td className="px-3 py-2.5 cost-cell font-semibold text-blue-700/80">
                 {fmtCurrency(item.directo_total)}
               </td>
-              <td className="px-2 py-2 cost-cell text-gray-400 bg-gray-50/50">
+              <td className="px-3 py-2.5 cost-cell text-gray-400">
                 {fmtCurrency(item.indirecto_total)}
               </td>
-              <td className="px-2 py-2 cost-cell font-bold text-[#2D8D68] bg-gray-50/50">
+              <td className="px-3 py-2.5 cost-cell font-bold text-[#143D34]">
                 {fmtCurrency(item.neto_total)}
               </td>
-              <td className="px-2 py-2 text-center text-gray-300 cursor-pointer hover:text-gray-500">
+              <td className="px-3 py-2.5 text-center text-gray-300 cursor-pointer hover:text-gray-500 transition-colors">
                 <MoreVertical size={14} />
               </td>
             </tr>
           ))}
         </tbody>
         {items.length > 0 && (
-          <tfoot className="bg-gray-50 font-semibold text-xs">
-            <tr>
-              <td colSpan={6} className="px-2 py-2 text-right text-gray-500">TOTAL</td>
-              <td className="px-2 py-2 cost-cell text-blue-700">{fmtCurrency(totals.directo)}</td>
-              <td className="px-2 py-2 cost-cell text-orange-600">{fmtCurrency(totals.indirecto)}</td>
-              <td className="px-2 py-2 cost-cell text-[#2D8D68] font-bold">{fmtCurrency(totals.neto)}</td>
+          <tfoot>
+            <tr className="bg-gradient-to-r from-gray-50 to-white font-semibold text-xs border-t-2 border-gray-200">
+              <td colSpan={6} className="px-3 py-3 text-right text-gray-400 uppercase text-[10px] tracking-wider">Total seccion</td>
+              <td className="px-3 py-3 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.directo)}</td>
+              <td className="px-3 py-3 cost-cell text-[#E8663C] font-bold">{fmtCurrency(totals.indirecto)}</td>
+              <td className="px-3 py-3 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.neto)}</td>
               <td />
             </tr>
           </tfoot>
