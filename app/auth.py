@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -8,7 +10,7 @@ from jwt import PyJWKClient
 from app.config import get_settings
 from app.db import get_auth_db
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 _jwks_client: PyJWKClient | None = None
 
@@ -23,9 +25,21 @@ def _get_jwks_client() -> PyJWKClient:
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
 ) -> dict:
-    """Validate Supabase JWT via auth DB and return {user_id, org_id}."""
+    """Validate Supabase JWT via auth DB and return {user_id, org_id}.
+
+    If DEMO_ORG_ID env var is set and no token is provided, returns demo user.
+    This allows browsing without login during development/demo.
+    """
+    demo_org = os.environ.get("DEMO_ORG_ID")
+
+    # No token provided — use demo mode if configured
+    if credentials is None or not credentials.credentials:
+        if demo_org:
+            return {"user_id": "demo-user", "org_id": demo_org}
+        raise HTTPException(401, "Token requerido")
+
     token = credentials.credentials
     try:
         signing_key = _get_jwks_client().get_signing_key_from_jwt(token)
