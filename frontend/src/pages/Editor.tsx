@@ -45,12 +45,25 @@ export default function Editor() {
   const [items, setItems] = useState<BudgetItem[]>([])
   const [loading, setLoading] = useState(true)
   const [toasts, setToasts] = useState<Toast[]>([])
+  const [viewMode, setViewMode] = useState<ViewMode>('rubro')
+  const [originalTree, setOriginalTree] = useState<TreeNode[]>([])
+
+  // Regroup items when view mode changes
+  const displayTree = useMemo(
+    () => regroupItems(viewMode, originalTree, allItems),
+    [viewMode, originalTree, allItems],
+  )
 
   /** Return items that belong to a given tree node.
    *  If the node has children (nested tree), use parent_id matching.
    *  If the tree is flat, use code-prefix matching to group section items.
    */
   const getItemsForNode = useCallback((node: TreeNode, all: BudgetItem[]): BudgetItem[] => {
+    // Virtual nodes (from alternate view modes) carry their children directly
+    if (node.id.startsWith('__virtual_') && node.children.length > 0) {
+      return node.children as BudgetItem[]
+    }
+
     // First try parent_id matching (works when tree is properly nested)
     const byParent = all.filter((i) => i.parent_id === node.id)
     if (byParent.length > 0) return byParent
@@ -90,6 +103,7 @@ export default function Editor() {
       .then(([{ budget: b, tree: t }, fetchedItems]) => {
         setBudget(b)
         setTree(t)
+        setOriginalTree(t)
         setAllItems(fetchedItems)
         // Auto-select first section node and show its items
         const firstNode = t[0] ?? null
@@ -238,9 +252,19 @@ export default function Editor() {
               <Plus size={12} /> Seccion
             </button>
           </div>
-          <div className="p-1.5 max-h-[520px] overflow-y-auto">
+          <div className="px-1.5 pt-1.5 pb-1">
+            <ViewModeSelector
+              mode={viewMode}
+              onChange={(m) => {
+                setViewMode(m)
+                setSelectedNode(null)
+                setItems([])
+              }}
+            />
+          </div>
+          <div className="px-1.5 pb-1.5 max-h-[480px] overflow-y-auto">
             <TreeView
-              nodes={tree}
+              nodes={displayTree}
               selectedId={selectedNode?.id}
               onSelect={(node) => {
                 setSelectedNode(node)
