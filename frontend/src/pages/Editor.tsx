@@ -71,11 +71,17 @@ export default function Editor() {
     const byParent = all.filter((i) => i.parent_id === node.id)
     if (byParent.length > 0) return byParent
     const code = node.code ?? ''
-    const sectionMatch = code.match(/^(\d+)\s*[-.]/)
-    if (sectionMatch) {
-      const prefix = sectionMatch[1] + '.'
-      return all.filter((i) => i.code?.startsWith(prefix) && i.id !== node.id)
+    // Only treat as section header if code is just a number (e.g. "1", "2") or "N-" pattern
+    // Items like "1.1" should NOT be treated as sections
+    const isSection = /^\d+\s*[-.]?\s*\D/.test(code) && !code.includes('.')
+    if (isSection) {
+      const sectionMatch = code.match(/^(\d+)/)
+      if (sectionMatch) {
+        const prefix = sectionMatch[1] + '.'
+        return all.filter((i) => i.code?.startsWith(prefix) && i.id !== node.id)
+      }
     }
+    // Leaf item: show itself in the table
     return all.filter((i) => i.id === node.id)
   }, [])
 
