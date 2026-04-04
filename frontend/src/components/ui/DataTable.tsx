@@ -275,7 +275,7 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
         </tbody>
         {items.length > 0 && (
           <tfoot className="sticky bottom-0 z-10">
-            <tr className="bg-[#E8F5EE]/50 font-semibold text-xs border-t border-[#2D8D68]/20">
+            <tr className="bg-[#E8F5EE] font-semibold text-xs border-t border-[#2D8D68]/20">
               <td colSpan={4} className="px-3 py-2.5 text-right text-[#2D8D68] uppercase text-[10px] tracking-wider font-bold">Total seccion</td>
               <td className="px-3 py-2.5 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.mat)}</td>
               <td className="px-3 py-2.5 cost-cell text-purple-700 font-bold">{fmtCurrency(totals.mo)}</td>

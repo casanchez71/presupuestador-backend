@@ -239,7 +239,7 @@ export default function Analysis() {
                 ))
               )}
             </tbody>
-            <tfoot className="bg-[#E8F5EE]/50 font-semibold text-xs border-t border-[#2D8D68]/20 sticky bottom-0">
+            <tfoot className="bg-[#E8F5EE] font-semibold text-xs border-t border-[#2D8D68]/20 sticky bottom-0 z-10">
               <tr>
                 <td className="px-3 py-2.5 text-[#2D8D68] uppercase text-[10px] tracking-wider font-bold">TOTAL OBRA</td>
                 <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(matTotal)}</td>
