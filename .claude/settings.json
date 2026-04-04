@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python*)",
+      "Bash(pytest*)",
+      "Bash(npm*)",
+      "Bash(npx*)",
+      "Bash(node*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git merge*)",
+      "Bash(git checkout*)",
+      "Bash(git branch*)",
+      "Bash(ls*)",
+      "Bash(mkdir*)",
+      "Bash(cd *)",
+      "Bash(cat *)",
+      "Bash(pip install*)",
+      "Bash(uvicorn*)",
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)"
+    ],
+    "deny": [
+      "Bash(rm -rf*)",
+      "Bash(sudo*)",
+      "Bash(git push*)",
+      "Bash(git push --force*)",
+      "Bash(supabase db reset*)",
+      "Bash(supabase db push*)"
+    ]
+  },
+  "hooks": {}
+}

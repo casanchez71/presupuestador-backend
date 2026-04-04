@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-sole-dark: #143D34;
+  --color-sole-coral: #E8663C;
+  --color-sole-coral-light: #FFF0EB;
+  --color-sole-teal: #2D8D68;
+  --color-sole-teal-dark: #1B5E4B;
+  --color-sole-teal-light: #E8F5EE;
+  --color-sole-gold: #E0A33A;
+  --color-sole-muted: #9D7A32;
+  --color-sole-bg: #F5F6F8;
+  --color-sole-line: #E5E7EB;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  background: #F5F6F8;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+.fade-in {
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.editable {
+  border-bottom: 1px dashed #CBD5E1;
+  cursor: text;
+}
+.editable:hover {
+  background: #FEFCE8;
+}
+
+.cost-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

@@ -76,6 +76,57 @@ class AnalysisResponse(BaseModel):
     items_count: int
 
 
+# ── Catalogs ────────────────────────────────────────────────────────────────
+
+class CatalogResponse(BaseModel):
+    id: str
+    org_id: str
+    name: str
+    source_file: str | None
+    created_at: str
+
+
+class CatalogEntryResponse(BaseModel):
+    id: str
+    catalog_id: str
+    tipo: str | None
+    codigo: str | None
+    descripcion: str | None
+    unidad: str | None
+    precio_con_iva: float | None
+    precio_sin_iva: float | None
+    referencia: str | None
+
+
+class ApplyCatalogResult(BaseModel):
+    items_matched: int
+    items_unmatched: int
+    total_updated: float
+
+
+# ── Budget update ──────────────────────────────────────────────────────────
+
+class BudgetUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    status: str | None = None
+
+
+# ── Indirect config update ──────────────────────────────────────────────────
+
+class IndirectConfigUpdate(BaseModel):
+    estructura_pct: float | None = None
+    jefatura_pct: float | None = None
+    logistica_pct: float | None = None
+    herramientas_pct: float | None = None
+
+
+# ── Budget copy ─────────────────────────────────────────────────────────────
+
+class BudgetCopyRequest(BaseModel):
+    name: str | None = None
+
+
 # ── Versions ─────────────────────────────────────────────────────────────────
 
 class VersionCreate(BaseModel):

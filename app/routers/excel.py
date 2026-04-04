@@ -1,9 +1,11 @@
 """Excel import/export router.
 
-Import understands the Las Heras format:
-  - Catalog sheets: 00_Mat, 00_MO, 00_Eq, 00_Sub
-  - Computation sheet: 01_C&P (multi-level header, rows 4-6, data from row 7)
-  - Detail sheets: numbered (1.1, 1.2, etc.) with materials + labor breakdown
+Import understands multiple formats:
+  - Las Heras: numeric codes (0.1, 1.1, etc.)
+  - Lugones/El Encuentro: date-encoded codes (2025-01-01 = 1.1, day=section, month=item)
+  - All share: catalog sheets (00_*), computation sheet (01_C&P), detail sheets
+
+Auto-detects format based on code column content.
 """
 
 from __future__ import annotations
@@ -125,24 +127,35 @@ def _parse_computation_sheet(
     items: list[dict] = []
     code_to_id_placeholder: dict[str, int] = {}  # code -> index for parent lookup
 
+    date_codes_corrected = 0
+
     for i in range(7, len(df)):
+        # Read RAW value from code column to preserve Timestamps
+        code_raw_val = df.iloc[i, COL_ITEM] if df.shape[1] > COL_ITEM else None
         code_raw = _cell_str(df, i, COL_ITEM)
         desc = _cell_str(df, i, COL_DESC)
         cantidad_val = safe_float(df.iloc[i, COL_CANTIDAD] if df.shape[1] > COL_CANTIDAD else None)
 
+        # Track date-code conversions
+        if isinstance(code_raw_val, (pd.Timestamp,)):
+            date_codes_corrected += 1
+
+        # Use raw value for normalization (preserves Timestamp for date-code detection)
+        code_for_normalize = code_raw_val if isinstance(code_raw_val, pd.Timestamp) else code_raw
+
         # Skip empty rows
-        if not code_raw and not desc:
+        if not code_raw and not desc and not isinstance(code_raw_val, pd.Timestamp):
             continue
 
         # Section title (no code or no cantidad) — create as parent item
         if cantidad_val is None:
-            if code_raw or desc:
+            if code_raw or desc or isinstance(code_raw_val, pd.Timestamp):
                 label = f"{code_raw} {desc}".strip() if desc else code_raw
                 items.append({
                     "budget_id": budget_id,
                     "org_id": org_id,
                     "parent_id": None,
-                    "code": normalize_item_code(code_raw) or None,
+                    "code": normalize_item_code(code_for_normalize) or None,
                     "description": label,
                     "unidad": None,
                     "cantidad": None,
@@ -156,14 +169,15 @@ def _parse_computation_sheet(
                     "neto_total": 0,
                     "notas": "Seccion",
                     "sort_order": len(items),
-                    "_code_norm": normalize_item_code(code_raw),
+                    "_code_norm": normalize_item_code(code_for_normalize),
                 })
-                if code_raw:
-                    code_to_id_placeholder[normalize_item_code(code_raw)] = len(items) - 1
+                norm = normalize_item_code(code_for_normalize)
+                if norm:
+                    code_to_id_placeholder[norm] = len(items) - 1
             continue
 
         # Regular item with data
-        code_norm = normalize_item_code(code_raw)
+        code_norm = normalize_item_code(code_for_normalize)
 
         # Find parent by code hierarchy
         parent_idx = None
@@ -199,7 +213,7 @@ def _parse_computation_sheet(
         if code_norm:
             code_to_id_placeholder[code_norm] = len(items) - 1
 
-    return items
+    return items, date_codes_corrected
 
 
 def _parse_detail_sheets(
@@ -333,7 +347,7 @@ async def import_excel(
     resources_inserted = 0
 
     if "01_C&P" in df_dict:
-        parsed_items = _parse_computation_sheet(df_dict["01_C&P"], budget_id, org_id)
+        parsed_items, date_codes_corrected = _parse_computation_sheet(df_dict["01_C&P"], budget_id, org_id)
 
         # Insert items one by one to resolve parent_id references
         idx_to_db_id: dict[int, str] = {}
@@ -351,12 +365,15 @@ async def import_excel(
                 items_inserted += 1
 
         # 5. Parse detail sheets and insert item_resources
+        system_sheets = {
+            "00_Mat", "00_MO", "00_Eq", "00_Sub", "00_JEF + ESTR",
+            "01_C&P", "01_VENTA", "01_RESUMEN VENTA",
+            "01_RESUMEN MAT.", "01_RESUMEN MAT M.O.",
+            "01_RESUMEN SERV. M.O.", "ESTRUCTURA", "TIEMPOS",
+        }
         detail_sheet_names = [
             s for s in df_dict.keys()
-            if s not in ("00_Mat", "00_MO", "00_Eq", "00_Sub", "00_JEF + ESTR",
-                         "01_C&P", "01_VENTA", "01_RESUMEN VENTA",
-                         "01_RESUMEN MAT.", "01_RESUMEN MAT M.O.",
-                         "01_RESUMEN SERV. M.O.", "ESTRUCTURA")
+            if s not in system_sheets and not s.startswith("00_") and not s.startswith("01_")
         ]
 
         resources_by_code = _parse_detail_sheets(df_dict, detail_sheet_names, org_id)
@@ -388,6 +405,7 @@ async def import_excel(
         "budget_name": budget_name,
         "items_inserted": items_inserted,
         "resources_inserted": resources_inserted,
+        "date_codes_corrected": date_codes_corrected if "01_C&P" in df_dict else 0,
     }
 
 
@@ -465,5 +483,229 @@ async def export_budget_excel(
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+# ── PDF Export ──────────────────────────────────────────────────────────────
+
+
+@router.get("/{budget_id}/export/pdf")
+async def export_budget_pdf(
+    budget_id: UUID,
+    user: dict = Depends(get_current_user),
+):
+    """Export a budget to PDF with professional layout."""
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import cm
+    from reportlab.platypus import (
+        Paragraph,
+        SimpleDocTemplate,
+        Spacer,
+        Table,
+        TableStyle,
+    )
+
+    db = get_data_db()
+    bid = str(budget_id)
+    org_id = user["org_id"]
+
+    budget = (
+        db.table("budgets")
+        .select("*")
+        .eq("id", bid)
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not budget.data:
+        raise HTTPException(404, "Presupuesto no encontrado")
+
+    items = (
+        db.table("budget_items")
+        .select("*")
+        .eq("budget_id", bid)
+        .eq("org_id", org_id)
+        .order("sort_order")
+        .execute()
+    )
+    if not items.data:
+        raise HTTPException(404, "Presupuesto sin items")
+
+    # Calculate totals
+    mat_total = sum(i.get("mat_total") or 0 for i in items.data)
+    mo_total = sum(i.get("mo_total") or 0 for i in items.data)
+    directo_total = sum(i.get("directo_total") or 0 for i in items.data)
+    indirecto_total = sum(i.get("indirecto_total") or 0 for i in items.data)
+    beneficio_total = sum(i.get("beneficio_total") or 0 for i in items.data)
+    neto_total = sum(i.get("neto_total") or 0 for i in items.data)
+
+    # Build PDF
+    output = BytesIO()
+    page_size = landscape(A4)
+    doc = SimpleDocTemplate(
+        output,
+        pagesize=page_size,
+        leftMargin=1.5 * cm,
+        rightMargin=1.5 * cm,
+        topMargin=1.5 * cm,
+        bottomMargin=1.5 * cm,
+    )
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        "CustomTitle",
+        parent=styles["Title"],
+        fontSize=16,
+        spaceAfter=6,
+    )
+    subtitle_style = ParagraphStyle(
+        "CustomSubtitle",
+        parent=styles["Normal"],
+        fontSize=10,
+        textColor=colors.grey,
+        spaceAfter=12,
+    )
+    section_style = ParagraphStyle(
+        "SectionHeader",
+        parent=styles["Heading2"],
+        fontSize=12,
+        spaceAfter=6,
+        spaceBefore=12,
+    )
+    footer_style = ParagraphStyle(
+        "Footer",
+        parent=styles["Normal"],
+        fontSize=8,
+        textColor=colors.grey,
+        spaceBefore=20,
+    )
+    cell_style = ParagraphStyle(
+        "Cell",
+        parent=styles["Normal"],
+        fontSize=7,
+        leading=9,
+    )
+
+    elements: list = []
+
+    # Header
+    budget_name = budget.data.get("name") or "Presupuesto"
+    budget_desc = budget.data.get("description") or ""
+    created_at = budget.data.get("created_at", "")[:10]
+
+    elements.append(Paragraph(budget_name, title_style))
+    header_info = f"Fecha: {created_at}"
+    if budget_desc:
+        header_info += f" &nbsp;|&nbsp; {budget_desc}"
+    elements.append(Paragraph(header_info, subtitle_style))
+
+    # Summary table
+    elements.append(Paragraph("Resumen de Costos", section_style))
+
+    def fmt(val: float) -> str:
+        return f"$ {val:,.2f}"
+
+    summary_data = [
+        ["Concepto", "Monto"],
+        ["Total Materiales", fmt(mat_total)],
+        ["Total Mano de Obra", fmt(mo_total)],
+        ["Costo Directo", fmt(directo_total)],
+        ["Costos Indirectos", fmt(indirecto_total)],
+        ["Beneficio", fmt(beneficio_total)],
+        ["NETO TOTAL", fmt(neto_total)],
+    ]
+
+    summary_table = Table(summary_data, colWidths=[8 * cm, 6 * cm])
+    summary_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 9),
+        ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -2), [colors.white, colors.HexColor("#ecf0f1")]),
+        ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#2c3e50")),
+        ("TEXTCOLOR", (0, -1), (-1, -1), colors.white),
+        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 12))
+
+    # Items table
+    elements.append(Paragraph("Detalle de Items", section_style))
+
+    items_header = [
+        "Codigo", "Descripcion", "Unidad", "Cantidad",
+        "MAT Unit.", "MO Unit.", "Directo Total", "Neto Total",
+    ]
+    items_rows = [items_header]
+
+    for item in items.data:
+        desc_text = item.get("description") or ""
+        # Wrap long descriptions in Paragraph for proper line breaking
+        desc_para = Paragraph(desc_text, cell_style)
+        cantidad = item.get("cantidad")
+        cantidad_str = f"{cantidad:,.2f}" if cantidad else ""
+
+        items_rows.append([
+            item.get("code") or "",
+            desc_para,
+            item.get("unidad") or "",
+            cantidad_str,
+            fmt(item.get("mat_unitario") or 0),
+            fmt(item.get("mo_unitario") or 0),
+            fmt(item.get("directo_total") or 0),
+            fmt(item.get("neto_total") or 0),
+        ])
+
+    # Totals row
+    items_rows.append([
+        "TOTAL", "", "", "",
+        "", "",
+        fmt(directo_total),
+        fmt(neto_total),
+    ])
+
+    col_widths = [2.2 * cm, 7 * cm, 1.8 * cm, 2.2 * cm, 2.8 * cm, 2.8 * cm, 3 * cm, 3 * cm]
+
+    items_table = Table(items_rows, colWidths=col_widths, repeatRows=1)
+    items_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 8),
+        ("FONTSIZE", (0, 1), (-1, -1), 7),
+        ("ALIGN", (2, 0), (-1, -1), "RIGHT"),
+        ("ALIGN", (0, 0), (1, -1), "LEFT"),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#bdc3c7")),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -2), [colors.white, colors.HexColor("#f8f9fa")]),
+        ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#2c3e50")),
+        ("TEXTCOLOR", (0, -1), (-1, -1), colors.white),
+        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+    elements.append(items_table)
+
+    # Footer
+    elements.append(Paragraph("Generado por Presupuestador v2.1", footer_style))
+
+    doc.build(elements)
+    output.seek(0)
+
+    safe_name = (budget.data["name"] or "presupuesto").replace(" ", "_")
+    filename = f"{safe_name}_{datetime.now().strftime('%Y%m%d')}.pdf"
+
+    return StreamingResponse(
+        output,
+        media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
