@@ -36,8 +36,15 @@
 24. ~~DataTable header~~ — teal suave bg-[#E8F5EE] sin líneas negras
 25. ~~Botón borrar items~~ — Trash2 con confirmación inline
 
+## COMPLETADOS RECIENTES ✅
+26. ~~Fase A+B Memoria de Cálculo~~ — notas_calculo en items, visible y editable en Ver Detalle
+27. ~~CostSummaryBar restaurado~~ — 5 cards gradient (azul/púrpura/teal/coral/dorado) = diseño aprobado por Carlos
+28. ~~Analysis unificado con Editor~~ — usa mismo CostSummaryBar component
+29. ~~Línea negra divisoria~~ — MarkupChainDisplay border suavizado a gray-100
+30. ~~Marca "editado por humano"~~ — badge sutil en ItemDetail cuando item tiene edits manuales
+
 ## EN CURSO (trabajando ahora) 🔧
-26. **Fase A+B Memoria de Cálculo** — Agente trabajando: notas_calculo en items, visible y editable en Ver Detalle
+(nada pendiente — esperando feedback de Carlos)
 
 ## BACKLOG PRIORITARIO (próximos) 🔴
 27. **Vista por planta REAL** — Items se REPITEN por piso (PB, Piso 1, Piso 2... Azotea) cada uno con su cantidad. CRITICO para Terrac.
