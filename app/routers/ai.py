@@ -54,7 +54,8 @@ Respondé ÚNICAMENTE con un JSON válido con esta estructura exacta:
           "unidad": "m³",
           "cantidad": 12.5,
           "confianza": "alta",
-          "notas": "4 columnas de 30x30cm x 3m altura"
+          "notas": "4 columnas de 30x30cm x 3m altura",
+          "memoria_calculo": "4 columnas x 0.30m x 0.30m x 3.00m = 1.08 m3\\nDesperdicio 5%: 1.08 x 1.05 = 1.13 m3\\nTotal redondeado: 1.15 m3"
         }
       ]
     }
@@ -74,6 +75,10 @@ Secciones típicas a considerar:
 - Carpintería (puertas, ventanas, marcos)
 - Pintura (interior, exterior, impermeabilizante)
 - Varios (limpieza final, conexiones a red)
+
+Para cada item, incluí un campo "memoria_calculo" con el desglose paso a paso
+de cómo calculaste la cantidad. Mostrá las dimensiones, fórmulas y operaciones
+intermedias. Ejemplo: "Largo 4.50m x Ancho 3.20m = 14.40 m2".
 
 Sé preciso con las cantidades. Usá las dimensiones del plano.
 Si no podés medir algo con certeza, indicá confianza "baja".
@@ -254,6 +259,7 @@ async def analyze_plan(
                                 "cantidad": float(s.get("cantidad_estimada", s.get("cantidad", 1))),
                                 "confianza": "media",
                                 "notas": "",
+                                "notas_calculo": "",
                             }
                             for i, s in enumerate(data)
                             if isinstance(s, dict) and s.get("description")
@@ -286,6 +292,7 @@ async def analyze_plan(
                 "cantidad": float(item.get("cantidad", 1)),
                 "confianza": item.get("confianza", "media") if item.get("confianza") in ("alta", "media", "baja") else "media",
                 "notas": str(item.get("notas", "")),
+                "notas_calculo": str(item.get("memoria_calculo", "")),
             })
         if items:
             normalized_sections.append({
@@ -394,6 +401,7 @@ async def insert_ai_suggestions(
                 "unidad": item.get("unidad", "u"),
                 "cantidad": float(item.get("cantidad", 1)),
                 "notas": item.get("notas", "Sugerido por IA"),
+                "notas_calculo": item.get("notas_calculo", ""),
                 "sort_order": sort_base + ii + 1,
             }
             if parent_id:

@@ -23,7 +23,7 @@ from app.tree import build_tree
 logger = logging.getLogger(__name__)
 
 # Fields that are user-editable (not calculated). Used for audit trail.
-AUDITABLE_FIELDS = {"cantidad", "mat_unitario", "mo_unitario", "description", "unidad", "code"}
+AUDITABLE_FIELDS = {"cantidad", "mat_unitario", "mo_unitario", "description", "unidad", "code", "notas_calculo"}
 
 router = APIRouter()
 

@@ -41,6 +41,7 @@ class BudgetItemCreate(BaseModel):
     beneficio_total: float | None = None
     neto_total: float | None = None
     notas: str | None = None
+    notas_calculo: str | None = None
 
 
 class BudgetItemUpdate(BaseModel):
@@ -58,6 +59,7 @@ class BudgetItemUpdate(BaseModel):
     beneficio_total: float | None = None
     neto_total: float | None = None
     notas: str | None = None
+    notas_calculo: str | None = None
 
 
 # ── Analysis ─────────────────────────────────────────────────────────────────

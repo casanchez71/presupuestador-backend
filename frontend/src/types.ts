@@ -27,6 +27,7 @@ export interface BudgetItem {
   beneficio_total: number
   neto_total: number
   notas?: string
+  notas_calculo?: string
   sort_order: number
   children?: BudgetItem[]
 }
@@ -122,6 +123,7 @@ export interface AIItem {
   cantidad: number
   confianza: 'alta' | 'media' | 'baja'
   notas: string
+  notas_calculo: string
 }
 
 export interface AISeccion {
@@ -145,4 +147,5 @@ export interface AIItemToInsert {
   unidad: string
   cantidad: number
   notas: string
+  notas_calculo: string
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronRight, ClipboardList, History, Pencil, Upload, Cpu, BookOpen } from 'lucide-react'
+import { ChevronRight, ChevronDown, ClipboardList, History, Pencil, Upload, Cpu, BookOpen, Calculator, Check, X } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency, fmtNumber, fmtPercent } from '../lib/format'
 import type { ItemResource, BudgetItem, Budget, ItemAudit } from '../types'
@@ -22,6 +22,7 @@ const FIELD_LABELS: Record<string, string> = {
   description: 'Descripcion',
   unidad: 'Unidad',
   code: 'Codigo',
+  notas_calculo: 'Memoria de Calculo',
 }
 
 const SOURCE_CONFIG: Record<string, { label: string; icon: typeof Pencil; color: string }> = {
@@ -166,6 +167,10 @@ export default function ItemDetail() {
   const [loading, setLoading] = useState(true)
   const [auditsLoading, setAuditsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [memoriaOpen, setMemoriaOpen] = useState(false)
+  const [editingMemoria, setEditingMemoria] = useState(false)
+  const [memoriaDraft, setMemoriaDraft] = useState('')
+  const [memoriaSaving, setMemoriaSaving] = useState(false)
 
   useEffect(() => {
     if (!id || !itemId) {
@@ -328,6 +333,97 @@ export default function ItemDetail() {
         <ResourceTable recursos={recursos} tipo="mano_obra" />
         <ResourceTable recursos={recursos} tipo="equipo" />
         <ResourceTable recursos={recursos} tipo="subcontrato" />
+      </div>
+
+      {/* Memoria de Calculo */}
+      <div className="bg-white rounded-xl border overflow-hidden mb-6">
+        <button
+          onClick={() => setMemoriaOpen(!memoriaOpen)}
+          className="w-full bg-gray-100 px-4 py-2.5 flex items-center gap-2 border-b hover:bg-gray-200 transition-colors"
+        >
+          <Calculator size={14} className="text-[#2D8D68]" />
+          <span className="font-bold text-sm text-gray-800">Memoria de Calculo</span>
+          {item?.notas_calculo && (
+            <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
+              con datos
+            </span>
+          )}
+          <span className="ml-auto">
+            {memoriaOpen ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
+          </span>
+        </button>
+        {memoriaOpen && (
+          <div className="p-4">
+            {editingMemoria ? (
+              <div className="space-y-3">
+                <textarea
+                  value={memoriaDraft}
+                  onChange={(e) => setMemoriaDraft(e.target.value)}
+                  rows={8}
+                  className="w-full border rounded-lg p-3 text-sm font-mono text-gray-700 focus:ring-2 focus:ring-[#2D8D68] focus:border-[#2D8D68] outline-none resize-y"
+                  placeholder="Ej: Largo 4.50m x Ancho 3.20m = 14.40 m2&#10;Desperdicio 5%: 14.40 x 1.05 = 15.12 m2"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={memoriaSaving}
+                    onClick={async () => {
+                      if (!id || !itemId) return
+                      setMemoriaSaving(true)
+                      try {
+                        const result = await budgetApi.updateItem(id, itemId, { notas_calculo: memoriaDraft } as Partial<BudgetItem>)
+                        if (result && typeof result === 'object' && 'item' in result) {
+                          const updatedItem = (result as { item: BudgetItem }).item
+                          setItem(updatedItem)
+                        } else {
+                          setItem((prev) => prev ? { ...prev, notas_calculo: memoriaDraft } : prev)
+                        }
+                        setEditingMemoria(false)
+                        // Refresh audits to show the new entry
+                        budgetApi.getItemAudits(id, itemId)
+                          .then((data) => setAudits(Array.isArray(data) ? data : []))
+                          .catch(() => {})
+                      } catch {
+                        // silently fail
+                      } finally {
+                        setMemoriaSaving(false)
+                      }
+                    }}
+                    className="flex items-center gap-1 bg-[#2D8D68] hover:bg-[#1B5E4B] text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  >
+                    <Check size={12} />
+                    {memoriaSaving ? 'Guardando...' : 'Guardar'}
+                  </button>
+                  <button
+                    disabled={memoriaSaving}
+                    onClick={() => setEditingMemoria(false)}
+                    className="flex items-center gap-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
+                  >
+                    <X size={12} />
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                {item?.notas_calculo ? (
+                  <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono bg-gray-50 rounded-lg p-3 mb-3">{item.notas_calculo}</pre>
+                ) : (
+                  <p className="text-sm text-gray-400 italic mb-3">Sin memoria de calculo para este item.</p>
+                )}
+                <button
+                  onClick={() => {
+                    setMemoriaDraft(item?.notas_calculo ?? '')
+                    setEditingMemoria(true)
+                  }}
+                  className="flex items-center gap-1 text-xs text-[#2D8D68] hover:text-[#1B5E4B] font-medium transition-colors"
+                >
+                  <Pencil size={12} />
+                  {item?.notas_calculo ? 'Editar memoria' : 'Agregar memoria de calculo'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Audit History */}
