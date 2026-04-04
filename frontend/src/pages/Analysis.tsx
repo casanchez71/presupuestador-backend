@@ -126,7 +126,7 @@ export default function Analysis() {
           <div className="w-4 h-4 border-2 border-[#2D8D68] border-t-transparent rounded-full animate-spin" />
           Cargando análisis...
         </div>
-      )
+      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-sm text-red-700">
