@@ -92,4 +92,57 @@ export interface BudgetVersion {
   created_at: string
 }
 
+export interface ItemAudit {
+  id: string
+  item_id: string
+  budget_id: string
+  org_id: string
+  user_id: string
+  field: string
+  old_value: string | null
+  new_value: string | null
+  source: string
+  created_at: string
+}
+
 export type TreeNode = BudgetItem & { children: TreeNode[] }
+
+// ─── AI Plan Analysis ─────────────────────────────────────────────────────────
+
+export interface AIProyecto {
+  descripcion: string
+  superficie_total_m2: number
+  ambientes_detectados: string[]
+}
+
+export interface AIItem {
+  codigo: string
+  descripcion: string
+  unidad: string
+  cantidad: number
+  confianza: 'alta' | 'media' | 'baja'
+  notas: string
+}
+
+export interface AISeccion {
+  codigo: string
+  nombre: string
+  items: AIItem[]
+}
+
+export interface AIAnalysisResult {
+  budget_id: string
+  proyecto: AIProyecto
+  secciones: AISeccion[]
+  total_items: number
+}
+
+export interface AIItemToInsert {
+  seccion_nombre: string
+  seccion_codigo: string
+  codigo: string
+  descripcion: string
+  unidad: string
+  cantidad: number
+  notas: string
+}

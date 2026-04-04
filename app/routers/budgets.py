@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -18,6 +19,11 @@ from app.schemas import (
     SectionCreate,
 )
 from app.tree import build_tree
+
+logger = logging.getLogger(__name__)
+
+# Fields that are user-editable (not calculated). Used for audit trail.
+AUDITABLE_FIELDS = {"cantidad", "mat_unitario", "mo_unitario", "description", "unidad", "code"}
 
 router = APIRouter()
 
@@ -295,17 +301,70 @@ async def update_item(
         .execute()
     )
 
-    db.table("audit_logs").insert({
-        "org_id": org_id,
-        "user_id": user["user_id"],
-        "budget_id": bid,
-        "item_id": iid,
-        "action": "update",
-        "changes": changes,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }).execute()
+    # Insert per-field audit records into item_audits table.
+    # NOTE: The item_audits table must be created via migrations/002_item_audits.sql.
+    # If the table does not exist yet, the insert will fail silently.
+    try:
+        audit_records = []
+        for field_name, change in changes.items():
+            if field_name in AUDITABLE_FIELDS:
+                audit_records.append({
+                    "item_id": iid,
+                    "budget_id": bid,
+                    "org_id": org_id,
+                    "user_id": user["user_id"],
+                    "field": field_name,
+                    "old_value": str(change["before"]) if change["before"] is not None else None,
+                    "new_value": str(change["after"]) if change["after"] is not None else None,
+                    "source": "manual_edit",
+                })
+        if audit_records:
+            db.table("item_audits").insert(audit_records).execute()
+    except Exception:
+        # Table may not exist yet — log but don't block the update
+        logger.warning("item_audits insert failed (table may not exist yet)", exc_info=True)
+
+    # Also write to legacy audit_logs if it exists
+    try:
+        db.table("audit_logs").insert({
+            "org_id": org_id,
+            "user_id": user["user_id"],
+            "budget_id": bid,
+            "item_id": iid,
+            "action": "update",
+            "changes": changes,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }).execute()
+    except Exception:
+        logger.warning("audit_logs insert failed", exc_info=True)
 
     return {"message": "Item actualizado", "item": updated.data}
+
+
+@router.get("/{budget_id}/items/{item_id}/audits")
+async def get_item_audits(
+    budget_id: UUID,
+    item_id: UUID,
+    user: dict = Depends(get_current_user),
+):
+    """Return audit history for an item, ordered by most recent first."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    try:
+        result = (
+            db.table("item_audits")
+            .select("*")
+            .eq("item_id", str(item_id))
+            .eq("budget_id", str(budget_id))
+            .eq("org_id", org_id)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        return result.data or []
+    except Exception:
+        # Table may not exist yet
+        logger.warning("item_audits query failed (table may not exist yet)", exc_info=True)
+        return []
 
 
 @router.get("/{budget_id}/items")

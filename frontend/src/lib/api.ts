@@ -2,12 +2,15 @@ import type {
   Budget,
   BudgetItem,
   ItemResource,
+  ItemAudit,
   PriceCatalog,
   CatalogEntry,
   AnalysisResponse,
   IndirectConfig,
   BudgetVersion,
   TreeNode,
+  AIAnalysisResult,
+  AIItemToInsert,
 } from '../types'
 
 const BASE_URL = (import.meta.env.VITE_API_URL as string) || '/api'
@@ -93,6 +96,10 @@ export const budgetApi = {
   getItemResources: (budgetId: string, itemId: string) =>
     get<ItemResource[]>(`/budgets/${budgetId}/items/${itemId}/resources`),
 
+  // Audits
+  getItemAudits: (budgetId: string, itemId: string) =>
+    get<ItemAudit[]>(`/budgets/${budgetId}/items/${itemId}/audits`),
+
   // Tree / Full
   getTree: (id: string) => get<TreeNode[]>(`/budgets/${id}/tree`),
   getFull: (id: string) => get<{ budget: Budget; tree: TreeNode[] }>(`/budgets/${id}/full`),
@@ -108,9 +115,9 @@ export const budgetApi = {
 
   // AI Plan analysis
   analyzePlan: (id: string, formData: FormData) =>
-    postFile<{ items: BudgetItem[] }>(`/budgets/${id}/analyze-plan`, formData),
-  addItemsFromAI: (id: string, items: Partial<BudgetItem>[]) =>
-    post<BudgetItem[]>(`/budgets/${id}/items/from-ai`, { items }),
+    postFile<AIAnalysisResult>(`/budgets/${id}/analyze-plan`, formData),
+  addItemsFromAI: (id: string, items: AIItemToInsert[]) =>
+    post<{ inserted: number; sections_created: number }>(`/budgets/${id}/items/from-ai`, { items }),
 
   // Indirects
   getIndirects: (id: string) => get<IndirectConfig>(`/budgets/${id}/indirects`),

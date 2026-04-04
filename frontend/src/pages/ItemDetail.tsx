@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronRight, ClipboardList } from 'lucide-react'
+import { ChevronRight, ClipboardList, History, Pencil, Upload, Cpu, BookOpen } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency, fmtNumber, fmtPercent } from '../lib/format'
-import type { ItemResource, BudgetItem, Budget } from '../types'
+import type { ItemResource, BudgetItem, Budget, ItemAudit } from '../types'
 
 
 type Tipo = ItemResource['tipo']
@@ -13,6 +13,37 @@ const TIPO_LABELS: Record<Tipo, string> = {
   mano_obra: 'Mano de Obra',
   equipo: 'Equipos',
   subcontrato: 'Subcontratos',
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  cantidad: 'Cantidad',
+  mat_unitario: 'MAT Unitario',
+  mo_unitario: 'MO Unitario',
+  description: 'Descripcion',
+  unidad: 'Unidad',
+  code: 'Codigo',
+}
+
+const SOURCE_CONFIG: Record<string, { label: string; icon: typeof Pencil; color: string }> = {
+  manual_edit: { label: 'Edicion manual', icon: Pencil, color: 'text-blue-600' },
+  ai_suggestion: { label: 'Sugerencia IA', icon: Cpu, color: 'text-purple-600' },
+  excel_import: { label: 'Importacion Excel', icon: Upload, color: 'text-green-600' },
+  catalog_update: { label: 'Catalogo de precios', icon: BookOpen, color: 'text-orange-600' },
+}
+
+function timeAgo(dateStr: string): string {
+  const now = new Date()
+  const date = new Date(dateStr)
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  const diffHr = Math.floor(diffMin / 60)
+  const diffDays = Math.floor(diffHr / 24)
+
+  if (diffMin < 1) return 'hace un momento'
+  if (diffMin < 60) return `hace ${diffMin} min`
+  if (diffHr < 24) return `hace ${diffHr}h`
+  if (diffDays < 7) return `hace ${diffDays}d`
+  return date.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function ResourceTable({ recursos, tipo }: { recursos: ItemResource[]; tipo: Tipo }) {
@@ -26,13 +57,13 @@ function ResourceTable({ recursos, tipo }: { recursos: ItemResource[]; tipo: Tip
         <span className="text-[10px] text-gray-400">{filtered.length} recursos</span>
       </div>
       {filtered.length === 0 ? (
-        <div className="p-4 text-xs text-gray-400 italic">Sin {TIPO_LABELS[tipo].toLowerCase()} para este ítem</div>
+        <div className="p-4 text-xs text-gray-400 italic">Sin {TIPO_LABELS[tipo].toLowerCase()} para este item</div>
       ) : (
         <table className="w-full text-xs">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-3 py-1.5 text-left text-gray-500 font-medium">Código</th>
-              <th className="px-3 py-1.5 text-left text-gray-500 font-medium">Descripción</th>
+              <th className="px-3 py-1.5 text-left text-gray-500 font-medium">Codigo</th>
+              <th className="px-3 py-1.5 text-left text-gray-500 font-medium">Descripcion</th>
               <th className="px-3 py-1.5 text-right text-gray-500 font-medium">Cant</th>
               <th className="px-3 py-1.5 text-right text-gray-500 font-medium">Desp%</th>
               <th className="px-3 py-1.5 text-right text-gray-500 font-medium">Cant+Desp</th>
@@ -71,13 +102,69 @@ function ResourceTable({ recursos, tipo }: { recursos: ItemResource[]; tipo: Tip
   )
 }
 
+function AuditHistory({ audits, loading }: { audits: ItemAudit[]; loading: boolean }) {
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-gray-400 p-4">
+        <div className="w-4 h-4 border-2 border-[#2D8D68] border-t-transparent rounded-full animate-spin" />
+        Cargando historial...
+      </div>
+    )
+  }
+
+  if (audits.length === 0) {
+    return (
+      <div className="p-6 text-center text-gray-400 text-sm">
+        Sin cambios registrados para este item.
+      </div>
+    )
+  }
+
+  return (
+    <div className="divide-y">
+      {audits.map((audit) => {
+        const config = SOURCE_CONFIG[audit.source] ?? SOURCE_CONFIG.manual_edit
+        const Icon = config.icon
+        const fieldLabel = FIELD_LABELS[audit.field] ?? audit.field
+
+        return (
+          <div key={audit.id} className="px-4 py-3 flex items-start gap-3 hover:bg-gray-50">
+            <div className={`mt-0.5 p-1 rounded-full bg-gray-100 ${config.color}`}>
+              <Icon size={12} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-gray-800">
+                <span className="font-medium">{fieldLabel}</span>
+                {' cambio de '}
+                <span className="font-mono bg-red-50 text-red-700 px-1 rounded text-[10px]">
+                  {audit.old_value ?? '—'}
+                </span>
+                {' a '}
+                <span className="font-mono bg-green-50 text-green-700 px-1 rounded text-[10px]">
+                  {audit.new_value ?? '—'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] text-gray-400">{timeAgo(audit.created_at)}</span>
+                <span className={`text-[10px] ${config.color}`}>{config.label}</span>
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function ItemDetail() {
   const { id, itemId } = useParams<{ id: string; itemId: string }>()
   const navigate = useNavigate()
   const [budget, setBudget] = useState<Budget | null>(null)
   const [item, setItem] = useState<BudgetItem | null>(null)
   const [recursos, setRecursos] = useState<ItemResource[]>([])
+  const [audits, setAudits] = useState<ItemAudit[]>([])
   const [loading, setLoading] = useState(true)
+  const [auditsLoading, setAuditsLoading] = useState(true)
 
   useEffect(() => {
     if (!id || !itemId) return
@@ -91,6 +178,12 @@ export default function ItemDetail() {
       if (it) setItem(it)
       setRecursos(res)
     }).finally(() => setLoading(false))
+
+    // Load audits separately (may fail if table doesn't exist)
+    budgetApi.getItemAudits(id, itemId)
+      .then(setAudits)
+      .catch(() => setAudits([]))
+      .finally(() => setAuditsLoading(false))
   }, [id, itemId])
 
   const totalMat = recursos.filter((r) => r.tipo === 'material').reduce((s, r) => s + r.subtotal, 0)
@@ -106,7 +199,7 @@ export default function ItemDetail() {
         <ChevronRight size={12} className="text-gray-300" />
         <span className="text-gray-400 cursor-pointer hover:text-[#2D8D68]" onClick={() => navigate(`/app/budgets/${id ?? '1'}/editor`)}>{budget?.name ?? 'Presupuesto'}</span>
         <ChevronRight size={12} className="text-gray-300" />
-        <span className="font-semibold text-gray-900">{item ? `${item.code ?? ''} ${item.description ?? ''}`.trim() : 'Ítem'}</span>
+        <span className="font-semibold text-gray-900">{item ? `${item.code ?? ''} ${item.description ?? ''}`.trim() : 'Item'}</span>
       </div>
 
       {/* Section label */}
@@ -115,7 +208,7 @@ export default function ItemDetail() {
       </div>
       <div className="flex items-center gap-3 mb-4">
         <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
-        <h1 className="text-xl font-extrabold text-gray-900">{item ? `${item.code ?? ''} ${item.description ?? ''}`.trim().toUpperCase() : 'DETALLE DE ÍTEM'}</h1>
+        <h1 className="text-xl font-extrabold text-gray-900">{item ? `${item.code ?? ''} ${item.description ?? ''}`.trim().toUpperCase() : 'DETALLE DE ITEM'}</h1>
       </div>
 
       {loading && (
@@ -144,9 +237,9 @@ export default function ItemDetail() {
           <div className="font-bold text-[#2D8D68]">{fmtNumber(cantidad * (1 + desperdicio / 100), 0)} {item?.unidad ?? ''}</div>
         </div>
         <div className="ml-auto text-right">
-          <div className="text-[10px] text-gray-400">Fórmula</div>
+          <div className="text-[10px] text-gray-400">Formula</div>
           <div className="font-mono text-xs text-gray-600">
-            {fmtNumber(cantidad, 2)} × (1 + 0.{desperdicio}) ={' '}
+            {fmtNumber(cantidad, 2)} x (1 + 0.{desperdicio}) ={' '}
             <strong>{fmtNumber(cantidad * (1 + desperdicio / 100), 0)} {item?.unidad ?? ''}</strong>
           </div>
         </div>
@@ -169,11 +262,25 @@ export default function ItemDetail() {
       </div>
 
       {/* Resource tables 2x2 */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <ResourceTable recursos={recursos} tipo="material" />
         <ResourceTable recursos={recursos} tipo="mano_obra" />
         <ResourceTable recursos={recursos} tipo="equipo" />
         <ResourceTable recursos={recursos} tipo="subcontrato" />
+      </div>
+
+      {/* Audit History */}
+      <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-gray-100 px-4 py-2.5 flex items-center gap-2 border-b">
+          <History size={14} className="text-[#2D8D68]" />
+          <span className="font-bold text-sm text-gray-800">Historial de cambios</span>
+          {audits.length > 0 && (
+            <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+              {audits.length}
+            </span>
+          )}
+        </div>
+        <AuditHistory audits={audits} loading={auditsLoading} />
       </div>
     </div>
   )
