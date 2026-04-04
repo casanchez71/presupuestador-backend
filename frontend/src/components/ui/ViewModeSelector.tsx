@@ -11,7 +11,7 @@ const MODES: { key: ViewMode; label: string; icon: typeof Layers }[] = [
   { key: 'rubro', label: 'Rubro', icon: Layers },
   { key: 'piso', label: 'Piso', icon: Building2 },
   { key: 'material', label: 'Material', icon: Package },
-  { key: 'tipo', label: 'Tipo', icon: Wrench },
+  { key: 'tipo', label: 'Gremio', icon: Wrench },
 ]
 
 const HELP_SECTIONS = [
@@ -32,8 +32,8 @@ const HELP_SECTIONS = [
   },
   {
     emoji: '\u{1F527}',
-    title: 'TIPO DE TRABAJO',
-    desc: 'Agrupa items por especialidad/gremio (Electricidad, Plomer\u00EDa, Pintura, Carpinter\u00EDa...)',
+    title: 'GREMIO / ESPECIALIDAD',
+    desc: 'Agrupa items por el gremio o especialidad que lo ejecuta (Electricista, Plomero, Pintor, Carpintero...). Util para ver cuanto trabajo tiene cada gremio.',
   },
 ]
 
