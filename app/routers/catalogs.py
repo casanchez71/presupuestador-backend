@@ -14,6 +14,23 @@ from app.schemas import CatalogEntryCreate, CatalogEntryUpdate, CatalogTipo
 
 router = APIRouter()
 
+# Column aliases for flexible CSV parsing
+PRICE_COLUMN_ALIASES = [
+    "precio_unitario", "precio_hora", "precio", "precio_sin_iva",
+    "costo", "precio_unit", "price", "unit_price",
+]
+CODIGO_COLUMN_ALIASES = ["codigo", "code", "cod"]
+DESCRIPCION_COLUMN_ALIASES = ["descripcion", "description", "desc"]
+UNIDAD_COLUMN_ALIASES = ["unidad", "unit", "und"]
+
+
+def _find_col(field_map: dict[str, str], aliases: list[str]) -> str | None:
+    """Return the first alias found in field_map (normalised lowercase keys)."""
+    for alias in aliases:
+        if alias in field_map:
+            return field_map[alias]
+    return None
+
 
 # ── Upload CSV catalog ────────────────────────────────────────────────────
 
@@ -27,7 +44,11 @@ async def upload_csv_catalog(
 ):
     """Upload a CSV price list and create a catalog with entries.
 
-    CSV must have columns: codigo, descripcion, unidad, precio_unitario
+    Required columns (accepts alternative names):
+      - codigo / code / cod
+      - descripcion / description / desc
+      - unidad / unit / und
+      - precio_unitario / precio_hora / precio / precio_sin_iva / costo / precio_unit / price / unit_price
     """
     db = get_data_db()
     org_id = user["org_id"]
@@ -41,24 +62,38 @@ async def upload_csv_catalog(
 
     reader = csv.DictReader(io.StringIO(text))
 
-    # Validate required columns
-    required_cols = {"codigo", "descripcion", "unidad", "precio_unitario"}
-    if not reader.fieldnames or not required_cols.issubset({c.strip().lower() for c in reader.fieldnames}):
+    # Normalize fieldnames to lowercase -> original name mapping
+    field_map = {c.strip().lower(): c for c in (reader.fieldnames or [])}
+
+    # Resolve each required column via aliases
+    codigo_col = _find_col(field_map, CODIGO_COLUMN_ALIASES)
+    descripcion_col = _find_col(field_map, DESCRIPCION_COLUMN_ALIASES)
+    unidad_col = _find_col(field_map, UNIDAD_COLUMN_ALIASES)
+    price_col = _find_col(field_map, PRICE_COLUMN_ALIASES)
+
+    missing: list[str] = []
+    if codigo_col is None:
+        missing.append(f"codigo (acepta: {', '.join(CODIGO_COLUMN_ALIASES)})")
+    if descripcion_col is None:
+        missing.append(f"descripcion (acepta: {', '.join(DESCRIPCION_COLUMN_ALIASES)})")
+    if unidad_col is None:
+        missing.append(f"unidad (acepta: {', '.join(UNIDAD_COLUMN_ALIASES)})")
+    if price_col is None:
+        missing.append(f"precio (acepta: {', '.join(PRICE_COLUMN_ALIASES)})")
+
+    if missing:
         raise HTTPException(
             400,
-            f"CSV debe tener columnas: {', '.join(sorted(required_cols))}. "
-            f"Encontradas: {reader.fieldnames}",
+            f"CSV falta columnas requeridas: {'; '.join(missing)}. "
+            f"Columnas encontradas: {list(reader.fieldnames or [])}",
         )
-
-    # Normalize fieldnames
-    field_map = {c.strip().lower(): c for c in reader.fieldnames}
 
     rows = []
     for row in reader:
-        codigo = (row.get(field_map.get("codigo", "codigo")) or "").strip()
-        descripcion = (row.get(field_map.get("descripcion", "descripcion")) or "").strip()
-        unidad = (row.get(field_map.get("unidad", "unidad")) or "").strip()
-        precio_raw = (row.get(field_map.get("precio_unitario", "precio_unitario")) or "").strip()
+        codigo = (row.get(codigo_col) or "").strip()  # type: ignore[arg-type]
+        descripcion = (row.get(descripcion_col) or "").strip()  # type: ignore[arg-type]
+        unidad = (row.get(unidad_col) or "").strip()  # type: ignore[arg-type]
+        precio_raw = (row.get(price_col) or "").strip()  # type: ignore[arg-type]
 
         if not codigo or not precio_raw:
             continue
