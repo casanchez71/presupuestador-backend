@@ -1,0 +1,25 @@
+codigo,descripcion,unidad,precio_unitario
+E-MC,Mini Cargadora,u,420000.0
+E-MCM,Mini Cargadora con martillo,u,550000.0
+E-ME,Mini Excavadora,u,550000.0
+E-MP,Motopison,u,40000.0
+E-RP,Retropala,u,680000.0
+E-VC,Vibrocompactador,u,680000.0
+E-MN,Motoniveladora,u,900000.0
+E-CAMCH,Camion Chasis,u,350000.0
+E-REG,Regador,u,350000.0
+E-MAR,Martillete,u,45000.0
+E-ASC,Ascerradora,u,60000.0
+E-RET,Retiro x camion,u,160000.0
+E-MR,Mini Retro,u,480000.0
+MS-TM3,TOSCA x M3,m3,30000.0
+MS-TCA,TOSCA X EQUIPO,m3,10500.0
+MS-ER,EXCAVACION Y RETIRO,m3,30000.0
+MS-TC,TOSCA COMPACTADA,m3,25000.0
+MS-ARBOL,RETIRO DE ARBOL,u,570000.0
+E-CAM,Camioneta,u,200000.0
+E-TRAS,TRASLADO DE MAQUINARIA,u,300000.0
+E-VOL,Volquete,u,200000.0
+E-EXC,Excavadora 22TN,u,900000.0
+E-TOP,Topadora,u,1350000.0
+E-PALA,Pala frontal,u,800000.0

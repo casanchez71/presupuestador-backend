@@ -1,0 +1,36 @@
+{
+  "gastos_generales_pct": 14.2,
+  "beneficio_pct": 25.0,
+  "financiero_pct": 8.2,
+  "nota": "Porcentajes estimados desde el presupuesto original Las Heras. gastos_generales incluye jefatura, estructura, logistica y herramientas. beneficio es el margen del constructor. financiero cubre IVA y financiamiento.",
+  "costos_fijos_mensuales": [
+    {
+      "concepto": "Jefatura de Obra",
+      "monto": 2500000.0
+    },
+    {
+      "concepto": "Jefe de Obra",
+      "monto": 2500000.0
+    },
+    {
+      "concepto": "Gastos Estructura",
+      "monto": 3400000.0
+    },
+    {
+      "concepto": "Nafta Jefe de Obra",
+      "monto": 500000.0
+    },
+    {
+      "concepto": "Nafta Jorge",
+      "monto": 500000.0
+    },
+    {
+      "concepto": "Guille",
+      "monto": 400000.0
+    },
+    {
+      "concepto": "Herramientas",
+      "monto": 2000000.0
+    }
+  ]
+}
