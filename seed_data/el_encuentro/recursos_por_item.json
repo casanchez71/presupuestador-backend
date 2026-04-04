@@ -1,0 +1,851 @@
+{
+  "2.2": [
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-CA",
+      "descripcion": "Capataz",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 28.0,
+      "precio_unitario": 50000.0,
+      "subtotal": 1400000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-OF",
+      "descripcion": "Oficial",
+      "unidad": "u",
+      "cantidad": null,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 0.0,
+      "precio_unitario": 40000.0,
+      "subtotal": 0.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-AY",
+      "descripcion": "Ayudante",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 28.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 840000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MS-Mr",
+      "descripcion": "MINIRETRO EXCAVADORA",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 28.0,
+      "precio_unitario": 550000.0,
+      "subtotal": 15400000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "ms-rv",
+      "descripcion": "RETIRO X VIAJE",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 417.0,
+      "precio_unitario": 55000.0,
+      "subtotal": 22935000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MS-T",
+      "descripcion": "TRASLADO DE MAQUINARIA",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.0,
+      "cantidad_efectiva": 1.0,
+      "precio_unitario": 300000.0,
+      "subtotal": 300000.0
+    }
+  ],
+  "2.3": [
+    {
+      "tipo": "material",
+      "codigo": "TOS8",
+      "descripcion": "Tosca",
+      "unidad": "m3",
+      "cantidad": 390.59,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 430.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 12900000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-CA",
+      "descripcion": "Capataz",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 0.0,
+      "precio_unitario": 50000.0,
+      "subtotal": 0.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-OF",
+      "descripcion": "Oficial",
+      "unidad": "u",
+      "cantidad": null,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 0.0,
+      "precio_unitario": 40000.0,
+      "subtotal": 0.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-AY",
+      "descripcion": "Ayudante",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 0.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 0.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MS-MC",
+      "descripcion": "MINICARGADORA",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.25,
+      "cantidad_efectiva": 19.0,
+      "precio_unitario": 420000.0,
+      "subtotal": 7980000.0
+    }
+  ],
+  "3.1": [
+    {
+      "tipo": "material",
+      "codigo": "A-NY200100m2",
+      "descripcion": "Nylon 200 Micrones (100 m2 x rollo)",
+      "unidad": "u",
+      "cantidad": 7.19,
+      "desperdicio_pct": 0.0,
+      "cantidad_efectiva": 8.0,
+      "precio_unitario": 81655.0,
+      "subtotal": 653240.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "m5,5",
+      "descripcion": "Malla Φ 5,5 (2 m x 5 m) (hierros cada 0,18 x 0,18 m) - menos de 50 u (u)",
+      "unidad": "u",
+      "cantidad": 71.93,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 80.0,
+      "precio_unitario": 34628.1,
+      "subtotal": 2770247.93
+    },
+    {
+      "tipo": "material",
+      "codigo": "H8",
+      "descripcion": "Hormigon H8",
+      "unidad": "m3",
+      "cantidad": 71.93,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 80.0,
+      "precio_unitario": 101500.0,
+      "subtotal": 8120000.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "HBP",
+      "descripcion": "BOMBA PLUMA",
+      "unidad": "m3",
+      "cantidad": 71.93,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 80.0,
+      "precio_unitario": 5200.0,
+      "subtotal": 416000.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "HBPT",
+      "descripcion": "TRASLADO BOMBA PLUMA",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.0,
+      "cantidad_efectiva": 1.0,
+      "precio_unitario": 520000.0,
+      "subtotal": 520000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-CA",
+      "descripcion": "Capataz",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.25,
+      "cantidad_efectiva": 7.0,
+      "precio_unitario": 50000.0,
+      "subtotal": 350000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-OF",
+      "descripcion": "Oficial",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.25,
+      "cantidad_efectiva": 13.0,
+      "precio_unitario": 40000.0,
+      "subtotal": 520000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-AY",
+      "descripcion": "Ayudante",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.25,
+      "cantidad_efectiva": 13.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 390000.0
+    }
+  ],
+  "3.3": [
+    {
+      "tipo": "material",
+      "codigo": "HADN6",
+      "descripcion": "Hierros ADN 420 Φ 6",
+      "unidad": "u",
+      "cantidad": 108.88,
+      "desperdicio_pct": 0.15,
+      "cantidad_efectiva": 126.0,
+      "precio_unitario": 5250.0,
+      "subtotal": 661500.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "HADN12",
+      "descripcion": "Hierros ADN 420 Φ 12",
+      "unidad": "u",
+      "cantidad": 36.29,
+      "desperdicio_pct": 0.4,
+      "cantidad_efectiva": 51.0,
+      "precio_unitario": 20442.5,
+      "subtotal": 1042567.5
+    },
+    {
+      "tipo": "material",
+      "codigo": "F-TSAL",
+      "descripcion": "Tabla saligna 1\"x5\" 3m",
+      "unidad": "u",
+      "cantidad": 580.67,
+      "desperdicio_pct": 0.15,
+      "cantidad_efectiva": 668.0,
+      "precio_unitario": 2900.0,
+      "subtotal": 1937200.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "pie",
+      "descripcion": "Bolson de Piedra (1m3)",
+      "unidad": "m3",
+      "cantidad": 32.66,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 36.0,
+      "precio_unitario": 49586.78,
+      "subtotal": 1785123.97
+    },
+    {
+      "tipo": "material",
+      "codigo": "ar",
+      "descripcion": "Bolson de Arena (1m3)",
+      "unidad": "m3",
+      "cantidad": 32.66,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 36.0,
+      "precio_unitario": 31040.0,
+      "subtotal": 1117440.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "cem",
+      "descripcion": "Bolsa Cemento \"Loma Negra\" 50 k (u)",
+      "unidad": "u",
+      "cantidad": 228.64,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 252.0,
+      "precio_unitario": 10675.0,
+      "subtotal": 2690100.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-CA",
+      "descripcion": "Capataz",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.25,
+      "cantidad_efectiva": 19.0,
+      "precio_unitario": 50000.0,
+      "subtotal": 950000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-OF",
+      "descripcion": "Oficial",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.25,
+      "cantidad_efectiva": 37.0,
+      "precio_unitario": 40000.0,
+      "subtotal": 1480000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-AY",
+      "descripcion": "Ayudante",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.25,
+      "cantidad_efectiva": 37.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 1110000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "E-MC",
+      "descripcion": "Mini Cargadora",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 15.0,
+      "precio_unitario": 420000.0,
+      "subtotal": 6300000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "SUB-COR",
+      "descripcion": "CORDON",
+      "unidad": "m",
+      "cantidad": null,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 0.0,
+      "precio_unitario": 8000.0,
+      "subtotal": 0.0
+    }
+  ],
+  "3.4": [
+    {
+      "tipo": "material",
+      "codigo": "HADN6",
+      "descripcion": "Hierros ADN 420 Φ 6",
+      "unidad": "u",
+      "cantidad": 13.01,
+      "desperdicio_pct": 0.15,
+      "cantidad_efectiva": 15.0,
+      "precio_unitario": 5250.0,
+      "subtotal": 78750.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "HADN12",
+      "descripcion": "Hierros ADN 420 Φ 12",
+      "unidad": "u",
+      "cantidad": 6.5,
+      "desperdicio_pct": 0.15,
+      "cantidad_efectiva": 8.0,
+      "precio_unitario": 20442.5,
+      "subtotal": 163540.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "F-TSAL",
+      "descripcion": "Tabla saligna 1\"x5\" 3m",
+      "unidad": "u",
+      "cantidad": 52.03,
+      "desperdicio_pct": 0.15,
+      "cantidad_efectiva": 60.0,
+      "precio_unitario": 2900.0,
+      "subtotal": 174000.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "pie",
+      "descripcion": "Bolson de Piedra (1m3)",
+      "unidad": "m3",
+      "cantidad": 1.56,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 2.0,
+      "precio_unitario": 49586.78,
+      "subtotal": 99173.55
+    },
+    {
+      "tipo": "material",
+      "codigo": "ar",
+      "descripcion": "Bolson de Arena (1m3)",
+      "unidad": "m3",
+      "cantidad": 1.56,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 2.0,
+      "precio_unitario": 31040.0,
+      "subtotal": 62080.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "cem",
+      "descripcion": "Bolsa Cemento \"Loma Negra\" 50 k (u)",
+      "unidad": "u",
+      "cantidad": 1.56,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 2.0,
+      "precio_unitario": 10675.0,
+      "subtotal": 21350.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-CA",
+      "descripcion": "Capataz",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 3.0,
+      "precio_unitario": 50000.0,
+      "subtotal": 150000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-OF",
+      "descripcion": "Oficial",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 6.0,
+      "precio_unitario": 40000.0,
+      "subtotal": 240000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-AY",
+      "descripcion": "Ayudante",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 6.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 180000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "E-MC",
+      "descripcion": "Mini Cargadora",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 2.0,
+      "precio_unitario": 420000.0,
+      "subtotal": 840000.0
+    }
+  ],
+  "3.5": [
+    {
+      "tipo": "material",
+      "codigo": "LGB",
+      "descripcion": "Garden Block 38x38x8cm (1m2)",
+      "unidad": "m2",
+      "cantidad": 427.0,
+      "desperdicio_pct": 0.15,
+      "cantidad_efectiva": 492.0,
+      "precio_unitario": 22500.0,
+      "subtotal": 11070000.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "ar",
+      "descripcion": "Bolson de Arena (1m3)",
+      "unidad": "m3",
+      "cantidad": 35.58,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 40.0,
+      "precio_unitario": 31040.0,
+      "subtotal": 1241600.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-CA",
+      "descripcion": "Capataz",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 19.0,
+      "precio_unitario": 50000.0,
+      "subtotal": 950000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-OF",
+      "descripcion": "Oficial",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 38.0,
+      "precio_unitario": 40000.0,
+      "subtotal": 1520000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-AY",
+      "descripcion": "Ayudante",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 38.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 1140000.0
+    }
+  ],
+  "3.6": [
+    {
+      "tipo": "material",
+      "codigo": "ar",
+      "descripcion": "Bolson de Arena (1m3)",
+      "unidad": "m3",
+      "cantidad": 20.12,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 23.0,
+      "precio_unitario": 31040.0,
+      "subtotal": 713920.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "lpint",
+      "descripcion": "Pavimento Intertrabado",
+      "unidad": "m2",
+      "cantidad": 1006.0,
+      "desperdicio_pct": 0.2,
+      "cantidad_efectiva": 1208.0,
+      "precio_unitario": 37600.0,
+      "subtotal": 45420800.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "ar",
+      "descripcion": "Bolson de Arena (1m3)",
+      "unidad": "m3",
+      "cantidad": 14.37,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 16.0,
+      "precio_unitario": 31040.0,
+      "subtotal": 496640.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "cem",
+      "descripcion": "Bolsa Cemento \"Loma Negra\" 50 k (u)",
+      "unidad": "u",
+      "cantidad": 100.6,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 111.0,
+      "precio_unitario": 10675.0,
+      "subtotal": 1184925.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-CA",
+      "descripcion": "Capataz",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.25,
+      "cantidad_efectiva": 42.0,
+      "precio_unitario": 50000.0,
+      "subtotal": 2100000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-OF",
+      "descripcion": "Oficial",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.25,
+      "cantidad_efectiva": 84.0,
+      "precio_unitario": 40000.0,
+      "subtotal": 3360000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-AY",
+      "descripcion": "Ayudante",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.25,
+      "cantidad_efectiva": 84.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 2520000.0
+    }
+  ],
+  "3.7": [
+    {
+      "tipo": "material",
+      "codigo": "LDC",
+      "descripcion": "Deck Liston Hormigon Cemento Piso Durmiente 100 X 12 Cms (1m2)",
+      "unidad": null,
+      "cantidad": 27.3,
+      "desperdicio_pct": 0.15,
+      "cantidad_efectiva": 32.0,
+      "precio_unitario": 41000.0,
+      "subtotal": 1312000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-CA",
+      "descripcion": "Capataz",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.0,
+      "cantidad_efectiva": 1.0,
+      "precio_unitario": 50000.0,
+      "subtotal": 50000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-OF",
+      "descripcion": "Oficial",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.0,
+      "cantidad_efectiva": 2.0,
+      "precio_unitario": 40000.0,
+      "subtotal": 80000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-AY",
+      "descripcion": "Ayudante",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.0,
+      "cantidad_efectiva": 2.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 60000.0
+    }
+  ],
+  "4.1": [
+    {
+      "tipo": "mano_obra",
+      "codigo": "mo-g",
+      "descripcion": "Gervacio",
+      "unidad": "Gervacio",
+      "cantidad": null,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 0.0,
+      "precio_unitario": 80000.0,
+      "subtotal": 0.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-AY",
+      "descripcion": "Ayudante",
+      "unidad": "Ayudante",
+      "cantidad": null,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 0.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 0.0
+    }
+  ],
+  "4.1.2": [
+    {
+      "tipo": "material",
+      "codigo": "h30",
+      "descripcion": "Hormigon H30",
+      "unidad": "m3",
+      "cantidad": 5.0,
+      "desperdicio_pct": 0.0,
+      "cantidad_efectiva": 5.0,
+      "precio_unitario": 125280.0,
+      "subtotal": 626400.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "m5,5",
+      "descripcion": "Malla Φ 5,5 (2 m x 5 m) (hierros cada 0,18 x 0,18 m) - menos de 50 u (u)",
+      "unidad": "u",
+      "cantidad": 4.0,
+      "desperdicio_pct": 0.0,
+      "cantidad_efectiva": 4.0,
+      "precio_unitario": 34628.1,
+      "subtotal": 138512.4
+    },
+    {
+      "tipo": "material",
+      "codigo": "C-400Lts",
+      "descripcion": "Tanque Cisterna Single Waterplast 400L dim 88 h 82",
+      "unidad": null,
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.0,
+      "cantidad_efectiva": 1.0,
+      "precio_unitario": 135607.0,
+      "subtotal": 135607.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "mo-g",
+      "descripcion": "Gervacio",
+      "unidad": "Gervacio",
+      "cantidad": null,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 0.0,
+      "precio_unitario": 80000.0,
+      "subtotal": 0.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-AY",
+      "descripcion": "Ayudante",
+      "unidad": "Ayudante",
+      "cantidad": null,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 0.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 0.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "Perfracion",
+      "descripcion": "Perforacion  para bobas de 7.5 HP de 17m3/h materiales y mo",
+      "unidad": null,
+      "cantidad": 1.0,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 1.0,
+      "precio_unitario": 2800000.0,
+      "subtotal": 2800000.0
+    }
+  ],
+  "4.2": [
+    {
+      "tipo": "material",
+      "codigo": "GRIF-CS",
+      "descripcion": "Griferia CANILLA DE SERVICIO",
+      "unidad": "u",
+      "cantidad": 4.0,
+      "desperdicio_pct": 0.5,
+      "cantidad_efectiva": 6.0,
+      "precio_unitario": 10000.0,
+      "subtotal": 60000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "mo-g",
+      "descripcion": "Gervacio",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 1.0,
+      "precio_unitario": 80000.0,
+      "subtotal": 80000.0
+    }
+  ],
+  "5.1": [
+    {
+      "tipo": "material",
+      "codigo": "tn",
+      "descripcion": "m3 de tierra negra pablo",
+      "unidad": "m3",
+      "cantidad": 180.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 198.0,
+      "precio_unitario": 60000.0,
+      "subtotal": 11880000.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "M-QC200",
+      "descripcion": "Tabla De Quebracho Colorado 1\" X 20 CM. X 2.00 M.",
+      "unidad": "u",
+      "cantidad": 464.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 511.0,
+      "precio_unitario": 24000.0,
+      "subtotal": 12264000.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "M-QC250",
+      "descripcion": "Tabla De Quebracho Colorado 1\" X 20 CM. X 2.50 M.",
+      "unidad": null,
+      "cantidad": 232.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 256.0,
+      "precio_unitario": 32500.0,
+      "subtotal": 8320000.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "M-P-CETOL",
+      "descripcion": "Cetol Duración Extrema Satinado Secado Rápido 4 L Madera Mm Color Natural",
+      "unidad": null,
+      "cantidad": 14.5,
+      "desperdicio_pct": 0.2,
+      "cantidad_efectiva": 18.0,
+      "precio_unitario": 75000.0,
+      "subtotal": 1350000.0
+    },
+    {
+      "tipo": "material",
+      "codigo": "M-QP180",
+      "descripcion": "PUNTAL DE QUEBRACHO 2X3 X 180m",
+      "unidad": null,
+      "cantidad": 116.0,
+      "desperdicio_pct": 0.2,
+      "cantidad_efectiva": 140.0,
+      "precio_unitario": 12000.0,
+      "subtotal": 1680000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-CA",
+      "descripcion": "Capataz",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 32.0,
+      "precio_unitario": 50000.0,
+      "subtotal": 1600000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-OF",
+      "descripcion": "Oficial",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 64.0,
+      "precio_unitario": 40000.0,
+      "subtotal": 2560000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "MO-AY",
+      "descripcion": "Ayudante",
+      "unidad": "u",
+      "cantidad": 2.0,
+      "desperdicio_pct": 0.1,
+      "cantidad_efectiva": 64.0,
+      "precio_unitario": 30000.0,
+      "subtotal": 1920000.0
+    },
+    {
+      "tipo": "mano_obra",
+      "codigo": "E-MC",
+      "descripcion": "Mini Cargadora",
+      "unidad": "u",
+      "cantidad": 1.0,
+      "desperdicio_pct": null,
+      "cantidad_efectiva": 15.0,
+      "precio_unitario": 420000.0,
+      "subtotal": 6300000.0
+    }
+  ]
+}

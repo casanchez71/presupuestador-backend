@@ -1,0 +1,282 @@
+[
+  {
+    "codigo": "SUB-PI",
+    "descripcion": "Pintura Interior: 1Mano Enduido + Yeso, 1 Mano Enduido, 2 a 3 Manos de Pintura",
+    "unidad": "m2",
+    "tipo": "subcontrato",
+    "precio": 16000.0
+  },
+  {
+    "codigo": "SUB-PIC",
+    "descripcion": "Pintura Interior Cielorraso",
+    "unidad": "m2",
+    "tipo": "subcontrato",
+    "precio": 10000.0
+  },
+  {
+    "codigo": "SUB-PET",
+    "descripcion": "Pintura Exterior Tarquini",
+    "unidad": "m2",
+    "tipo": "subcontrato",
+    "precio": 12000.0
+  },
+  {
+    "codigo": "SUB-PE",
+    "descripcion": "Pintura Exterior",
+    "unidad": "m2",
+    "tipo": "subcontrato",
+    "precio": 10000.0
+  },
+  {
+    "codigo": "SUB-PI",
+    "descripcion": "Pintura Interior",
+    "unidad": "m2",
+    "tipo": "subcontrato",
+    "precio": 8000.0
+  },
+  {
+    "codigo": "SUB-END",
+    "descripcion": "Enduido",
+    "unidad": "m2",
+    "tipo": "subcontrato",
+    "precio": 8000.0
+  },
+  {
+    "codigo": "SUB-PPS",
+    "descripcion": "Pintura Puerta Simple Hoja",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 25000.0
+  },
+  {
+    "codigo": "SUB-PPD",
+    "descripcion": "Pintura Puerta Doble Hoja",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 50000.0
+  },
+  {
+    "codigo": "SUB-CIE",
+    "descripcion": "Instalacion de Cielorraso Durlock. Incluye Materiales.",
+    "unidad": "m2",
+    "tipo": "subcontrato",
+    "precio": 37000.0
+  },
+  {
+    "codigo": "SUB-CIEDES",
+    "descripcion": "Instalacion de Cielorraso Desmontable. Incluye Materiales.",
+    "unidad": "m2",
+    "tipo": "subcontrato",
+    "precio": 37000.0
+  },
+  {
+    "codigo": "SUB-CIECO",
+    "descripcion": "Instalacion de Cielorraso Durlock Cortineros.  Incluye Materiales.",
+    "unidad": "m",
+    "tipo": "subcontrato",
+    "precio": 45000.0
+  },
+  {
+    "codigo": "SUB-CIECA",
+    "descripcion": "Instalacion de Cajon Durlock.  Incluye Materiales.",
+    "unidad": "m",
+    "tipo": "subcontrato",
+    "precio": 20000.0
+  },
+  {
+    "codigo": "SUB-CIEGL",
+    "descripcion": "Instalacion de Cielorraso Durlock Garganta Led.   Incluye Materiales.",
+    "unidad": "m",
+    "tipo": "subcontrato",
+    "precio": 45000.0
+  },
+  {
+    "codigo": "SUB-TAB",
+    "descripcion": "Instalacion de Tabique Durlock.  Incluye Materiales.",
+    "unidad": "m2",
+    "tipo": "subcontrato",
+    "precio": 48000.0
+  },
+  {
+    "codigo": "SUB-BZ",
+    "descripcion": "Instlacion Buña Z.  Incluye Materiales.",
+    "unidad": "m",
+    "tipo": "subcontrato",
+    "precio": 16000.0
+  },
+  {
+    "codigo": "SUB-CAN",
+    "descripcion": "Instalacion Cantonera.  Incluye Materiales.",
+    "unidad": "m",
+    "tipo": "subcontrato",
+    "precio": 16000.0
+  },
+  {
+    "codigo": "SUB-E-BOC",
+    "descripcion": "Boca. Incluye Materiales.",
+    "unidad": "boca",
+    "tipo": "subcontrato",
+    "precio": 100000.0
+  },
+  {
+    "codigo": "SUB-E-COL",
+    "descripcion": "Colocacion de artefatcos",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 7000.0
+  },
+  {
+    "codigo": "SUB-E-AAC",
+    "descripcion": "Alimentacion aire acondicionado con split.",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 100000.0
+  },
+  {
+    "codigo": "SUB-E-TAB",
+    "descripcion": "Instalacion de Tablero para 100 bocas (casa chica). Incluye alimentacion desde el pilar.",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 100000.0
+  },
+  {
+    "codigo": "SUB-ZING",
+    "descripcion": "Zinguero",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 700000.0
+  },
+  {
+    "codigo": "SUB-PIS",
+    "descripcion": "Pisero",
+    "unidad": "m²",
+    "tipo": "subcontrato",
+    "precio": 7000.0
+  },
+  {
+    "codigo": "SUB-COR",
+    "descripcion": "CORDON",
+    "unidad": "m",
+    "tipo": "subcontrato",
+    "precio": 10000.0
+  },
+  {
+    "codigo": "SUB-ELE-T",
+    "descripcion": null,
+    "unidad": "TABLERO",
+    "tipo": "subcontrato",
+    "precio": 1000000.0
+  },
+  {
+    "codigo": "SUB-ELE-B",
+    "descripcion": "Electricista",
+    "unidad": "boca",
+    "tipo": "subcontrato",
+    "precio": 60000.0
+  },
+  {
+    "codigo": "SUB-SIDING",
+    "descripcion": "COLOCAcion de siding en pared",
+    "unidad": "m2",
+    "tipo": "subcontrato",
+    "precio": 18000.0
+  },
+  {
+    "codigo": "SUB-REV-CH",
+    "descripcion": "Revestimiento de chapa",
+    "unidad": "m2",
+    "tipo": "subcontrato",
+    "precio": 18000.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MOVIMIENTO DE SUELOS",
+    "unidad": "UNIDAD",
+    "tipo": "subcontrato",
+    "precio": null
+  },
+  {
+    "codigo": "MS-MC",
+    "descripcion": "MINICARGADORA",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 420000.0
+  },
+  {
+    "codigo": "MS-MCM",
+    "descripcion": "MINICARGADORA CON MARTILLO",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 550000.0
+  },
+  {
+    "codigo": "MS-MR",
+    "descripcion": "MINIRETRO EXCAVADORA",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 550000.0
+  },
+  {
+    "codigo": "MS-T",
+    "descripcion": "TRASLADO DE MAQUINARIA",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 300000.0
+  },
+  {
+    "codigo": "MS-RV",
+    "descripcion": "RETIRO X VIAJE",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 60000.0
+  },
+  {
+    "codigo": "MS-TM3",
+    "descripcion": "TOSCA x M3",
+    "unidad": "m3",
+    "tipo": "subcontrato",
+    "precio": 30000.0
+  },
+  {
+    "codigo": "MS-TCA",
+    "descripcion": "TOSCA X CAMION",
+    "unidad": "m3",
+    "tipo": "subcontrato",
+    "precio": 240000.0
+  },
+  {
+    "codigo": "MS-ER",
+    "descripcion": "EXCAVACION Y RETIRO",
+    "unidad": "m3",
+    "tipo": "subcontrato",
+    "precio": 21000.0
+  },
+  {
+    "codigo": "MS-TC",
+    "descripcion": "TOSCA COMPACTADA",
+    "unidad": "m3",
+    "tipo": "subcontrato",
+    "precio": 25000.0
+  },
+  {
+    "codigo": "MS-ARBOL",
+    "descripcion": "RETIRO DE ARBOL",
+    "unidad": "u",
+    "tipo": "subcontrato",
+    "precio": 200000.0
+  },
+  {
+    "codigo": "BQ",
+    "descripcion": "BAÑO QUIMICO",
+    "unidad": "U",
+    "tipo": "subcontrato",
+    "precio": 120000.0
+  },
+  {
+    "codigo": "Perfracion",
+    "descripcion": "Perforacion  para bobas de 7.5 HP de 17m3/h materiales y mo",
+    "unidad": null,
+    "tipo": "subcontrato",
+    "precio": 2800000.0
+  }
+]

@@ -2,14 +2,113 @@
 
 from __future__ import annotations
 
+import csv
+import io
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 
 from app.auth import get_current_user
 from app.db import get_data_db
+from app.schemas import CatalogTipo
 
 router = APIRouter()
+
+
+# ── Upload CSV catalog ────────────────────────────────────────────────────
+
+
+@router.post("/upload-csv")
+async def upload_csv_catalog(
+    file: UploadFile = File(...),
+    tipo: CatalogTipo = Query(..., description="Tipo: material, mano_obra, equipo, subcontrato"),
+    name: str = Query(None, description="Nombre del catalogo (default: nombre del archivo)"),
+    user: dict = Depends(get_current_user),
+):
+    """Upload a CSV price list and create a catalog with entries.
+
+    CSV must have columns: codigo, descripcion, unidad, precio_unitario
+    """
+    db = get_data_db()
+    org_id = user["org_id"]
+
+    # Read and parse CSV
+    content = await file.read()
+    try:
+        text = content.decode("utf-8-sig")  # handle BOM
+    except UnicodeDecodeError:
+        text = content.decode("latin-1")
+
+    reader = csv.DictReader(io.StringIO(text))
+
+    # Validate required columns
+    required_cols = {"codigo", "descripcion", "unidad", "precio_unitario"}
+    if not reader.fieldnames or not required_cols.issubset({c.strip().lower() for c in reader.fieldnames}):
+        raise HTTPException(
+            400,
+            f"CSV debe tener columnas: {', '.join(sorted(required_cols))}. "
+            f"Encontradas: {reader.fieldnames}",
+        )
+
+    # Normalize fieldnames
+    field_map = {c.strip().lower(): c for c in reader.fieldnames}
+
+    rows = []
+    for row in reader:
+        codigo = (row.get(field_map.get("codigo", "codigo")) or "").strip()
+        descripcion = (row.get(field_map.get("descripcion", "descripcion")) or "").strip()
+        unidad = (row.get(field_map.get("unidad", "unidad")) or "").strip()
+        precio_raw = (row.get(field_map.get("precio_unitario", "precio_unitario")) or "").strip()
+
+        if not codigo or not precio_raw:
+            continue
+
+        try:
+            # Handle Argentine format (dot as thousands, comma as decimal)
+            precio_clean = precio_raw.replace(".", "").replace(",", ".") if "," in precio_raw else precio_raw
+            precio = float(precio_clean)
+        except ValueError:
+            continue
+
+        rows.append({
+            "codigo": codigo,
+            "descripcion": descripcion,
+            "unidad": unidad,
+            "precio_sin_iva": precio,
+            "tipo": tipo,
+        })
+
+    if not rows:
+        raise HTTPException(400, "CSV sin filas validas")
+
+    # Create catalog
+    catalog_name = name or (file.filename or "catalogo").rsplit(".", 1)[0]
+    catalog_result = db.table("price_catalogs").insert({
+        "org_id": org_id,
+        "name": catalog_name,
+        "source_file": file.filename,
+    }).execute()
+    if not catalog_result.data:
+        raise HTTPException(500, "Error al crear catalogo")
+    catalog_id = catalog_result.data[0]["id"]
+
+    # Insert entries
+    entries = [
+        {
+            "catalog_id": catalog_id,
+            "org_id": org_id,
+            **row,
+        }
+        for row in rows
+    ]
+    db.table("catalog_entries").insert(entries).execute()
+
+    return {
+        "catalog_id": catalog_id,
+        "name": catalog_name,
+        "entries_count": len(entries),
+        "tipo": tipo,
+    }
 
 
 # ── List catalogs ───────────────────────────────────────────────────────────

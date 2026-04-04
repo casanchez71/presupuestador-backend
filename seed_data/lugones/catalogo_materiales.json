@@ -1,0 +1,2154 @@
+[
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES CORRALON",
+    "unidad": "UNIDAD",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "ARG",
+    "descripcion": "Arena a granel (1m3)",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": 29403.0,
+    "precio_sin_iva": 24300.0
+  },
+  {
+    "codigo": "AR",
+    "descripcion": "Bolson de Arena (1m3)",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 31040.0
+  },
+  {
+    "codigo": "PIEG",
+    "descripcion": "Piedra a granel (1m3)",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": 58995.0,
+    "precio_sin_iva": 48756.2
+  },
+  {
+    "codigo": "PIEP",
+    "descripcion": "Bolson de Piedra partida (1m3)",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 74566.0
+  },
+  {
+    "codigo": "PIE",
+    "descripcion": "Bolson de Piedra (1m3)",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": 60000.0,
+    "precio_sin_iva": 49586.78
+  },
+  {
+    "codigo": "CEM",
+    "descripcion": "Bolsa Cemento \"Loma Negra\" 25 k (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 5050.0
+  },
+  {
+    "codigo": "CEM-GROUT",
+    "descripcion": "Sika Grout 25k (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 31900.0
+  },
+  {
+    "codigo": "CAL",
+    "descripcion": "Bolsa Cal \"Cacique\" 25 k (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 6500.0,
+    "precio_sin_iva": 5371.9
+  },
+  {
+    "codigo": "PLASTICOR",
+    "descripcion": "Bolsa Plasticor 40k (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 8500.0,
+    "precio_sin_iva": 7024.79
+  },
+  {
+    "codigo": "CER",
+    "descripcion": "Ceresita 20 k (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 45000.0,
+    "precio_sin_iva": 37190.08
+  },
+  {
+    "codigo": "LP18",
+    "descripcion": "Ladrillo Portante 18 (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1377.0
+  },
+  {
+    "codigo": "LP12",
+    "descripcion": "Ladrillo Portante 12 (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1110.2
+  },
+  {
+    "codigo": "LH18",
+    "descripcion": "Ladrillo Hueco 18 (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 598.0
+  },
+  {
+    "codigo": "LH12",
+    "descripcion": "Ladrillo Hueco 12 (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 726.0
+  },
+  {
+    "codigo": "LH8",
+    "descripcion": "Ladrillo Hueco 8 (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 568.7
+  },
+  {
+    "codigo": "LCOM",
+    "descripcion": "Ladrillo Comun",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 190.61
+  },
+  {
+    "codigo": "LCOMVIST",
+    "descripcion": "Ladrillo Comun Vista",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 240.0,
+    "precio_sin_iva": 198.35
+  },
+  {
+    "codigo": "LPINT",
+    "descripcion": "Pavimento Intertrabado",
+    "unidad": "m2",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 37600.0
+  },
+  {
+    "codigo": "LGB",
+    "descripcion": "Garden Block 38x38x8cm (1m2)",
+    "unidad": "m2",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 22500.0
+  },
+  {
+    "codigo": "LDC",
+    "descripcion": "Deck Liston Hormigon Cemento Piso Durmiente 100 X 12 Cms (1m2)",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 41000.0
+  },
+  {
+    "codigo": "YES",
+    "descripcion": "Bolsa Yeso Tuyango 30 k (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 13879.0,
+    "precio_sin_iva": 11470.25
+  },
+  {
+    "codigo": "ES",
+    "descripcion": "Cascote / Escombro (m3)",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": 19360.0,
+    "precio_sin_iva": 16000.0
+  },
+  {
+    "codigo": "TOS8",
+    "descripcion": "Tosca",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 30000.0
+  },
+  {
+    "codigo": "TOS30",
+    "descripcion": "Tosca",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 9500.0
+  },
+  {
+    "codigo": "TN",
+    "descripcion": "BOLSON Tierra negra",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 33275.0
+  },
+  {
+    "codigo": "TNF",
+    "descripcion": "BOLSON Tierra negra fertil 10% compost",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 86600.0
+  },
+  {
+    "codigo": "TRA",
+    "descripcion": "BOLSON Tierra negra abonada 40% compost",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 94400.0
+  },
+  {
+    "codigo": "CL2",
+    "descripcion": "Clavos 2\" punta paris (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 3739.67
+  },
+  {
+    "codigo": "CL2.5",
+    "descripcion": "Clavos 2,5\" punta paris (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 3739.67
+  },
+  {
+    "codigo": "AL",
+    "descripcion": "Alambre Fardo (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 4326.45
+  },
+  {
+    "codigo": "ES24",
+    "descripcion": "Cascote / Escombro cada 24 m3 (m3)",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": 16500.0,
+    "precio_sin_iva": 13636.36
+  },
+  {
+    "codigo": "DISCO PORC",
+    "descripcion": "Disco Amoladora para porcelanato. marca aliafor",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 20000.0
+  },
+  {
+    "codigo": "DISCO",
+    "descripcion": "Disco Ascerradora",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 120000.0
+  },
+  {
+    "codigo": "DIS",
+    "descripcion": "Disco corte",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 40000.0
+  },
+  {
+    "codigo": "VI7",
+    "descripcion": "Vigueta pretensada de hormigon 7m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 34000.0
+  },
+  {
+    "codigo": "VI6",
+    "descripcion": "Vigueta pretensada de hormigon 6m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 30111.0
+  },
+  {
+    "codigo": "VI4",
+    "descripcion": "Vigueta pretensada de hormigon 4m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 26000.0
+  },
+  {
+    "codigo": "VI-EPS",
+    "descripcion": "Ladrillos Telgopor 10cm",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 3600.0
+  },
+  {
+    "codigo": "P-pro",
+    "descripcion": "Protex 215 x 1kg",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 21780.0,
+    "precio_sin_iva": 18000.0
+  },
+  {
+    "codigo": "z-sell",
+    "descripcion": "Adhesivo Zocalos Sellador Rellenador Atrim 420gr",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 13000.0
+  },
+  {
+    "codigo": "ME",
+    "descripcion": "MECHA ROTOPERCUTORA",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 5000.0
+  },
+  {
+    "codigo": "EPS",
+    "descripcion": "EPS aislante para techos 1x1 30mm 15 Kg Pack 5u",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 60000.0
+  },
+  {
+    "codigo": "GRO",
+    "descripcion": "Sika Grout 22kg",
+    "unidad": "U",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 43000.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES ACERO",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "M3,5",
+    "descripcion": "Malla Φ 3,5 (2 m x 5 m) (hierros cada 0,18 x 0,18 m) - menos de 50 u (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 23200.0,
+    "precio_sin_iva": 19173.55
+  },
+  {
+    "codigo": "M5",
+    "descripcion": "Malla Φ 5 (2 m x 5 m) (hierros cada 0,18 x 0,18 m) - menos de 50 u (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 36200.0,
+    "precio_sin_iva": 29917.36
+  },
+  {
+    "codigo": "M5,5",
+    "descripcion": "Malla Φ 5,5 (2 m x 5 m) (hierros cada 0,18 x 0,18 m) - menos de 50 u (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 41900.0,
+    "precio_sin_iva": 34628.1
+  },
+  {
+    "codigo": "M3,5M",
+    "descripcion": "Malla Φ 3,5 (2 m x 5 m) (hierros cada 0,18 x 0,18 m) - mas de 50 u (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 22600.0,
+    "precio_sin_iva": 18677.69
+  },
+  {
+    "codigo": "M5M",
+    "descripcion": "Malla Φ 5  (2 m x 5 m) (hierros cada 0,18 x 0,18 m) - mas de 50 u (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 35800.0,
+    "precio_sin_iva": 29586.78
+  },
+  {
+    "codigo": "M5,5",
+    "descripcion": "Malla Φ 5,5  (2 m x 5 m) (hierros cada 0,18 x 0,18 m)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 36600.0,
+    "precio_sin_iva": 37608.0
+  },
+  {
+    "codigo": "M6",
+    "descripcion": "Malla Φ 6  (2 m x 5 m) (hierros cada 0,15 x 0,15 m)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "M8",
+    "descripcion": "Malla Φ 8  (2 m x 5 m) (hierros cada 0,15 x 0,15 m)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 50000.0
+  },
+  {
+    "codigo": "M8-Q335",
+    "descripcion": "Malla Φ 8  Q335 (2,4 m x 6 m) (hierros cada 0,15 x 0,15 m)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "HADN6",
+    "descripcion": "Hierros ADN 420 Φ 6",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 5250.0
+  },
+  {
+    "codigo": "HADN8",
+    "descripcion": "Hierros ADN 420 Φ 8",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 9050.0
+  },
+  {
+    "codigo": "HADN10",
+    "descripcion": "Hierros ADN 420Φ 10",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 12100.0,
+    "precio_sin_iva": 10000.0
+  },
+  {
+    "codigo": "HADN12",
+    "descripcion": "Hierros ADN 420 Φ 12",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 20442.5
+  },
+  {
+    "codigo": "HADN16",
+    "descripcion": "Hierros ADN 420 Φ 16",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 36603.12
+  },
+  {
+    "codigo": "HADN20",
+    "descripcion": "Hierros ADN 420 Φ 20",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 48744.82,
+    "precio_sin_iva": 40284.98
+  },
+  {
+    "codigo": "HADN25",
+    "descripcion": "Hierros ADN 420 Φ 25",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 83198.48,
+    "precio_sin_iva": 68759.07
+  },
+  {
+    "codigo": "HADN6K",
+    "descripcion": "Hierros ADN 420 Φ 6 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1347.48
+  },
+  {
+    "codigo": "HADN8K",
+    "descripcion": "Hierros ADN 420 Φ 8 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1310.31
+  },
+  {
+    "codigo": "HADN10K",
+    "descripcion": "Hierros ADN 420Φ 10 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1310.31
+  },
+  {
+    "codigo": "HADN12K",
+    "descripcion": "Hierros ADN 420 Φ 12 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1301.01
+  },
+  {
+    "codigo": "HADN16K",
+    "descripcion": "Hierros ADN 420 Φ 16 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1263.84
+  },
+  {
+    "codigo": "HADN20K",
+    "descripcion": "Hierros ADN 420 Φ 20 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1263.84
+  },
+  {
+    "codigo": "HADN25K",
+    "descripcion": "Hierros ADN 420 Φ 25 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1263.84
+  },
+  {
+    "codigo": "HADN6K",
+    "descripcion": "Hierros ADN 420 Φ 6 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1455.0
+  },
+  {
+    "codigo": "HADN8K",
+    "descripcion": "Hierros ADN 420 Φ 8 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1374.0
+  },
+  {
+    "codigo": "HADN10K",
+    "descripcion": "Hierros ADN 420Φ 10 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1374.0
+  },
+  {
+    "codigo": "HADN12K",
+    "descripcion": "Hierros ADN 420 Φ 12 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1374.0
+  },
+  {
+    "codigo": "HADN16K",
+    "descripcion": "Hierros ADN 420 Φ 16 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1322.0
+  },
+  {
+    "codigo": "HADN20K",
+    "descripcion": "Hierros ADN 420 Φ 20 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1322.0
+  },
+  {
+    "codigo": "HADN25K",
+    "descripcion": "Hierros ADN 420 Φ 25 (k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1322.0
+  },
+  {
+    "codigo": "HL16",
+    "descripcion": "Hierros Liso Φ 16 - l=6 m",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 20410.0
+  },
+  {
+    "codigo": "M-ELEC",
+    "descripcion": "Malla electrosada (1x1) 250",
+    "unidad": "m2",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 30000.0
+  },
+  {
+    "codigo": "C.E. 40X60",
+    "descripcion": "Cano estructural 40x60x1.6 (6mts)",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 60000.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES PLOMERIA",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "LAVAT",
+    "descripcion": "Lavatorio DECA (SOBRE MESADA)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 200000.0
+  },
+  {
+    "codigo": "INOD",
+    "descripcion": "Inodoro FERRUM",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 600000.0
+  },
+  {
+    "codigo": "INOD-BID",
+    "descripcion": "Indoro y Bidet completos FERRUM",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1000000.0
+  },
+  {
+    "codigo": "PDP",
+    "descripcion": "Pileta de patio AWADUCT",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 12000.0
+  },
+  {
+    "codigo": "GRIF-TOI",
+    "descripcion": "Grfieria Lavatorio FV",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 150000.0
+  },
+  {
+    "codigo": "GRIF-COC",
+    "descripcion": "Griferia mocomando cocina movible FV",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 300000.0
+  },
+  {
+    "codigo": "GRIF-CS",
+    "descripcion": "Griferia CANILLA DE SERVICIO",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 10000.0
+  },
+  {
+    "codigo": "GRIF-DUCHA",
+    "descripcion": "Grfieria Ducha FV",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 360000.0
+  },
+  {
+    "codigo": "GRIF-BID",
+    "descripcion": "Grfieria Bide FV",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 211000.0
+  },
+  {
+    "codigo": "PDP-REJ",
+    "descripcion": "Rejilla ATRIM Pileta Patio Reversible 12x12 Cuadrada Acero I",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 26000.0
+  },
+  {
+    "codigo": "INOD-DEP",
+    "descripcion": "Deposito Capea Italiana Apoyo",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 98608.68
+  },
+  {
+    "codigo": "INOD",
+    "descripcion": "Inodoro Capea Italiana Largo",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 143129.81
+  },
+  {
+    "codigo": "PL-E",
+    "descripcion": "Embudo Pluvial 110 \"Awaduct\"",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 20000.0
+  },
+  {
+    "codigo": "PL-TRI",
+    "descripcion": "Tritubo 40 mm (3 mm espesor)",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 4487.71
+  },
+  {
+    "codigo": "PL-FAJA",
+    "descripcion": "Faja Advertencia Blanca",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 480.0,
+    "precio_sin_iva": 396.69
+  },
+  {
+    "codigo": "PL-CAM30",
+    "descripcion": "Tapa y Marco Hormigon para Camara Inspeccion 0,6 x 0,6 m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 32000.0,
+    "precio_sin_iva": 26446.28
+  },
+  {
+    "codigo": "PL-CAM60",
+    "descripcion": "Tapa y Marco Hormigon para Camara Inspeccion 0,6 x 0,6 m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 40000.0,
+    "precio_sin_iva": 33057.85
+  },
+  {
+    "codigo": "H-CAM60",
+    "descripcion": "Tapa y Marco SEMILLA DE MELON para Camara Inspeccion 0,6 x 0,6 m",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 150000.0
+  },
+  {
+    "codigo": "AF-TAN2000",
+    "descripcion": "Tanque De Agua Waterplast Vertical Tricapa 2000l",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 450000.0
+  },
+  {
+    "codigo": "CL-PPN40",
+    "descripcion": "Caño PVC 40 mm - long= 4 m AWADUCT",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 6000.0
+  },
+  {
+    "codigo": "CL-PPN63",
+    "descripcion": "Caño PVC 63 mm - long= 4 m AWADUCT",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 7500.0
+  },
+  {
+    "codigo": "CL-PPN110",
+    "descripcion": "Caño PVC 110 mm - long= 4 m AWADUCT",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 13800.0
+  },
+  {
+    "codigo": "PL-PVC110",
+    "descripcion": "Caño PVC 110 mm - long= 4 m AWADUCT",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "PL-PVC110-3.2",
+    "descripcion": "Caño PVC 110 mm - long= 4 m (espesor 3,2mm)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 18676.0
+  },
+  {
+    "codigo": "PL-PVC160",
+    "descripcion": "Caño PVC 160 mm - long= 4 m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 27745.0
+  },
+  {
+    "codigo": "PL-PVC400",
+    "descripcion": "Caño PVC 400 mm - long= 6 m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 374120.0
+  },
+  {
+    "codigo": "PL-PVC600",
+    "descripcion": "Caño PVC 600 mm - por metro",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 67640.0,
+    "precio_sin_iva": 55900.83
+  },
+  {
+    "codigo": "PL-HA400",
+    "descripcion": "Caño Hormigon Armado 400 mm",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 17800.0,
+    "precio_sin_iva": 14710.74
+  },
+  {
+    "codigo": "PL-HA500",
+    "descripcion": "Caño Hormigon Armado 500 mm",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 21000.0,
+    "precio_sin_iva": 17355.37
+  },
+  {
+    "codigo": "PL-CN1/2",
+    "descripcion": "Caño Riego Negro 1/2\" - rollo 100 m",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": 25000.0,
+    "precio_sin_iva": 20661.16
+  },
+  {
+    "codigo": "PL-CN1",
+    "descripcion": "Caño Riego Negro 1 1/2\" - rollo 50 m",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": 40000.0,
+    "precio_sin_iva": 33057.85
+  },
+  {
+    "codigo": "PL-CN2",
+    "descripcion": "Caño Riego Negro 2\" - rollo 100 m",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": 150000.0,
+    "precio_sin_iva": 123966.94
+  },
+  {
+    "codigo": "PL-SAL1",
+    "descripcion": "Caño Saladillo 1\"",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": 16000.0,
+    "precio_sin_iva": 13223.14
+  },
+  {
+    "codigo": "PL-SAL2",
+    "descripcion": "Caño Saladillo 2\"",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 39000.0,
+    "precio_sin_iva": 32231.4
+  },
+  {
+    "codigo": "MN",
+    "descripcion": "Manguera Negra Polietileno Agua Riego 3/4 Pulgada K4 100m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 65200.0
+  },
+  {
+    "codigo": "C-400Lts",
+    "descripcion": "Tanque Cisterna Single Waterplast 400L dim 88 h 82",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 135607.0
+  },
+  {
+    "codigo": "C-600Lts",
+    "descripcion": "Tanque Cisterna Single Waterplast 600L dim 92 h 109",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 195628.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES MOBILIARIO Y MESADAS",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "MES-TOI",
+    "descripcion": "Mesada de granito para toilet (40x100 aprox)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 600000.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES AISLACION E IMPERMEABILIZACION",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "A-MEAS45",
+    "descripcion": "Membrana Asfaltica Maxiplas MAXI450 x 40 kg",
+    "unidad": "kg",
+    "tipo": "material",
+    "precio_con_iva": 54637.0,
+    "precio_sin_iva": 45154.55
+  },
+  {
+    "codigo": "A-EMAS",
+    "descripcion": "Emulsion Asfaltica Ormiflex 7 x 200 l",
+    "unidad": "l",
+    "tipo": "material",
+    "precio_con_iva": 312104.0,
+    "precio_sin_iva": 257937.19
+  },
+  {
+    "codigo": "A-MLA",
+    "descripcion": "Membrana Liquida Acrilica \"Protex\" 20 kg (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 98500.0,
+    "precio_sin_iva": 81404.96
+  },
+  {
+    "codigo": "A-MLP",
+    "descripcion": "Membrana Liquida Poliuretanica \"Protex\" 20 kg (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 147500.0,
+    "precio_sin_iva": 121900.83
+  },
+  {
+    "codigo": "A-NY200100m2",
+    "descripcion": "Nylon 200 Micrones (100 m2 x rollo)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 65000.0,
+    "precio_sin_iva": 81655.0
+  },
+  {
+    "codigo": "A-NY20050m2",
+    "descripcion": "Nylon 200 Micrones (50 m2 x rollo)",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 38100.0
+  },
+  {
+    "codigo": "A-SELLPU40",
+    "descripcion": "Sellador Protex PU40 600 cc",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 18760.0
+  },
+  {
+    "codigo": "PROTEX",
+    "descripcion": "PROTEX 20 kg x caja",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 22990.0,
+    "precio_sin_iva": 19000.0
+  },
+  {
+    "codigo": "ME-ASF",
+    "descripcion": "INERTOLTECH caja 18 lts Imprimación Membranas Base Asfáltica",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 39034.6,
+    "precio_sin_iva": 32260.0
+  },
+  {
+    "codigo": "ME-LIQ",
+    "descripcion": "Protex Techos Acrilico Blanco X 20 Kgs Membrana Liquida Blanco Mate",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 88693.0,
+    "precio_sin_iva": 73300.0
+  },
+  {
+    "codigo": "A-MEAS36",
+    "descripcion": "Membrana Asfaltica Maxiplas MAXI450 x 36 kg",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 81977.5,
+    "precio_sin_iva": 67750.0
+  },
+  {
+    "codigo": "PI-ASF",
+    "descripcion": "Pintura Impermeabilizante Asfáltica Secado Rápido X 18 Lts",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 50000.0
+  },
+  {
+    "codigo": "AGEO",
+    "descripcion": "Manto Geotextil 75gr Sinteplast 26,25 m2",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 60000.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES FENOLICOS",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "F-MIR",
+    "descripcion": "Fenolico 18mm Miraluz",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 55260.0
+  },
+  {
+    "codigo": "F-GR2",
+    "descripcion": "Fenolico 18mm Grandis 2 Buenas",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 45454.0
+  },
+  {
+    "codigo": "F-GR1",
+    "descripcion": "Fenolico 18mm Grandis 1 Buena",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 37025.0
+  },
+  {
+    "codigo": "F-IND",
+    "descripcion": "Fenolico 18mm Industrial",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 32400.0
+  },
+  {
+    "codigo": "F-PI",
+    "descripcion": "Fenolico scarp 18mm Pino cic",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 26320.0
+  },
+  {
+    "codigo": "F-T",
+    "descripcion": "Tabla 1 x 4 x 3,66 m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 3000.0
+  },
+  {
+    "codigo": "F-P",
+    "descripcion": "Puntal 3 x 3 x 3,66 m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 6500.0
+  },
+  {
+    "codigo": "PUN",
+    "descripcion": "Puntal",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 6900.0
+  },
+  {
+    "codigo": "F-TSAL",
+    "descripcion": "Tabla saligna 1\"x5\" 3m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 2900.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES DURLOCK",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "D-PL9.5",
+    "descripcion": "Placa Durlock 9,5 mm 1,20 x 2,40 m (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 13500.0,
+    "precio_sin_iva": 10665.0
+  },
+  {
+    "codigo": "D-PL12.5",
+    "descripcion": "Placa Durlock 12,5 mm 1,20 x 2,40 m (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 0.0
+  },
+  {
+    "codigo": "D-S35",
+    "descripcion": "Solera 35 x 30 x 2600 mm x 0,5 mm (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 2900.0,
+    "precio_sin_iva": 2291.0
+  },
+  {
+    "codigo": "D-S70",
+    "descripcion": "Solera 70 x 30 x 2600 mm x 0,5 mm (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 0.0
+  },
+  {
+    "codigo": "D-M34",
+    "descripcion": "Montante 34 x 30 x 2600 mm x 0,5 mm (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 3800.0,
+    "precio_sin_iva": 3002.0
+  },
+  {
+    "codigo": "D-M69",
+    "descripcion": "Montante 69 x 30 x 2600 mm x 0,5 mm (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1.0
+  },
+  {
+    "codigo": "D-POM",
+    "descripcion": "Perfil Omega",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1.0
+  },
+  {
+    "codigo": "D-T1",
+    "descripcion": "Tornillo T1 Mecha 8 x 9/16\" (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 45.0
+  },
+  {
+    "codigo": "D-T2",
+    "descripcion": "Tornillo T2 Aguja 6 x 1\" (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 16.0
+  },
+  {
+    "codigo": "D-MAS",
+    "descripcion": "Masilla \"Anclaflex Plus\" x 32 k (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 35500.0
+  },
+  {
+    "codigo": "D-CIN",
+    "descripcion": "Cinta Papel Microperforada 150 m (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 10500.0
+  },
+  {
+    "codigo": "D-END",
+    "descripcion": "Enduido Interior \"Encove\" x 25 k (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 25974.02
+  },
+  {
+    "codigo": "D-FIJ",
+    "descripcion": "Fijacion del 8 (Tornillo y Tarugo)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 85.12
+  },
+  {
+    "codigo": "D-BUN",
+    "descripcion": "Buña Z Perimetral 0,36 mm x 2600 mm",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 3553.72
+  },
+  {
+    "codigo": "YE",
+    "descripcion": "Yeso \"Tuyango\" x 30 k (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 7933.88
+  },
+  {
+    "codigo": "D-PL60",
+    "descripcion": "Placa Deco Clasic Texturada Clasica 0,060 m x 0,060 m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "D-PER",
+    "descripcion": "Perimetrales",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "D-LAR",
+    "descripcion": "Largueros",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "D-TRA",
+    "descripcion": "Travesaños 0,61 m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "D-AL14",
+    "descripcion": "Alambre Galvanizado Nro 14",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "D-FIJ",
+    "descripcion": "Fijaciones",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "D-SELL",
+    "descripcion": "Sellador Indifugo Promat",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "D-MATA",
+    "descripcion": "Mat Aislante",
+    "unidad": "m2",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES STEEL FRAME",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "SF-PGC200",
+    "descripcion": "Pefil PGC 200 (2,54mm) 200 x 80 x 6000",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 1.0,
+    "precio_sin_iva": 0.83
+  },
+  {
+    "codigo": "SF-PGU150",
+    "descripcion": "Perfil PGU 150 (2,54 mm) 150 x 40 x 6000",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 69219.5,
+    "precio_sin_iva": 57206.2
+  },
+  {
+    "codigo": "SF-PGC150",
+    "descripcion": "Perfil PGC 150 (2,54 mm) 150 x 40 x 6000",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 77872.0,
+    "precio_sin_iva": 64357.02
+  },
+  {
+    "codigo": "SF-PGU70",
+    "descripcion": "Perfil PGU 70 (0,94mm) 70 x 35 x 6000",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 16622.0,
+    "precio_sin_iva": 13737.19
+  },
+  {
+    "codigo": "SF-PGC70",
+    "descripcion": "Perfil PGC 70 (0,94 mm) 70 x 40 x 6000",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 20315.5,
+    "precio_sin_iva": 16789.67
+  },
+  {
+    "codigo": "SF-OSB",
+    "descripcion": "Placa OSB (18,3 mm) 1,22 x 2,44",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 46553.0,
+    "precio_sin_iva": 38473.55
+  },
+  {
+    "codigo": "SF-POME",
+    "descripcion": "Perfil PGO 22 (0,94 mm) x 3,00 m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 10235.5,
+    "precio_sin_iva": 8459.09
+  },
+  {
+    "codigo": "SF-TYBEK",
+    "descripcion": "Barrera de Agua y Viento TYBEK 1,5 x 20 m (30 m2)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 48647.0,
+    "precio_sin_iva": 40204.13
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "REVESTIMIENTOS STEEL FRAME",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "REV-HDG",
+    "descripcion": "Revestimiento Tipo Hunter Douglass",
+    "unidad": "m2",
+    "tipo": "material",
+    "precio_con_iva": 1.0,
+    "precio_sin_iva": 1.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES PINTURA",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "RE-PLI20",
+    "descripcion": "Pintura Latex Interior Blanco Mate \"Loxon\" 20 l (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 150000.0
+  },
+  {
+    "codigo": "RE-PLI1",
+    "descripcion": "Pintura Latex Interior Blanco Mate \"AlbaLatex\" 1 l (u)",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 0.0
+  },
+  {
+    "codigo": "RE-END15",
+    "descripcion": "Enduido Plastico Interior 15 l (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 22636.36
+  },
+  {
+    "codigo": "RE-END20",
+    "descripcion": "Enduido Interior Exterior Talento - Polacrin 20 l (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 30000.0
+  },
+  {
+    "codigo": "RE-PLIC",
+    "descripcion": "Latex Cielorraso Loxon-Sherwin Williams 20 l (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 150000.0
+  },
+  {
+    "codigo": "RE-PINC25",
+    "descripcion": "Pincel Nro 25",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 5900.0
+  },
+  {
+    "codigo": "RE-PINC15",
+    "descripcion": "Pincel Nro 15",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 3600.0
+  },
+  {
+    "codigo": "RE-ROD",
+    "descripcion": "Rodillo",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 9000.0
+  },
+  {
+    "codigo": "RE-LIJ220",
+    "descripcion": "Lija al Agua Nro 220",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 700.0
+  },
+  {
+    "codigo": "RE-LIJ150",
+    "descripcion": "Lija al Agua Nro 150",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 700.0
+  },
+  {
+    "codigo": "RE-CAR",
+    "descripcion": "Rollo Carton Corrugado",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 6000.0
+  },
+  {
+    "codigo": "RE-CIN",
+    "descripcion": "Cinta de Papel Azul nro 36",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 10000.0
+  },
+  {
+    "codigo": "RE-FIJ",
+    "descripcion": "Fijador Sellador - Sellaplast Sinteplast Al Agua 10 Litros Color Incoloro",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 40000.0
+  },
+  {
+    "codigo": "RE-CONVO",
+    "descripcion": "Convertidor de Oxido",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 10200.0
+  },
+  {
+    "codigo": "RE-SINSAT",
+    "descripcion": "Sintetico Satinado Blanco 1 l",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 13800.0
+  },
+  {
+    "codigo": "RE-TBASE",
+    "descripcion": "Base Para Revestimiento Plástico- Quimtex Cuarzo Base - 18lt",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 120000.0
+  },
+  {
+    "codigo": "RE-TARQ",
+    "descripcion": "Quimtex Vallarta - Revestimiento Plastico A Rodillo - 27(k)",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 120000.0
+  },
+  {
+    "codigo": null,
+    "descripcion": "Latex Frente \"Albion\" 20 l (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 105181.82
+  },
+  {
+    "codigo": "RE-ANTIOX",
+    "descripcion": "Antioxido Blanco 4 l (u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 29818.18
+  },
+  {
+    "codigo": "S-TABLA",
+    "descripcion": "ETERNIT Siding Cedral Natural de 8mm x 3,60m x 20cm (Placa cementicia)",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 42000.0
+  },
+  {
+    "codigo": "S-TORN",
+    "descripcion": "Tornillo TORO T2 P. MECHA C/ALAS #8x1 1/4\"",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 40.0
+  },
+  {
+    "codigo": "S-PGO",
+    "descripcion": "PGO OMEGA GALERA 0.90 |28| 3m IMECON",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 8400.0
+  },
+  {
+    "codigo": "S-T+T",
+    "descripcion": "Tornillo TORO FIX Z AMARILLO 5 X 45 UNIDAD + Tarugo - SOBRE TACO COMUN C/TOPE N 8 X 1",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 60.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES REVESTIMIENTO PISOS",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "RP-PORC",
+    "descripcion": "PORCELANATO VILLAGRES 82X141,5 CATHEDRAL CEMENT (2,32m2 x caja)",
+    "unidad": "m2",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 45000.0
+  },
+  {
+    "codigo": "RP-PORC2",
+    "descripcion": "Porcelanato Pulido Beige 60x60 Cm Rectificado Antimancha",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 30000.0
+  },
+  {
+    "codigo": "RP-CER",
+    "descripcion": "CERAMICA 74X74 CER METROPOLE PUL ( 3,24m2 x caja)",
+    "unidad": "m2",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 21000.0
+  },
+  {
+    "codigo": "PR-PASC1",
+    "descripcion": "Pastina Klaukol para Ceramica x 1kg",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 3000.0
+  },
+  {
+    "codigo": "PR-PASP1",
+    "descripcion": "Pastina Klaukol para Porcelanato x 1kg",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 8000.0
+  },
+  {
+    "codigo": "RP-KP",
+    "descripcion": "Klaukol Porcellanato 25 k",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 20000.0
+  },
+  {
+    "codigo": "RP-KC",
+    "descripcion": "Klaukol Ceramica 25 k",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 11000.0
+  },
+  {
+    "codigo": "RP-NIVPORC",
+    "descripcion": "Tornillos Niveladores Porcelanato 750u + 80 Tuercas",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 21000.0
+  },
+  {
+    "codigo": "RP-NIVCER",
+    "descripcion": "Niveladores Ceramicos - Cuna 150u y Arcos 150u",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 15200.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES ELECTRICIDAD",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "IE-CC1.5",
+    "descripcion": "Caño Corrugado Blanco 1 1/2\" - 38 mm (rollo 25m)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 17443.18
+  },
+  {
+    "codigo": "IE-TAB",
+    "descripcion": "Tablero con todo.",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 2000000.0
+  },
+  {
+    "codigo": "IE-ART",
+    "descripcion": "Artefacto de luz.",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 30000.0
+  },
+  {
+    "codigo": "IE-BOCA",
+    "descripcion": "Boca Cambre (caja, cable, modulo)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 45000.0
+  },
+  {
+    "codigo": "IE-CU2,5",
+    "descripcion": "CABLE UNIPOLAR 2,5 ROJO + AZUL + VERDE X6M",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 12000.0
+  },
+  {
+    "codigo": "AA-CP",
+    "descripcion": "Caja Pre-instalacion Para Aire Acondicionado Pared 43x11 Cm",
+    "unidad": "U",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 3500.0
+  },
+  {
+    "codigo": null,
+    "descripcion": "\\",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MATERIALES EDTRUCTURA DE HIERRO",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "CH-GSINUS28",
+    "descripcion": "Chapa Galvanizada Sinus N27 Color Zinc",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 10150.0,
+    "precio_sin_iva": 8388.43
+  },
+  {
+    "codigo": "CH-GSINUS25",
+    "descripcion": "Chapa Galvanizada Sinus N25 Color Zinc",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 11750.0,
+    "precio_sin_iva": 9710.74
+  },
+  {
+    "codigo": "CH-GT10125",
+    "descripcion": "Chapa Galvanizada T101 N25 Color Zinc",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 11750.0,
+    "precio_sin_iva": 9710.74
+  },
+  {
+    "codigo": "CH-CSINUS27",
+    "descripcion": "Chapa Cincalum Sinus N27 Color Aluminizada",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 10500.0,
+    "precio_sin_iva": 8677.69
+  },
+  {
+    "codigo": "CH-CSINUS25",
+    "descripcion": "Chapa Cincalum Sinus N25 Color Aluminizada",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 12100.0,
+    "precio_sin_iva": 10000.0
+  },
+  {
+    "codigo": "CH-CT10127",
+    "descripcion": "Chapa Cincalum T101 N27 Color Aluminizada",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 12100.0,
+    "precio_sin_iva": 10000.0
+  },
+  {
+    "codigo": "CH-CT10125",
+    "descripcion": "Chapa Cincalum T101 N25 Color Aluminizada",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 10500.0,
+    "precio_sin_iva": 8677.69
+  },
+  {
+    "codigo": "CH-PPSINUS25",
+    "descripcion": "Chapa Prepintada Sinus N25",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 18100.0,
+    "precio_sin_iva": 14958.68
+  },
+  {
+    "codigo": "CH-PPT10125",
+    "descripcion": "Chapa Prepintada T101N25",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 18100.0,
+    "precio_sin_iva": 14958.68
+  },
+  {
+    "codigo": "TE-30x50x2",
+    "descripcion": "Tubo Estructural 30 x 50 x 2,0 mm - 6 m largo",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 33267.02,
+    "precio_sin_iva": 27493.4
+  },
+  {
+    "codigo": "TE-40X40X1.6",
+    "descripcion": "Tubo Estructural 40 x 40 x 1,6 mm",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 28637.58,
+    "precio_sin_iva": 23667.42
+  },
+  {
+    "codigo": "TE-40X40X2",
+    "descripcion": "Tubo Estructural 40 x 40 x 2,0 mm",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 41090.72,
+    "precio_sin_iva": 33959.27
+  },
+  {
+    "codigo": "TE-100X50X2",
+    "descripcion": "Tubo Estructural 100 x 50 x 2,0 mm - 6 m largo",
+    "unidad": "U",
+    "tipo": "material",
+    "precio_con_iva": 59335.96,
+    "precio_sin_iva": 49037.98
+  },
+  {
+    "codigo": "TE-150x50",
+    "descripcion": "Tubo Estructural 150 x 50 x 2,0 mm",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 66212.89
+  },
+  {
+    "codigo": "TE-200x100",
+    "descripcion": "Tubo Estructural 200 x 100 x 3,2 mm",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 55788.0
+  },
+  {
+    "codigo": "TE-300x150",
+    "descripcion": "Tubo Estructural 300 x 150",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1.0
+  },
+  {
+    "codigo": "TE-160x3,2",
+    "descripcion": "Tubo Estructural 160 mm diametro x 3,2 mm - 6 m largo",
+    "unidad": "k",
+    "tipo": "material",
+    "precio_con_iva": 231000.0,
+    "precio_sin_iva": 190909.09
+  },
+  {
+    "codigo": "TE-152x2",
+    "descripcion": "Tubo Estructural 152 mm diametro x 2,0 mm - 6 m largo",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1753.0
+  },
+  {
+    "codigo": "PC-100x45x2",
+    "descripcion": "Perfil C 100 x 45  (2,0mm) - 12 m largo",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 92815.62,
+    "precio_sin_iva": 76707.12
+  },
+  {
+    "codigo": "PC-140X60X2",
+    "descripcion": "Perfil C 140 x 60 (2,0mm) - 12 m largo",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 138008.1,
+    "precio_sin_iva": 114056.28
+  },
+  {
+    "codigo": "PU-160",
+    "descripcion": "Perfiol U 160 (2,0mm) - 12 m largo",
+    "unidad": "U",
+    "tipo": "material",
+    "precio_con_iva": 110518.0,
+    "precio_sin_iva": 91337.19
+  },
+  {
+    "codigo": "PC",
+    "descripcion": "Perfil C Acero",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1.0
+  },
+  {
+    "codigo": "CH-TAM2",
+    "descripcion": "Tornillo Autoperforante 2\" (bolsa 100 u)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 27102.0,
+    "precio_sin_iva": 22398.35
+  },
+  {
+    "codigo": "CH-C22",
+    "descripcion": "Chapa Calibre 22 (1,00 x 2,00 m)",
+    "unidad": "U",
+    "tipo": "material",
+    "precio_con_iva": 34580.0,
+    "precio_sin_iva": 28578.51
+  },
+  {
+    "codigo": "CH-C25",
+    "descripcion": "Chapa Calibre 25 (1,22 x 2,44m)",
+    "unidad": "U",
+    "tipo": "material",
+    "precio_con_iva": 29640.0,
+    "precio_sin_iva": 24495.87
+  },
+  {
+    "codigo": "CH-PREP",
+    "descripcion": "Chapa galvanizada prepintada (4x1,1)",
+    "unidad": "m2",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 85000.0
+  },
+  {
+    "codigo": "P-OMEGA",
+    "descripcion": "Perfl Omega (2.6m)",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 3200.0
+  },
+  {
+    "codigo": "IPE-220",
+    "descripcion": "Perfil IPE 220 x12m",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 1105000.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "ZINGUERIA",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "Z-CAN",
+    "descripcion": "Canaleta de Zinc",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 1.0,
+    "precio_sin_iva": 1.0
+  },
+  {
+    "codigo": "Z-BOR",
+    "descripcion": "Borde Cubierta",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": 1.0,
+    "precio_sin_iva": 1.0
+  },
+  {
+    "codigo": "Z-BL",
+    "descripcion": "Banda L",
+    "unidad": "m",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 7500.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "SISTEMA DE CLIMATIZACION",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "CALDERA",
+    "descripcion": "CALDERA (hasta 9 radiadores)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": 1.0,
+    "precio_sin_iva": 1300000.0
+  },
+  {
+    "codigo": "RAD",
+    "descripcion": "RADIADOR 4 SECCIONES. Incluye valvulas y demas accesorios.",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 200000.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "HORMIGON",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "H8",
+    "descripcion": "Hormigon H8",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 101500.0
+  },
+  {
+    "codigo": "H21",
+    "descripcion": "Hormigon H21",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 122132.0
+  },
+  {
+    "codigo": "H30",
+    "descripcion": "Hormigon H30",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 125280.0
+  },
+  {
+    "codigo": "H30P",
+    "descripcion": "Hormigon H30 Pavimento",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 130000.0
+  },
+  {
+    "codigo": "HRDC150",
+    "descripcion": "RDC 150",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 73611.0
+  },
+  {
+    "codigo": "HEND",
+    "descripcion": "Endurecedor de hormigon (25k)",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 6000.0
+  },
+  {
+    "codigo": "HBP",
+    "descripcion": "BOMBA PLUMA",
+    "unidad": "m3",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 5200.0
+  },
+  {
+    "codigo": "HBPT",
+    "descripcion": "TRASLADO BOMBA PLUMA",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 520000.0
+  },
+  {
+    "codigo": "CODIGO",
+    "descripcion": "MADERA",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": null
+  },
+  {
+    "codigo": "M-QC200",
+    "descripcion": "Tabla De Quebracho Colorado 1\" X 20 CM. X 2.00 M.",
+    "unidad": "u",
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 24000.0
+  },
+  {
+    "codigo": "M-QC250",
+    "descripcion": "Tabla De Quebracho Colorado 1\" X 20 CM. X 2.50 M.",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 32500.0
+  },
+  {
+    "codigo": "M-P-CETOL",
+    "descripcion": "Cetol Duración Extrema Satinado Secado Rápido 4 L Madera Mm Color Natural",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 75000.0
+  },
+  {
+    "codigo": "M-QP180",
+    "descripcion": "PUNTAL DE QUEBRACHO 2X3 X 180m",
+    "unidad": null,
+    "tipo": "material",
+    "precio_con_iva": null,
+    "precio_sin_iva": 12000.0
+  }
+]

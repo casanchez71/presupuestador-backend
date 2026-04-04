@@ -8,7 +8,15 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from app.auth import get_current_user
 from app.calculations import calc_budget_summary, calc_item_totals, recalc_all_items
 from app.db import get_data_db
-from app.schemas import BudgetCopyRequest, BudgetCreate, BudgetItemCreate, BudgetItemUpdate, BudgetUpdate
+from app.schemas import (
+    BudgetCopyRequest,
+    BudgetCreate,
+    BudgetItemCreate,
+    BudgetItemUpdate,
+    BudgetUpdate,
+    CreateFullBudget,
+    SectionCreate,
+)
 from app.tree import build_tree
 
 router = APIRouter()
@@ -40,6 +48,91 @@ async def create_budget(budget: BudgetCreate, user: dict = Depends(get_current_u
         "status": "draft",
     }).execute()
     return result.data[0]
+
+
+@router.post("/create-full")
+async def create_full_budget(payload: CreateFullBudget, user: dict = Depends(get_current_user)):
+    """Create a complete budget with sections, items, and indirect config in one request."""
+    db = get_data_db()
+    org_id = user["org_id"]
+
+    # 1. Create the budget record
+    budget_data: dict = {
+        "org_id": org_id,
+        "name": payload.name,
+        "description": payload.description,
+        "status": "draft",
+    }
+    budget_result = db.table("budgets").insert(budget_data).execute()
+    if not budget_result.data:
+        raise HTTPException(500, "Error al crear presupuesto")
+    budget = budget_result.data[0]
+    budget_id = budget["id"]
+
+    # 2. Create sections and their child items
+    sort_order = 0
+    sections_created = 0
+    items_created = 0
+
+    for seccion in (payload.secciones or []):
+        # Create section item (parent_id=None, notas="Seccion")
+        section_row = {
+            "budget_id": budget_id,
+            "org_id": org_id,
+            "parent_id": None,
+            "code": seccion.codigo,
+            "description": seccion.nombre,
+            "notas": "Seccion",
+            "sort_order": sort_order,
+            "mat_unitario": 0,
+            "mo_unitario": 0,
+        }
+        section_result = db.table("budget_items").insert(section_row).execute()
+        section_id = section_result.data[0]["id"]
+        sections_created += 1
+        sort_order += 1
+
+        # Create child items under this section
+        for item in seccion.items:
+            item_row = {
+                "budget_id": budget_id,
+                "org_id": org_id,
+                "parent_id": section_id,
+                "code": item.codigo,
+                "description": item.descripcion,
+                "unidad": item.unidad,
+                "cantidad": item.cantidad,
+                "mat_unitario": 0,
+                "mo_unitario": 0,
+                "notas": None,
+                "sort_order": sort_order,
+            }
+            calculated = calc_item_totals(item_row)
+            db.table("budget_items").insert(calculated).execute()
+            items_created += 1
+            sort_order += 1
+
+    # 3. Set indirect config if provided
+    if payload.indirectos:
+        db.table("indirect_configs").insert({
+            "budget_id": budget_id,
+            "org_id": org_id,
+            "estructura_pct": payload.indirectos.estructura_pct,
+            "jefatura_pct": payload.indirectos.jefatura_pct,
+            "logistica_pct": payload.indirectos.logistica_pct,
+            "herramientas_pct": payload.indirectos.herramientas_pct,
+        }).execute()
+
+    # 4. Build summary
+    all_items = _get_items(budget_id, org_id)
+    summary = calc_budget_summary(all_items)
+
+    return {
+        "budget": budget,
+        "sections_created": sections_created,
+        "items_created": items_created,
+        "summary": summary,
+    }
 
 
 @router.get("")
@@ -271,6 +364,198 @@ async def get_item_resources(
         .execute()
     )
     return result.data or []
+
+
+# ── Sections ────────────────────────────────────────────────────────────────
+
+
+@router.post("/{budget_id}/sections")
+async def create_section(
+    budget_id: UUID,
+    payload: SectionCreate,
+    user: dict = Depends(get_current_user),
+):
+    """Add a section to an existing budget."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    bid = str(budget_id)
+
+    # Verify budget belongs to org
+    budget = (
+        db.table("budgets")
+        .select("id")
+        .eq("id", bid)
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not budget.data:
+        raise HTTPException(404, "Presupuesto no encontrado")
+
+    # Determine next sort_order
+    existing_items = _get_items(bid, org_id)
+    next_sort = max((i.get("sort_order") or 0 for i in existing_items), default=-1) + 1
+
+    section_row = {
+        "budget_id": bid,
+        "org_id": org_id,
+        "parent_id": None,
+        "code": payload.codigo,
+        "description": payload.nombre,
+        "notas": "Seccion",
+        "sort_order": next_sort,
+        "mat_unitario": 0,
+        "mo_unitario": 0,
+    }
+    result = db.table("budget_items").insert(section_row).execute()
+    if not result.data:
+        raise HTTPException(500, "Error al crear seccion")
+    return result.data[0]
+
+
+# ── Assign catalog ─────────────────────────────────────────────────────────
+
+
+@router.post("/{budget_id}/assign-catalog/{catalog_id}")
+async def assign_catalog_to_budget(
+    budget_id: UUID,
+    catalog_id: UUID,
+    user: dict = Depends(get_current_user),
+):
+    """Assign a price catalog to a budget: match resource codes and update prices."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    bid = str(budget_id)
+    cid = str(catalog_id)
+
+    # Verify budget
+    budget = (
+        db.table("budgets")
+        .select("id")
+        .eq("id", bid)
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not budget.data:
+        raise HTTPException(404, "Presupuesto no encontrado")
+
+    # Verify catalog
+    catalog = (
+        db.table("price_catalogs")
+        .select("id")
+        .eq("id", cid)
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not catalog.data:
+        raise HTTPException(404, "Catalogo no encontrado")
+
+    # Load catalog entries indexed by codigo
+    entries_result = (
+        db.table("catalog_entries")
+        .select("codigo, precio_sin_iva, tipo")
+        .eq("catalog_id", cid)
+        .eq("org_id", org_id)
+        .execute()
+    )
+    price_map: dict[str, dict] = {}
+    for entry in (entries_result.data or []):
+        codigo = (entry.get("codigo") or "").strip()
+        precio = entry.get("precio_sin_iva")
+        if codigo and precio is not None:
+            price_map[codigo] = {"precio": float(precio), "tipo": entry.get("tipo")}
+
+    if not price_map:
+        raise HTTPException(404, "Catalogo sin entradas con precios")
+
+    # Get all budget items
+    items = _get_items(bid, org_id)
+    if not items:
+        raise HTTPException(404, "Presupuesto sin items")
+
+    item_ids = [item["id"] for item in items]
+
+    # Get all resources, match codes, update prices
+    updated_count = 0
+    for item_id in item_ids:
+        resources = (
+            db.table("item_resources")
+            .select("*")
+            .eq("item_id", item_id)
+            .eq("org_id", org_id)
+            .execute()
+        )
+        for resource in (resources.data or []):
+            codigo = (resource.get("codigo") or "").strip()
+            if codigo not in price_map:
+                continue
+
+            new_precio = price_map[codigo]["precio"]
+            cantidad_eff = resource.get("cantidad_efectiva") or resource.get("cantidad") or 0
+            new_subtotal = round(new_precio * float(cantidad_eff), 2)
+
+            db.table("item_resources").update({
+                "precio_unitario": new_precio,
+                "subtotal": new_subtotal,
+            }).eq("id", resource["id"]).execute()
+            updated_count += 1
+
+    # Recalculate item totals from resources
+    for item_id in item_ids:
+        resources = (
+            db.table("item_resources")
+            .select("tipo, subtotal")
+            .eq("item_id", item_id)
+            .eq("org_id", org_id)
+            .execute()
+        )
+        mat_total = 0.0
+        mo_total = 0.0
+        for r in (resources.data or []):
+            subtotal = r.get("subtotal") or 0
+            if r.get("tipo") == "material":
+                mat_total += subtotal
+            elif r.get("tipo") == "mano_obra":
+                mo_total += subtotal
+
+        directo_total = mat_total + mo_total
+        item_data = (
+            db.table("budget_items")
+            .select("indirecto_total, beneficio_total, cantidad")
+            .eq("id", item_id)
+            .single()
+            .execute()
+        )
+        if not item_data.data:
+            continue
+
+        cantidad = item_data.data.get("cantidad") or 0
+        indirecto = item_data.data.get("indirecto_total") or 0
+        beneficio = item_data.data.get("beneficio_total") or 0
+        neto_total = directo_total + indirecto + beneficio
+
+        mat_unitario = round(mat_total / cantidad, 2) if cantidad else 0
+        mo_unitario = round(mo_total / cantidad, 2) if cantidad else 0
+
+        db.table("budget_items").update({
+            "mat_unitario": mat_unitario,
+            "mo_unitario": mo_unitario,
+            "mat_total": round(mat_total, 2),
+            "mo_total": round(mo_total, 2),
+            "directo_total": round(directo_total, 2),
+            "neto_total": round(neto_total, 2),
+        }).eq("id", item_id).execute()
+
+    # Build updated summary
+    all_items = _get_items(bid, org_id)
+    summary = calc_budget_summary(all_items)
+
+    return {
+        "updated_count": updated_count,
+        "summary": summary,
+    }
 
 
 # ── Tree ─────────────────────────────────────────────────────────────────────

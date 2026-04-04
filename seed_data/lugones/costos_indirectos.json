@@ -1,0 +1,38 @@
+[
+  {
+    "concepto": "Jefatura de Obra",
+    "monto": 2000000.0
+  },
+  {
+    "concepto": "Jefe de Obra",
+    "monto": 1500000.0
+  },
+  {
+    "concepto": "Gastos Estructura",
+    "monto": 1620000.0
+  },
+  {
+    "concepto": "Nafta Jefe de Obra",
+    "monto": 280000.0
+  },
+  {
+    "concepto": "Nafta Nico",
+    "monto": 140000.0
+  },
+  {
+    "concepto": "Guille",
+    "monto": 200000.0
+  },
+  {
+    "concepto": "Herramientas",
+    "monto": 1000000.0
+  },
+  {
+    "concepto": "JEFATURA X 12 MESES",
+    "monto": 24000000.0
+  },
+  {
+    "concepto": "G.E. X 12 MESES",
+    "monto": 19440000.0
+  }
+]

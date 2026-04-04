@@ -1,0 +1,37 @@
+[
+  {
+    "codigo": "MO-CA",
+    "descripcion": "Capataz",
+    "unidad": "u",
+    "tipo": "mano_obra",
+    "precio": 90000.0
+  },
+  {
+    "codigo": "MO-PU",
+    "descripcion": "Puntero",
+    "unidad": "u",
+    "tipo": "mano_obra",
+    "precio": 82500.0
+  },
+  {
+    "codigo": "MO-OF",
+    "descripcion": "Oficial",
+    "unidad": "u",
+    "tipo": "mano_obra",
+    "precio": 75000.0
+  },
+  {
+    "codigo": "MO-AY",
+    "descripcion": "Ayudante",
+    "unidad": "u",
+    "tipo": "mano_obra",
+    "precio": 60000.0
+  },
+  {
+    "codigo": "MO-GER",
+    "descripcion": "GERVACIO",
+    "unidad": "u",
+    "tipo": "mano_obra",
+    "precio": 80000.0
+  }
+]

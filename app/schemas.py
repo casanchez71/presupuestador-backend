@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -131,3 +132,44 @@ class BudgetCopyRequest(BaseModel):
 
 class VersionCreate(BaseModel):
     notes: str | None = None
+
+
+# ── Full budget creation (step-by-step) ─────────────────────────────────────
+
+class ItemInput(BaseModel):
+    codigo: str
+    descripcion: str
+    unidad: str = ""
+    cantidad: float = 0
+
+
+class SeccionInput(BaseModel):
+    codigo: str
+    nombre: str
+    items: list[ItemInput] = []
+
+
+class IndirectConfigInput(BaseModel):
+    estructura_pct: float = 0
+    jefatura_pct: float = 0
+    logistica_pct: float = 0
+    herramientas_pct: float = 0
+
+
+class CreateFullBudget(BaseModel):
+    name: str
+    description: str = ""
+    superficie_m2: float | None = None
+    duracion_meses: int | None = None
+    secciones: list[SeccionInput] | None = None
+    indirectos: IndirectConfigInput | None = None
+
+
+class SectionCreate(BaseModel):
+    codigo: str
+    nombre: str
+
+
+# ── CSV catalog upload ──────────────────────────────────────────────────────
+
+CatalogTipo = Literal["material", "mano_obra", "equipo", "subcontrato"]

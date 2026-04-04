@@ -1,0 +1,725 @@
+{
+  "proyecto": "Edificio Las Heras - Obra Gris",
+  "superficie_m2": 2663.25,
+  "duracion_meses": 16,
+  "secciones": [
+    {
+      "nombre": "1- TAREAS PRELIMINARES",
+      "items": [
+        {
+          "codigo": "0.1",
+          "descripcion": "OBRADOR",
+          "unidad": "mes",
+          "cantidad": 16.0
+        },
+        {
+          "codigo": "0.2",
+          "descripcion": "BANOS QUIMICOS (2)",
+          "unidad": "mes",
+          "cantidad": 16.0
+        },
+        {
+          "codigo": "0.3",
+          "descripcion": "INSTALACIONES PROVISORIAS",
+          "unidad": "gl",
+          "cantidad": 1.0
+        },
+        {
+          "codigo": "0.4",
+          "descripcion": "LIMPIEZA PERIODICA DE OBRA",
+          "unidad": "mes",
+          "cantidad": 16.0
+        },
+        {
+          "codigo": "0.5",
+          "descripcion": "ACARREO DE MATERIALES",
+          "unidad": "mes",
+          "cantidad": 16.0
+        },
+        {
+          "codigo": "0.6",
+          "descripcion": "AYUDA DE GREMIOS",
+          "unidad": "mes",
+          "cantidad": 16.0
+        },
+        {
+          "codigo": "0.7",
+          "descripcion": "LIMPIEZA FINAL",
+          "unidad": "gl",
+          "cantidad": 1.0
+        },
+        {
+          "codigo": "0.8",
+          "descripcion": "ESTRUCTURA DE ENCOFRADO Y APUNTALAMIENTO PROVISORIO",
+          "unidad": "gl",
+          "cantidad": 1.0
+        }
+      ]
+    },
+    {
+      "nombre": "EXCAVACION",
+      "items": [
+        {
+          "codigo": "0.9",
+          "descripcion": "EXCAVACION BASES Y TRONCOS",
+          "unidad": "m³",
+          "cantidad": 366.36
+        },
+        {
+          "codigo": "0.10",
+          "descripcion": "EXCAVACION TENSORES",
+          "unidad": "m³",
+          "cantidad": 5.4
+        },
+        {
+          "codigo": "0.11",
+          "descripcion": "EXCAVACION TRONERAS",
+          "unidad": "m³",
+          "cantidad": 276.0
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - FUNDACIONES",
+      "items": [
+        {
+          "codigo": "0.12",
+          "descripcion": "BASES",
+          "unidad": "m³",
+          "cantidad": 108.0
+        },
+        {
+          "codigo": "0.13",
+          "descripcion": "TRONCOS",
+          "unidad": "m³",
+          "cantidad": 20.0
+        },
+        {
+          "codigo": "0.14",
+          "descripcion": "TENSORES",
+          "unidad": "m³",
+          "cantidad": 5.4
+        },
+        {
+          "codigo": "0.15",
+          "descripcion": "TABIQUES DE SUBMURACION",
+          "unidad": "m³",
+          "cantidad": 42.75
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - SOBRE SUBSUELO",
+      "items": [
+        {
+          "codigo": "1.1",
+          "descripcion": "COLUMNAS Y TABIQUES",
+          "unidad": "m³",
+          "cantidad": 23.0
+        },
+        {
+          "codigo": "1.2",
+          "descripcion": "VIGAS",
+          "unidad": "m³",
+          "cantidad": 16.0
+        },
+        {
+          "codigo": "1.3",
+          "descripcion": "LOSA",
+          "unidad": "m³",
+          "cantidad": 57.0
+        },
+        {
+          "codigo": "1.31",
+          "descripcion": "LOSA DE SUPRESION SOBRE SUELO COMPACTADO. e=10cm.",
+          "unidad": "m³",
+          "cantidad": 39.0
+        },
+        {
+          "codigo": "1.32",
+          "descripcion": "PAVIMENTO ALISADO EN ESTACIONAMIENTO. e=10cm",
+          "unidad": "m²",
+          "cantidad": 310.0
+        },
+        {
+          "codigo": "1.4",
+          "descripcion": "MAMPOSTERIA.",
+          "unidad": "m²",
+          "cantidad": 360.0
+        },
+        {
+          "codigo": "1.5",
+          "descripcion": "CONTRAPISO . e=12cm",
+          "unidad": "m²",
+          "cantidad": 80.0
+        },
+        {
+          "codigo": "1.6",
+          "descripcion": "CARPETA . e=3cm",
+          "unidad": "m²",
+          "cantidad": 80.0
+        },
+        {
+          "codigo": "1.7",
+          "descripcion": "REVOQUE INTERIOR. (GRUESO FRATAZADO)",
+          "unidad": "m²",
+          "cantidad": 180.0
+        },
+        {
+          "codigo": "1.8",
+          "descripcion": "REVOQUE INTERTIOR HIDROFUGO.",
+          "unidad": "m²",
+          "cantidad": 282.0
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - SOBRE PLANTA BAJA",
+      "items": [
+        {
+          "codigo": "2.1",
+          "descripcion": "COLUMNAS Y TABIQUES",
+          "unidad": "m³",
+          "cantidad": 31.0
+        },
+        {
+          "codigo": "n",
+          "descripcion": "VIGAS",
+          "unidad": "m³",
+          "cantidad": 14.0
+        },
+        {
+          "codigo": "2.3",
+          "descripcion": "LOSA",
+          "unidad": "m³",
+          "cantidad": 26.0
+        },
+        {
+          "codigo": "2.4",
+          "descripcion": "MAMPOSTERIA.",
+          "unidad": "m²",
+          "cantidad": 340.0
+        },
+        {
+          "codigo": "2.5",
+          "descripcion": "CONTRAPISO INTERIOR . e=12cm",
+          "unidad": "m²",
+          "cantidad": 144.0
+        },
+        {
+          "codigo": "2.51",
+          "descripcion": "PAVIMENTO ALISADO EN ESTACIONAMIENTO. e=10cm",
+          "unidad": "m²",
+          "cantidad": 267.0
+        },
+        {
+          "codigo": "2.6",
+          "descripcion": "CARPETA INTERIOR. e=3cm",
+          "unidad": "m²",
+          "cantidad": 144.0
+        },
+        {
+          "codigo": "2.7",
+          "descripcion": "REVOQUE INTERIOR. (GRUESO FRATAZADO)",
+          "unidad": "m²",
+          "cantidad": 224.0
+        },
+        {
+          "codigo": "2.8",
+          "descripcion": "REVOQUE EXTERIOR (GRUESO FRATAZADO) CON HIDROFUGO.",
+          "unidad": "m²",
+          "cantidad": 456.0
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - SOBRE PRIMER PISO",
+      "items": [
+        {
+          "codigo": "3.1",
+          "descripcion": "COLUMNAS Y TABIQUES",
+          "unidad": "m³",
+          "cantidad": 18.0
+        },
+        {
+          "codigo": "3.2",
+          "descripcion": "VIGAS",
+          "unidad": "m³",
+          "cantidad": 13.0
+        },
+        {
+          "codigo": "3.3",
+          "descripcion": "LOSA",
+          "unidad": "m³",
+          "cantidad": 24.0
+        },
+        {
+          "codigo": "3.4",
+          "descripcion": "MAMPOSTERIA.",
+          "unidad": "m²",
+          "cantidad": 320.0
+        },
+        {
+          "codigo": "3.5",
+          "descripcion": "CONTRAPISO . e=12cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.6",
+          "descripcion": "CARPETA . e=3cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.7",
+          "descripcion": "REVOQUE INTERIOR. (GRUESO FRATAZADO)",
+          "unidad": "m²",
+          "cantidad": 244.0
+        },
+        {
+          "codigo": "3.8",
+          "descripcion": "REVOQUE EXTERIOR (GRUESO FRATAZADO) CON HIDROFUGO.",
+          "unidad": "m²",
+          "cantidad": 284.0
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - SOBRE SEGUNDO PISO",
+      "items": [
+        {
+          "codigo": "3.1",
+          "descripcion": "COLUMNAS Y TABIQUES",
+          "unidad": "m³",
+          "cantidad": 18.0
+        },
+        {
+          "codigo": "3.2",
+          "descripcion": "VIGAS",
+          "unidad": "m³",
+          "cantidad": 13.0
+        },
+        {
+          "codigo": "3.3",
+          "descripcion": "LOSA",
+          "unidad": "m³",
+          "cantidad": 24.0
+        },
+        {
+          "codigo": "3.4",
+          "descripcion": "MAMPOSTERIA.",
+          "unidad": "m²",
+          "cantidad": 320.0
+        },
+        {
+          "codigo": "3.5",
+          "descripcion": "CONTRAPISO . e=12cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.6",
+          "descripcion": "CARPETA . e=3cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.7",
+          "descripcion": "REVOQUE INTERIOR. (GRUESO FRATAZADO)",
+          "unidad": "m²",
+          "cantidad": 244.0
+        },
+        {
+          "codigo": "3.8",
+          "descripcion": "REVOQUE EXTERIOR (GRUESO FRATAZADO) CON HIDROFUGO.",
+          "unidad": "m²",
+          "cantidad": 284.0
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - SOBRE TERCER PISO",
+      "items": [
+        {
+          "codigo": "3.1",
+          "descripcion": "COLUMNAS Y TABIQUES",
+          "unidad": "m³",
+          "cantidad": 18.0
+        },
+        {
+          "codigo": "3.2",
+          "descripcion": "VIGAS",
+          "unidad": "m³",
+          "cantidad": 13.0
+        },
+        {
+          "codigo": "3.3",
+          "descripcion": "LOSA",
+          "unidad": "m³",
+          "cantidad": 24.0
+        },
+        {
+          "codigo": "3.4",
+          "descripcion": "MAMPOSTERIA.",
+          "unidad": "m²",
+          "cantidad": 320.0
+        },
+        {
+          "codigo": "3.5",
+          "descripcion": "CONTRAPISO . e=12cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.6",
+          "descripcion": "CARPETA . e=3cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.7",
+          "descripcion": "REVOQUE INTERIOR. (GRUESO FRATAZADO)",
+          "unidad": "m²",
+          "cantidad": 244.0
+        },
+        {
+          "codigo": "3.8",
+          "descripcion": "REVOQUE EXTERIOR (GRUESO FRATAZADO) CON HIDROFUGO.",
+          "unidad": "m²",
+          "cantidad": 284.0
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - SOBRE CUARTO PISO",
+      "items": [
+        {
+          "codigo": "3.1",
+          "descripcion": "COLUMNAS Y TABIQUES",
+          "unidad": "m³",
+          "cantidad": 18.0
+        },
+        {
+          "codigo": "3.2",
+          "descripcion": "VIGAS",
+          "unidad": "m³",
+          "cantidad": 13.0
+        },
+        {
+          "codigo": "3.3",
+          "descripcion": "LOSA",
+          "unidad": "m³",
+          "cantidad": 24.0
+        },
+        {
+          "codigo": "3.4",
+          "descripcion": "MAMPOSTERIA.",
+          "unidad": "m²",
+          "cantidad": 320.0
+        },
+        {
+          "codigo": "3.5",
+          "descripcion": "CONTRAPISO . e=12cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.6",
+          "descripcion": "CARPETA . e=3cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.7",
+          "descripcion": "REVOQUE INTERIOR. (GRUESO FRATAZADO)",
+          "unidad": "m²",
+          "cantidad": 244.0
+        },
+        {
+          "codigo": "3.8",
+          "descripcion": "REVOQUE EXTERIOR (GRUESO FRATAZADO) CON HIDROFUGO.",
+          "unidad": "m²",
+          "cantidad": 284.0
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - SOBRE QUINTO PISO",
+      "items": [
+        {
+          "codigo": "3.1",
+          "descripcion": "COLUMNAS Y TABIQUES",
+          "unidad": "m³",
+          "cantidad": 18.0
+        },
+        {
+          "codigo": "3.2",
+          "descripcion": "VIGAS",
+          "unidad": "m³",
+          "cantidad": 13.0
+        },
+        {
+          "codigo": "3.3",
+          "descripcion": "LOSA",
+          "unidad": "m³",
+          "cantidad": 24.0
+        },
+        {
+          "codigo": "3.4",
+          "descripcion": "MAMPOSTERIA.",
+          "unidad": "m²",
+          "cantidad": 320.0
+        },
+        {
+          "codigo": "3.5",
+          "descripcion": "CONTRAPISO . e=12cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.6",
+          "descripcion": "CARPETA . e=3cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.7",
+          "descripcion": "REVOQUE INTERIOR. (GRUESO FRATAZADO)",
+          "unidad": "m²",
+          "cantidad": 244.0
+        },
+        {
+          "codigo": "3.8",
+          "descripcion": "REVOQUE EXTERIOR (GRUESO FRATAZADO) CON HIDROFUGO.",
+          "unidad": "m²",
+          "cantidad": 284.0
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - SOBRE SEXTO PISO",
+      "items": [
+        {
+          "codigo": "3.1",
+          "descripcion": "COLUMNAS Y TABIQUES",
+          "unidad": "m³",
+          "cantidad": 18.0
+        },
+        {
+          "codigo": "3.2",
+          "descripcion": "VIGAS",
+          "unidad": "m³",
+          "cantidad": 13.0
+        },
+        {
+          "codigo": "3.3",
+          "descripcion": "LOSA",
+          "unidad": "m³",
+          "cantidad": 24.0
+        },
+        {
+          "codigo": "3.4",
+          "descripcion": "MAMPOSTERIA.",
+          "unidad": "m²",
+          "cantidad": 320.0
+        },
+        {
+          "codigo": "3.5",
+          "descripcion": "CONTRAPISO . e=12cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.6",
+          "descripcion": "CARPETA . e=3cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.7",
+          "descripcion": "REVOQUE INTERIOR. (GRUESO FRATAZADO)",
+          "unidad": "m²",
+          "cantidad": 244.0
+        },
+        {
+          "codigo": "3.8",
+          "descripcion": "REVOQUE EXTERIOR (GRUESO FRATAZADO) CON HIDROFUGO.",
+          "unidad": "m²",
+          "cantidad": 284.0
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - SOBRE SEPTIMO PISO",
+      "items": [
+        {
+          "codigo": "3.1",
+          "descripcion": "COLUMNAS Y TABIQUES",
+          "unidad": "m³",
+          "cantidad": 18.0
+        },
+        {
+          "codigo": "3.2",
+          "descripcion": "VIGAS",
+          "unidad": "m³",
+          "cantidad": 13.0
+        },
+        {
+          "codigo": "3.3",
+          "descripcion": "LOSA",
+          "unidad": "m³",
+          "cantidad": 24.0
+        },
+        {
+          "codigo": "3.4",
+          "descripcion": "MAMPOSTERIA.",
+          "unidad": "m²",
+          "cantidad": 320.0
+        },
+        {
+          "codigo": "3.5",
+          "descripcion": "CONTRAPISO . e=12cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.6",
+          "descripcion": "CARPETA . e=3cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.7",
+          "descripcion": "REVOQUE INTERIOR. (GRUESO FRATAZADO)",
+          "unidad": "m²",
+          "cantidad": 244.0
+        },
+        {
+          "codigo": "3.8",
+          "descripcion": "REVOQUE EXTERIOR (GRUESO FRATAZADO) CON HIDROFUGO.",
+          "unidad": "m²",
+          "cantidad": 284.0
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - SOBRE OCTAVO PISO",
+      "items": [
+        {
+          "codigo": "3.1",
+          "descripcion": "COLUMNAS Y TABIQUES",
+          "unidad": "m³",
+          "cantidad": 18.0
+        },
+        {
+          "codigo": "3.2",
+          "descripcion": "VIGAS",
+          "unidad": "m³",
+          "cantidad": 13.0
+        },
+        {
+          "codigo": "3.3",
+          "descripcion": "LOSA",
+          "unidad": "m³",
+          "cantidad": 24.0
+        },
+        {
+          "codigo": "3.4",
+          "descripcion": "MAMPOSTERIA.",
+          "unidad": "m²",
+          "cantidad": 320.0
+        },
+        {
+          "codigo": "3.5",
+          "descripcion": "CONTRAPISO . e=12cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.6",
+          "descripcion": "CARPETA . e=3cm",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "3.7",
+          "descripcion": "REVOQUE INTERIOR. (GRUESO FRATAZADO)",
+          "unidad": "m²",
+          "cantidad": 244.0
+        },
+        {
+          "codigo": "3.8",
+          "descripcion": "REVOQUE EXTERIOR (GRUESO FRATAZADO) CON HIDROFUGO.",
+          "unidad": "m²",
+          "cantidad": 284.0
+        }
+      ]
+    },
+    {
+      "nombre": "OBRA GRIS - SOBRE AZOTEA",
+      "items": [
+        {
+          "codigo": "4.1",
+          "descripcion": "COLUMNAS Y TABIQUES",
+          "unidad": "m³",
+          "cantidad": 7.0
+        },
+        {
+          "codigo": "4.2",
+          "descripcion": "VIGAS",
+          "unidad": "m³",
+          "cantidad": 11.0
+        },
+        {
+          "codigo": "4.3",
+          "descripcion": "LOSA",
+          "unidad": "m³",
+          "cantidad": 8.0
+        },
+        {
+          "codigo": "4.4",
+          "descripcion": "MAMPOSTERIA.",
+          "unidad": "m²",
+          "cantidad": 104.0
+        },
+        {
+          "codigo": "4.5",
+          "descripcion": "CONTRAPISO . e=12cm (Terraza Accesible)",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "4.6",
+          "descripcion": "CARPETA . e=3cm (Terraza Accesible)",
+          "unidad": "m²",
+          "cantidad": 270.0
+        },
+        {
+          "codigo": "4.7",
+          "descripcion": "REVOQUE INTERIOR. (GRUESO FRATAZADO)",
+          "unidad": "m²",
+          "cantidad": 120.0
+        },
+        {
+          "codigo": "4.8",
+          "descripcion": "REVOQUE EXTERIOR (GRUESO FRATAZADO) CON HIDROFUGO.",
+          "unidad": "m²",
+          "cantidad": 120.0
+        },
+        {
+          "codigo": "4.5",
+          "descripcion": "CONTRAPISO . e=12cm (Terraza Inaccesible)",
+          "unidad": "m²",
+          "cantidad": 70.0
+        },
+        {
+          "codigo": "4.6",
+          "descripcion": "CARPETA . e=3cm (Terraza Inaccesible)",
+          "unidad": "m²",
+          "cantidad": 70.0
+        }
+      ]
+    }
+  ]
+}

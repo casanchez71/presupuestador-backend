@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutGrid, Clock, Edit3, ClipboardList, BarChart2, Layers,
-  Download, Upload, Settings, BookOpen, RefreshCw, LogOut,
+  Download, Upload, Settings, BookOpen, RefreshCw, LogOut, Plus,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -94,6 +94,7 @@ export default function Sidebar() {
       </div>
       <nav className="px-2 space-y-0.5 text-[13px] flex-1 overflow-y-auto">
         <NavItem to="/app/dashboard" end icon={<LayoutGrid size={15} />} label="Mis Presupuestos" />
+        <NavItem to="/app/new-project" icon={<Plus size={15} />} label="Nuevo Presupuesto" />
         <NavItem to="/app/budgets/1/editor" icon={<Edit3 size={15} />} label="Editor de Obra" />
         <NavItem to="/app/budgets/1/item/1" icon={<ClipboardList size={15} />} label="Detalle de Ítem" />
         <NavItem to="/app/budgets/1/analysis" icon={<BarChart2 size={15} />} label="Análisis" />

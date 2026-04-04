@@ -1,0 +1,149 @@
+[
+  {
+    "codigo": "E-MC",
+    "descripcion": "Mini Cargadora",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 420000.0
+  },
+  {
+    "codigo": "E-MCM",
+    "descripcion": "Mini Cargadora con martillo",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 550000.0
+  },
+  {
+    "codigo": "E-ME",
+    "descripcion": "Mini Excavadora",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 550000.0
+  },
+  {
+    "codigo": "E-MP",
+    "descripcion": "Motopison",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 40000.0
+  },
+  {
+    "codigo": "E-RP",
+    "descripcion": "Retropala",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 450000.0
+  },
+  {
+    "codigo": "E-VC",
+    "descripcion": "Vibrocompactador",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 400000.0
+  },
+  {
+    "codigo": "E-MN",
+    "descripcion": "Motoniveladora",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 600000.0
+  },
+  {
+    "codigo": "E-CAMCH",
+    "descripcion": "Camion Chasis",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 150000.0
+  },
+  {
+    "codigo": "E-REG",
+    "descripcion": "Regador",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 200000.0
+  },
+  {
+    "codigo": "E-MAR",
+    "descripcion": "Martillete",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 60000.0
+  },
+  {
+    "codigo": "E-ASC",
+    "descripcion": "Ascerradora",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 60000.0
+  },
+  {
+    "codigo": "E-RET",
+    "descripcion": "Retiro x camion",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 250000.0
+  },
+  {
+    "codigo": "E-MR",
+    "descripcion": "Mini Retro",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 480000.0
+  },
+  {
+    "codigo": "MS-TM3",
+    "descripcion": "TOSCA x M3",
+    "unidad": "m3",
+    "tipo": "equipo",
+    "precio": 30000.0
+  },
+  {
+    "codigo": "MS-TCA",
+    "descripcion": "TOSCA X CAMION",
+    "unidad": "m3",
+    "tipo": "equipo",
+    "precio": 240000.0
+  },
+  {
+    "codigo": "MS-ER",
+    "descripcion": "EXCAVACION Y RETIRO",
+    "unidad": "m3",
+    "tipo": "equipo",
+    "precio": 21000.0
+  },
+  {
+    "codigo": "MS-TC",
+    "descripcion": "TOSCA COMPACTADA",
+    "unidad": "m3",
+    "tipo": "equipo",
+    "precio": 25000.0
+  },
+  {
+    "codigo": "MS-ARBOL",
+    "descripcion": "RETIRO DE ARBOL",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 570000.0
+  },
+  {
+    "codigo": "E-CAM",
+    "descripcion": "Camioneta",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 100000.0
+  },
+  {
+    "codigo": "E-TRAS",
+    "descripcion": "TRASLADO DE MAQUINARIA",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 300000.0
+  },
+  {
+    "codigo": "E-VOL",
+    "descripcion": "Volquete",
+    "unidad": "u",
+    "tipo": "equipo",
+    "precio": 200000.0
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "concepto": "Jefatura de Obra",
+    "monto": 2500000.0
+  },
+  {
+    "concepto": "Jefe de Obra",
+    "monto": 2500000.0
+  },
+  {
+    "concepto": "Gastos Estructura",
+    "monto": 3400000.0
+  },
+  {
+    "concepto": "Nafta Jefe de Obra",
+    "monto": 500000.0
+  },
+  {
+    "concepto": "Nafta Jorge",
+    "monto": 500000.0
+  },
+  {
+    "concepto": "Guille",
+    "monto": 400000.0
+  },
+  {
+    "concepto": "Herramientas",
+    "monto": 2000000.0
+  }
+]

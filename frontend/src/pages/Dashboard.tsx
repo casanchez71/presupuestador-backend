@@ -63,7 +63,7 @@ export default function Dashboard() {
           </span>
         </div>
         <button
-          onClick={() => navigate('/app/import')}
+          onClick={() => navigate('/app/new-project')}
           className="bg-[#2D8D68] hover:bg-[#1B5E4B] text-white font-semibold px-4 py-2 rounded-lg text-xs flex items-center gap-1.5 transition-colors"
         >
           <Plus size={14} /> Nuevo presupuesto
@@ -97,7 +97,7 @@ export default function Dashboard() {
         <div className="mb-6 text-center py-12 bg-white rounded-xl border">
           <p className="text-gray-500 text-sm mb-2">No hay presupuestos todavía.</p>
           <button
-            onClick={() => navigate('/app/import')}
+            onClick={() => navigate('/app/new-project')}
             className="bg-[#2D8D68] hover:bg-[#1B5E4B] text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors"
           >
             Importar Excel

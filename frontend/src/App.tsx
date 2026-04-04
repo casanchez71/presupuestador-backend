@@ -10,6 +10,7 @@ import ItemDetail from './pages/ItemDetail'
 import Analysis from './pages/Analysis'
 import AIPlans from './pages/AIPlans'
 import ImportExcel from './pages/ImportExcel'
+import NewProject from './pages/NewProject'
 import Export from './pages/Export'
 import MarkupChain from './pages/MarkupChain'
 import Catalogs from './pages/Catalogs'
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="budgets/:id/ai" element={<AIPlans />} />
             <Route path="budgets/:id/export" element={<Export />} />
             <Route path="budgets/:id/versions" element={<Versions />} />
+            <Route path="new-project" element={<NewProject />} />
             <Route path="import" element={<ImportExcel />} />
             <Route path="settings/markups" element={<MarkupChain />} />
             <Route path="catalogs" element={<Catalogs />} />

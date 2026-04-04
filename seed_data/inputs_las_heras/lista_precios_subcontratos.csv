@@ -1,0 +1,57 @@
+codigo,descripcion,unidad,precio_unitario
+SUB-PI,"Pintura Interior: 1Mano Enduido + Yeso, 1 Mano Enduido, 2 a 3 Manos de Pintura",m2,15000.0
+SUB-PIC,Pintura Interior Cielorraso con una mano de enduido,m2,10000.0
+SUB-PET,Pintura Exterior Tarquini,m2,12000.0
+SUB-PE,Pintura Exterior,m2,10000.0
+SUB-PIY,"Pintura interior sobre yeso con una mano de enduido, lijado, fijado y pintado",m2,10000.0
+SUB-PI,Pintura Interior,m2,8000.0
+SUB-END,Enduido,m2,8000.0
+SUB-PPS,Pintura Puerta Simple Hoja,u,25000.0
+SUB-PPD,Pintura Puerta Doble Hoja,u,50000.0
+SUB-CIE,Instalacion de Cielorraso Durlock. Incluye Materiales.,m2,37000.0
+SUB-CIEDES,Instalacion de Cielorraso Desmontable. Incluye Materiales.,m2,37000.0
+SUB-CIECO,Instalacion de Cielorraso Durlock Cortineros.  Incluye Materiales.,m,45000.0
+SUB-CIECA,Instalacion de Cajon Durlock.  Incluye Materiales.,m,20000.0
+SUB-CIEGL,Instalacion de Cielorraso Durlock Garganta Led.   Incluye Materiales.,m,45000.0
+SUB-TAB,Instalacion de Tabique Durlock.  Incluye Materiales.,m2,48000.0
+SUB-BZ,Instlacion Buña Z.  Incluye Materiales.,m,16000.0
+SUB-CAN,Instalacion Cantonera.  Incluye Materiales.,m,16000.0
+SUB-E-BOC,Boca. Mano de obra y Materiales.,boca,100000.0
+SUB-E-COL,Colocacion de artefatcos,u,7000.0
+SUB-E-AAC,Alimentacion aire acondicionado con split. (Mo y mat),u,100000.0
+SUB-E-TAB,Instalacion de Tablero para 100 bocas (casa chica). Incluye alimentacion desde el pilar.,u,100000.0
+SUB-ELE-B,Boca mano de obra,boca,60000.0
+SUB-PIS,PISO,m²,10000.0
+SUB-COR,CORDON,m,10000.0
+SUB-CONT,BOMBEO HORMIGON CELULAR. Incluye mano de obra y bomba.,m²,12000.0
+SUB-SIDING,Colocion de siding en pared,m2,18000.0
+SUB-REV-CH,Revestimiento de chapa,m2,18000.0
+SUB-YP,Ejecucion de yeso proyectado en Pared,m2,10000.0
+SUB-YAC,Ejecucion de yeso proyectado aristas y cantonera,unidad,10000.0
+MS-MC,MINICARGADORA,u,420000.0
+MS-MCM,MINICARGADORA CON MARTILLO,u,550000.0
+MS-MR,MINIRETRO EXCAVADORA,u,550000.0
+MS-T,TRASLADO DE MAQUINARIA,u,300000.0
+MS-RV,RETIRO X VIAJE,u,60000.0
+MS-RVL,RETIRO X m la Lucila - sobre camion,m3,30000.0
+MS-TM3,TOSCA x M3,m3,30000.0
+MS-TM3L,TOSCA x M3 la Lucila - Compactada,m3,55000.0
+MS-TCA,TOSCA X CAMION,m3,240000.0
+MS-ER,EXCAVACION Y RETIRO,m3,21000.0
+MS-TC,TOSCA COMPACTADA,m3,25000.0
+MS-ARBOL,RETIRO DE ARBOL,u,200000.0
+Perfracion,Perforacion  para bobas de 7.5 HP de 17m3/h materiales y mo,,2800000.0
+GAS-B,BOCA,u,390000.0
+GAS-20M,INSTALACION 20 M CAÑERIA,u,430000.0
+GAS-CAL,INSTALACION CALDERA SOLO GAS,u,90000.0
+GAS-ANA,INSTALACION ANAFE,u,70000.0
+SUB-ZING,Zinguero,u,700000.0
+BQ,BAÑO QUIMICO,u,65000.0
+OBR,OBRADOR,u,148000.0
+SUB-YES-PARED,YESO APLICADO EN PARED,m2,10000.0
+SUB-YES-CIEL,YESO APLICADO EN CIELORRASO,m2,20000.0
+SUB-YES-CIEL-ARM,YESO APLICADO EN CIELORRASO ARMADO,m2,30000.0
+SUB-YES-BUNA,YESO APLICADO - BUNA (x metro lineal),m,8000.0
+SUB-YES-ARISTA,YESO APLICADO - ARISTA Y CANTONERA (x metro lineal),m,8000.0
+SILL- PE,PINTURA EXTERIOR CON SILLETA,m2,13000.0
+SILL-RE,REVOQUE EXTERIOR CON SILLETA. (con ceresita),m2,25000.0

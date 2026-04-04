@@ -1,0 +1,30 @@
+[
+  {
+    "codigo": "MO-CA",
+    "descripcion": "Capataz",
+    "unidad": "u",
+    "tipo": "mano_obra",
+    "precio": 120000.0
+  },
+  {
+    "codigo": "MO-PU",
+    "descripcion": "Puntero",
+    "unidad": "u",
+    "tipo": "mano_obra",
+    "precio": 105000.0
+  },
+  {
+    "codigo": "MO-OF",
+    "descripcion": "Oficial",
+    "unidad": "u",
+    "tipo": "mano_obra",
+    "precio": 90000.0
+  },
+  {
+    "codigo": "MO-AY",
+    "descripcion": "Ayudante",
+    "unidad": "u",
+    "tipo": "mano_obra",
+    "precio": 60000.0
+  }
+]

@@ -1,0 +1,5 @@
+codigo,descripcion,unidad,precio_hora
+MO-CA,Capataz,u,120000.0
+MO-PU,Puntero,u,105000.0
+MO-OF,Oficial,u,90000.0
+MO-AY,Ayudante,u,60000.0

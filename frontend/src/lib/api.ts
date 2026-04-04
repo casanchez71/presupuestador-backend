@@ -120,6 +120,14 @@ export const budgetApi = {
   // Analysis
   getAnalysis: (id: string) => get<AnalysisResponse>(`/budgets/${id}/analysis`),
 
+  // Create full budget (wizard)
+  createFull: (data: {
+    name: string
+    description?: string
+    sections?: { nombre: string; items: { descripcion: string; unidad: string; cantidad: number }[] }[]
+    indirects?: { estructura_pct: number; jefatura_pct: number; logistica_pct: number; herramientas_pct: number }
+  }) => post<{ budget_id: string; sections_created: number; items_created: number }>('/budgets/create-full', data),
+
   // Versions
   getVersions: (id: string) => get<BudgetVersion[]>(`/budgets/${id}/versions`),
   createVersion: (id: string) => post<BudgetVersion>(`/budgets/${id}/versions`),
