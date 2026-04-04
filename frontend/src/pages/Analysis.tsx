@@ -3,7 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { BarChart2, Download } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency } from '../lib/format'
-import type { AnalysisResponse, Budget, BudgetItem } from '../types'
+import ViewModeSelector from '../components/ui/ViewModeSelector'
+import { groupByFloor, groupByMaterial, groupByWorkType } from '../lib/viewModes'
+import type { ViewMode } from '../lib/viewModes'
+import type { AnalysisResponse, Budget, BudgetItem, TreeNode } from '../types'
 
 interface SectionRow {
   name: string
@@ -49,6 +52,21 @@ function buildSections(items: BudgetItem[]): SectionRow[] {
   })
 }
 
+/** Build section rows from virtual tree nodes (used by non-rubro modes) */
+function buildSectionsFromTree(nodes: TreeNode[]): SectionRow[] {
+  return nodes.map((node) => {
+    return {
+      name: node.description ?? 'Sin nombre',
+      mat: node.mat_total,
+      mo: node.mo_total,
+      directo: node.directo_total,
+      indirecto: node.indirecto_total,
+      benef: node.beneficio_total,
+      neto: node.neto_total,
+    }
+  })
+}
+
 function sumItems(items: BudgetItem[]) {
   let mat = 0, mo = 0, directo = 0, indirecto = 0, benef = 0, neto = 0
   for (const i of items) {
@@ -70,6 +88,7 @@ export default function Analysis() {
   const [allItems, setAllItems] = useState<BudgetItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<ViewMode>('rubro')
 
   useEffect(() => {
     if (!id) return
@@ -91,7 +110,37 @@ export default function Analysis() {
       .finally(() => setLoading(false))
   }, [id])
 
-  const sections = useMemo(() => buildSections(allItems), [allItems])
+  const sections = useMemo(() => {
+    if (viewMode === 'rubro') {
+      return buildSections(allItems)
+    }
+    // For other modes, use the grouping functions and convert tree nodes to section rows
+    let grouped: TreeNode[]
+    switch (viewMode) {
+      case 'piso':
+        grouped = groupByFloor(allItems)
+        break
+      case 'material':
+        grouped = groupByMaterial(allItems)
+        break
+      case 'tipo':
+        grouped = groupByWorkType(allItems)
+        break
+      default:
+        grouped = []
+    }
+    if (grouped.length === 0) {
+      return []
+    }
+    return buildSectionsFromTree(grouped)
+  }, [allItems, viewMode])
+
+  const VIEW_MODE_LABELS: Record<ViewMode, string> = {
+    rubro: 'Rubro',
+    piso: 'Piso',
+    material: 'Material',
+    tipo: 'Tipo de Trabajo',
+  }
 
   const budgetName = budget?.name ?? 'Presupuesto'
   const itemsCount = data?.items_count ?? allItems.length
@@ -106,12 +155,12 @@ export default function Analysis() {
     <div className="p-6 fade-in">
       {/* Section label */}
       <div className="flex items-center gap-2 text-[#2D8D68] text-[11px] font-bold tracking-wider mb-1">
-        <BarChart2 size={14} /> VISTA DE ANÁLISIS
+        <BarChart2 size={14} /> VISTA DE ANALISIS
       </div>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
-          <h1 className="text-xl font-extrabold text-gray-900">ANÁLISIS — {budgetName.toUpperCase()}</h1>
+          <h1 className="text-xl font-extrabold text-gray-900">ANALISIS — {budgetName.toUpperCase()}</h1>
         </div>
         <button
           onClick={() => navigate(`/app/budgets/${id ?? '1'}/export`)}
@@ -121,16 +170,21 @@ export default function Analysis() {
         </button>
       </div>
 
+      {/* View Mode Selector */}
+      <div className="mb-4">
+        <ViewModeSelector mode={viewMode} onChange={setViewMode} />
+      </div>
+
       {loading && (
         <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
           <div className="w-4 h-4 border-2 border-[#2D8D68] border-t-transparent rounded-full animate-spin" />
-          Cargando análisis...
+          Cargando analisis...
         </div>
       )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-sm text-red-700">
-          <p className="font-semibold mb-1">Error al cargar el análisis</p>
+          <p className="font-semibold mb-1">Error al cargar el analisis</p>
           <p className="text-xs">{error}</p>
         </div>
       )}
@@ -138,7 +192,7 @@ export default function Analysis() {
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="bg-white rounded-xl border p-4">
-          <div className="text-[10px] text-gray-400 mb-1">ÍTEMS TOTALES</div>
+          <div className="text-[10px] text-gray-400 mb-1">ITEMS TOTALES</div>
           <div className="text-2xl font-bold text-gray-900">{itemsCount}</div>
           <div className="text-[10px] text-gray-500 mt-1">En {sections.length} secciones principales</div>
         </div>
@@ -183,10 +237,15 @@ export default function Analysis() {
 
       {/* Section table */}
       <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-gray-50 px-3 py-2 border-b">
+          <span className="text-[10px] font-bold text-gray-500 tracking-wide">
+            DESGLOSE POR {VIEW_MODE_LABELS[viewMode].toUpperCase()}
+          </span>
+        </div>
         <table className="w-full text-xs">
           <thead className="bg-gray-100 text-gray-600">
             <tr>
-              <th className="px-3 py-2 text-left font-semibold">Sección</th>
+              <th className="px-3 py-2 text-left font-semibold">Seccion</th>
               <th className="px-3 py-2 text-right font-semibold">MAT</th>
               <th className="px-3 py-2 text-right font-semibold">MO</th>
               <th className="px-3 py-2 text-right font-semibold">Directo</th>
@@ -196,17 +255,25 @@ export default function Analysis() {
             </tr>
           </thead>
           <tbody>
-            {sections.map((s, i) => (
-              <tr key={i} className="border-b hover:bg-gray-50">
-                <td className="px-3 py-2 font-medium text-gray-800">{s.name}</td>
-                <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mat)}</td>
-                <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mo)}</td>
-                <td className="px-3 py-2 cost-cell text-blue-700 font-medium">{fmtCurrency(s.directo)}</td>
-                <td className="px-3 py-2 cost-cell">{fmtCurrency(s.indirecto)}</td>
-                <td className="px-3 py-2 cost-cell">{fmtCurrency(s.benef)}</td>
-                <td className="px-3 py-2 cost-cell font-bold">{fmtCurrency(s.neto)}</td>
+            {sections.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-3 py-8 text-center text-gray-400">
+                  No hay datos para agrupar con esta vista.
+                </td>
               </tr>
-            ))}
+            ) : (
+              sections.map((s, i) => (
+                <tr key={i} className="border-b hover:bg-gray-50">
+                  <td className="px-3 py-2 font-medium text-gray-800">{s.name}</td>
+                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mat)}</td>
+                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mo)}</td>
+                  <td className="px-3 py-2 cost-cell text-blue-700 font-medium">{fmtCurrency(s.directo)}</td>
+                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.indirecto)}</td>
+                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.benef)}</td>
+                  <td className="px-3 py-2 cost-cell font-bold">{fmtCurrency(s.neto)}</td>
+                </tr>
+              ))
+            )}
           </tbody>
           <tfoot className="bg-[#2D8D68] text-white font-semibold">
             <tr>

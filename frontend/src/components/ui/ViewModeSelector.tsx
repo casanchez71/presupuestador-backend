@@ -1,4 +1,5 @@
-import { Layers, Building2, Package, Wrench } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Layers, Building2, Package, Wrench, HelpCircle, X } from 'lucide-react'
 import type { ViewMode } from '../../lib/viewModes'
 
 interface Props {
@@ -6,38 +7,119 @@ interface Props {
   onChange: (mode: ViewMode) => void
 }
 
-const MODES: { key: ViewMode; label: string; icon: typeof Layers; tooltip: string }[] = [
-  { key: 'rubro', label: 'Rubro', icon: Layers, tooltip: 'Agrupa items por seccion de obra (Estructura, Albanileria, Instalaciones...)' },
-  { key: 'piso', label: 'Piso', icon: Building2, tooltip: 'Agrupa items por planta del edificio (Subsuelo, PB, Pisos, Azotea)' },
-  { key: 'material', label: 'Material', icon: Package, tooltip: 'Agrupa items por tipo de material (Hormigon, Acero, Ladrillos...)' },
-  { key: 'tipo', label: 'Tipo', icon: Wrench, tooltip: 'Agrupa items por tipo de trabajo (Electricidad, Plomeria, Pintura...)' },
+const MODES: { key: ViewMode; label: string; icon: typeof Layers }[] = [
+  { key: 'rubro', label: 'Rubro', icon: Layers },
+  { key: 'piso', label: 'Piso', icon: Building2 },
+  { key: 'material', label: 'Material', icon: Package },
+  { key: 'tipo', label: 'Gremio', icon: Wrench },
+]
+
+const HELP_SECTIONS = [
+  {
+    emoji: '\u{1F3D7}\uFE0F',
+    title: 'RUBRO',
+    desc: 'Agrupa los items por secci\u00F3n de obra tal como fueron definidos (Tareas Preliminares, Estructura, Alba\u00F1iler\u00EDa...)',
+  },
+  {
+    emoji: '\u{1F3E2}',
+    title: 'PISO',
+    desc: 'Agrupa items por planta del edificio (Subsuelo, Planta Baja, Pisos, Azotea)',
+  },
+  {
+    emoji: '\u{1F4E6}',
+    title: 'MATERIAL',
+    desc: 'Agrupa items por tipo de material principal (Hormig\u00F3n, Acero, Ladrillos, Cer\u00E1mica...)',
+  },
+  {
+    emoji: '\u{1F527}',
+    title: 'GREMIO / ESPECIALIDAD',
+    desc: 'Agrupa items por el gremio o especialidad que lo ejecuta (Electricista, Plomero, Pintor, Carpintero...). Util para ver cuanto trabajo tiene cada gremio.',
+  },
 ]
 
 export default function ViewModeSelector({ mode, onChange }: Props) {
+  const [showHelp, setShowHelp] = useState(false)
+  const helpRef = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+
+  // Close on click outside
+  useEffect(() => {
+    if (!showHelp) return
+    function handleClick(e: MouseEvent) {
+      if (
+        helpRef.current &&
+        !helpRef.current.contains(e.target as Node) &&
+        btnRef.current &&
+        !btnRef.current.contains(e.target as Node)
+      ) {
+        setShowHelp(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showHelp])
+
   return (
-    <div className="flex gap-1 p-1 rounded-xl bg-gray-100/80">
-      {MODES.map(({ key, label, icon: Icon, tooltip }) => {
-        const active = mode === key
-        return (
-          <div key={key} className="relative flex-1 group">
+    <div className="flex items-center gap-2">
+      <div className="flex gap-1 p-1 rounded-2xl bg-gray-50">
+        {MODES.map(({ key, label, icon: Icon }) => {
+          const active = mode === key
+          return (
             <button
+              key={key}
               onClick={() => onChange(key)}
-              className={`flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold rounded-lg transition-all duration-200 w-full justify-center ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all duration-200 ${
                 active
-                  ? 'bg-white text-[#143D34] shadow-sm'
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'
+                  ? 'bg-[#2D8D68] text-white shadow-md'
+                  : 'bg-gray-100 border border-gray-200 text-gray-500 hover:bg-gray-200'
               }`}
             >
-              <Icon size={12} className={active ? 'text-[#2D8D68]' : ''} />
+              <Icon size={13} className={active ? 'text-white' : ''} />
               {label}
             </button>
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-gray-800 text-white text-[10px] leading-tight rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg max-w-[200px] whitespace-normal text-center">
-              {tooltip}
-              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800" />
+          )
+        })}
+      </div>
+
+      {/* Help button */}
+      <div className="relative">
+        <button
+          ref={btnRef}
+          onClick={() => setShowHelp((v) => !v)}
+          className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+          aria-label="Ayuda sobre vistas"
+        >
+          <HelpCircle size={15} />
+        </button>
+
+        {showHelp && (
+          <div
+            ref={helpRef}
+            className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 p-4"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-bold text-gray-800 tracking-wide">VISTAS DEL PRESUPUESTO</h3>
+              <button
+                onClick={() => setShowHelp(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {HELP_SECTIONS.map((s) => (
+                <div key={s.title} className="flex gap-2.5">
+                  <span className="text-base flex-shrink-0 mt-0.5">{s.emoji}</span>
+                  <div>
+                    <div className="text-[11px] font-bold text-gray-700">{s.title}</div>
+                    <div className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        )
-      })}
+        )}
+      </div>
     </div>
   )
 }

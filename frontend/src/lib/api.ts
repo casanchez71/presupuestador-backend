@@ -90,7 +90,7 @@ export const budgetApi = {
   // Items
   getItems: (id: string) => get<BudgetItem[]>(`/budgets/${id}/items`),
   createItem: (id: string, data: Partial<BudgetItem>) =>
-    post<BudgetItem>(`/budgets/${id}/items`, data),
+    post<BudgetItem>(`/budgets/${id}/items`, [data]),
   updateItem: (budgetId: string, itemId: string, data: Partial<BudgetItem>) =>
     patch<BudgetItem>(`/budgets/${budgetId}/items/${itemId}`, data),
   deleteItem: (budgetId: string, itemId: string) =>
