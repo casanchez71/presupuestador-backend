@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { MoreVertical, Pencil, Loader2 } from 'lucide-react'
+import { Eye, Pencil, Loader2 } from 'lucide-react'
 import type { BudgetItem } from '../../types'
 import { fmtCurrency, fmtNumber } from '../../lib/format'
 
 interface Props {
   items: BudgetItem[]
   onEditItem?: (itemId: string, field: string, oldValue: number, newValue: number) => Promise<void>
+  onViewDetail?: (itemId: string) => void
 }
 
 type EditableField = 'cantidad' | 'mat_unitario' | 'mo_unitario'
@@ -19,7 +20,7 @@ interface CellState {
   hasAudit: boolean
 }
 
-export default function DataTable({ items, onEditItem }: Props) {
+export default function DataTable({ items, onEditItem, onViewDetail }: Props) {
   const [editing, setEditing] = useState<{ id: string; field: EditableField } | null>(null)
   const [editValue, setEditValue] = useState('')
   const [cellStates, setCellStates] = useState<Record<string, CellState>>({})
@@ -226,8 +227,16 @@ export default function DataTable({ items, onEditItem }: Props) {
               <td className="px-3 py-2.5 cost-cell font-bold text-[#143D34]">
                 {fmtCurrency(item.neto_total)}
               </td>
-              <td className="px-3 py-2.5 text-center text-gray-300 cursor-pointer hover:text-gray-500 transition-colors">
-                <MoreVertical size={14} />
+              <td className="px-3 py-2.5 text-center">
+                {onViewDetail ? (
+                  <button
+                    onClick={() => onViewDetail(item.id)}
+                    className="text-gray-300 hover:text-[#2D8D68] transition-colors"
+                    title="Ver detalle"
+                  >
+                    <Eye size={14} />
+                  </button>
+                ) : null}
               </td>
             </tr>
           ))}

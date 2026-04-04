@@ -290,7 +290,7 @@ export default function Editor() {
   const neto = items.reduce((s, i) => s + i.neto_total, 0)
 
   return (
-    <div className="p-4 fade-in">
+    <div className="p-4 fade-in h-full flex flex-col">
       {/* Toast notifications */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
         {toasts.map((toast) => (
@@ -411,9 +411,9 @@ export default function Editor() {
         />
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Tree Panel */}
-        <div className="w-64 bg-white rounded-2xl shadow-sm border border-gray-200/80 flex-shrink-0 overflow-hidden">
+        <div className="w-64 bg-white rounded-2xl shadow-sm border border-gray-200/80 flex-shrink-0 overflow-hidden flex flex-col">
           {/* Gradient header */}
           <div className="bg-gradient-to-r from-[#143D34] to-[#2D8D68] text-white px-4 py-3 flex justify-between items-center">
             <span className="font-semibold text-xs tracking-wide">Estructura de Obra</span>
@@ -472,7 +472,7 @@ export default function Editor() {
             </div>
           )}
 
-          <div className="px-2 pt-2.5 pb-2 max-h-[480px] overflow-y-auto">
+          <div className="px-2 pt-2.5 pb-2 flex-1 overflow-y-auto">
             <TreeView
               nodes={displayTree}
               selectedId={selectedNode?.id}
@@ -487,7 +487,7 @@ export default function Editor() {
         </div>
 
         {/* Main Content Panel */}
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden flex flex-col">
           {/* Section header */}
           <div className="bg-gradient-to-r from-gray-50 to-white border-b px-5 py-3 flex justify-between items-center">
             <div>
@@ -510,21 +510,6 @@ export default function Editor() {
                   <Plus size={12} /> Item
                 </button>
               )}
-              {items.length === 1 ? (
-                <button
-                  onClick={() => navigate(`/app/budgets/${id ?? '1'}/item/${items[0].id}`)}
-                  className="text-xs bg-gradient-to-r from-[#2D8D68] to-[#1B5E4B] hover:from-[#1B5E4B] hover:to-[#143D34] text-white px-3 py-1.5 rounded-xl font-medium transition-all duration-200 shadow-sm"
-                >
-                  Ver detalle
-                </button>
-              ) : selectedNode && (!selectedNode.children || selectedNode.children.length === 0) ? (
-                <button
-                  onClick={() => navigate(`/app/budgets/${id ?? '1'}/item/${selectedNode.id}`)}
-                  className="text-xs bg-gradient-to-r from-[#2D8D68] to-[#1B5E4B] hover:from-[#1B5E4B] hover:to-[#143D34] text-white px-3 py-1.5 rounded-xl font-medium transition-all duration-200 shadow-sm"
-                >
-                  Ver detalle
-                </button>
-              ) : null}
             </div>
           </div>
 
@@ -539,6 +524,7 @@ export default function Editor() {
             />
           )}
 
+          <div className="flex-1 overflow-y-auto">
           {items.length === 0 ? (
             <div className="py-16 px-8 text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-100 mb-4">
@@ -562,10 +548,11 @@ export default function Editor() {
               </div>
             </div>
           ) : (
-            <DataTable items={items} onEditItem={handleEditItem} />
+            <DataTable items={items} onEditItem={handleEditItem} onViewDetail={(itemId) => navigate(`/app/budgets/${id}/item/${itemId}`)} />
           )}
 
-          <div className="px-5 py-2.5 bg-gradient-to-r from-[#E8F5EE] to-[#E8F5EE]/50 text-[10px] text-[#1B5E4B] border-t flex items-center gap-1.5">
+          </div>
+          <div className="px-5 py-2.5 bg-gradient-to-r from-[#E8F5EE] to-[#E8F5EE]/50 text-[10px] text-[#1B5E4B] border-t flex items-center gap-1.5 flex-shrink-0">
             <span className="w-1 h-1 rounded-full bg-[#2D8D68] inline-block" />
             Click en celdas punteadas para editar. Totales se recalculan automaticamente por la cadena de markups.
           </div>
