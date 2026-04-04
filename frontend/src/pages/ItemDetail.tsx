@@ -165,31 +165,89 @@ export default function ItemDetail() {
   const [audits, setAudits] = useState<ItemAudit[]>([])
   const [loading, setLoading] = useState(true)
   const [auditsLoading, setAuditsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!id || !itemId) return
+    if (!id || !itemId) {
+      setLoading(false)
+      setAuditsLoading(false)
+      setError('Faltan parametros de presupuesto o item.')
+      return
+    }
+
+    let cancelled = false
+
     // Load budget, item info, and resources in parallel
     Promise.all([
       budgetApi.get(id).catch(() => null),
       budgetApi.getItems(id).then((items) => items.find((i) => i.id === itemId) ?? null).catch(() => null),
       budgetApi.getItemResources(id, itemId).catch(() => [] as ItemResource[]),
     ]).then(([b, it, res]) => {
+      if (cancelled) return
       if (b) setBudget(b)
       if (it) setItem(it)
-      setRecursos(res)
-    }).finally(() => setLoading(false))
+      setRecursos(Array.isArray(res) ? res : [])
+      if (!it) {
+        setError('No se encontro el item. Puede ser una seccion sin detalle de recursos.')
+      }
+    }).catch(() => {
+      if (!cancelled) setError('Error cargando datos del item.')
+    }).finally(() => {
+      if (!cancelled) setLoading(false)
+    })
 
     // Load audits separately (may fail if table doesn't exist)
     budgetApi.getItemAudits(id, itemId)
-      .then(setAudits)
-      .catch(() => setAudits([]))
-      .finally(() => setAuditsLoading(false))
+      .then((data) => { if (!cancelled) setAudits(Array.isArray(data) ? data : []) })
+      .catch(() => { if (!cancelled) setAudits([]) })
+      .finally(() => { if (!cancelled) setAuditsLoading(false) })
+
+    return () => { cancelled = true }
   }, [id, itemId])
 
-  const totalMat = recursos.filter((r) => r.tipo === 'material').reduce((s, r) => s + r.subtotal, 0)
-  const totalMO = recursos.filter((r) => r.tipo === 'mano_obra').reduce((s, r) => s + r.subtotal, 0)
+  // Use the item's own cost fields (from BudgetItem) as the source of truth for the summary.
+  // Only fall back to summing resources if the item fields are zero/missing.
+  const resourceMat = recursos.filter((r) => r.tipo === 'material').reduce((s, r) => s + r.subtotal, 0)
+  const resourceMO = recursos.filter((r) => r.tipo === 'mano_obra').reduce((s, r) => s + r.subtotal, 0)
+  const totalMat = (item?.mat_total ?? 0) !== 0 ? (item?.mat_total ?? 0) : resourceMat
+  const totalMO = (item?.mo_total ?? 0) !== 0 ? (item?.mo_total ?? 0) : resourceMO
+  const costoDirecto = (item?.directo_total ?? 0) !== 0 ? (item?.directo_total ?? 0) : totalMat + totalMO
   const cantidad = item?.cantidad ?? 0
   const desperdicio = 10
+
+  // Show loading spinner while fetching
+  if (loading) {
+    return (
+      <div className="p-6 fade-in">
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="w-4 h-4 border-2 border-[#2D8D68] border-t-transparent rounded-full animate-spin" />
+          Cargando detalle del item...
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state with a back button
+  if (error && !item) {
+    return (
+      <div className="p-6 fade-in">
+        <div className="flex items-center gap-1.5 text-xs mb-4">
+          <span className="text-gray-400 cursor-pointer hover:text-[#2D8D68]" onClick={() => navigate('/app/dashboard')}>Presupuestos</span>
+          <ChevronRight size={12} className="text-gray-300" />
+          <span className="text-gray-400 cursor-pointer hover:text-[#2D8D68]" onClick={() => navigate(`/app/budgets/${id ?? '1'}/editor`)}>{budget?.name ?? 'Presupuesto'}</span>
+        </div>
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 text-center">
+          <div className="text-orange-700 font-medium text-sm mb-2">{error}</div>
+          <button
+            onClick={() => navigate(`/app/budgets/${id ?? '1'}/editor`)}
+            className="text-xs bg-[#2D8D68] hover:bg-[#1B5E4B] text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            Volver al editor
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 fade-in">
@@ -210,13 +268,6 @@ export default function ItemDetail() {
         <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
         <h1 className="text-xl font-extrabold text-gray-900">{item ? `${item.code ?? ''} ${item.description ?? ''}`.trim().toUpperCase() : 'DETALLE DE ITEM'}</h1>
       </div>
-
-      {loading && (
-        <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
-          <div className="w-4 h-4 border-2 border-[#2D8D68] border-t-transparent rounded-full animate-spin" />
-          Cargando recursos...
-        </div>
-      )}
 
       {/* Item summary */}
       <div className="bg-white rounded-xl border p-4 mb-4 flex items-center gap-8 flex-wrap">
@@ -248,16 +299,26 @@ export default function ItemDetail() {
       {/* Cost quick summary */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="bg-gray-50 rounded-lg p-3 border text-center">
-          <div className="text-[10px] text-gray-400">Total MAT</div>
-          <div className="font-bold text-gray-800">{fmtCurrency(totalMat)}</div>
+          <div className="text-[10px] text-gray-400">MAT Unitario</div>
+          <div className="font-bold text-gray-800">{fmtCurrency(item?.mat_unitario ?? 0)}</div>
+          <div className="text-[10px] text-gray-400 mt-1">Total MAT</div>
+          <div className="font-semibold text-gray-700 text-sm">{fmtCurrency(totalMat)}</div>
         </div>
         <div className="bg-gray-50 rounded-lg p-3 border text-center">
-          <div className="text-[10px] text-gray-400">Total MO</div>
-          <div className="font-bold text-gray-800">{fmtCurrency(totalMO)}</div>
+          <div className="text-[10px] text-gray-400">MO Unitario</div>
+          <div className="font-bold text-gray-800">{fmtCurrency(item?.mo_unitario ?? 0)}</div>
+          <div className="text-[10px] text-gray-400 mt-1">Total MO</div>
+          <div className="font-semibold text-gray-700 text-sm">{fmtCurrency(totalMO)}</div>
         </div>
         <div className="bg-[#E8F5EE] rounded-lg p-3 border border-[#2D8D68] text-center">
           <div className="text-[10px] text-[#1B5E4B]">Costo Directo</div>
-          <div className="font-bold text-[#2D8D68]">{fmtCurrency(totalMat + totalMO)}</div>
+          <div className="font-bold text-[#2D8D68]">{fmtCurrency(costoDirecto)}</div>
+          {(item?.neto_total ?? 0) > 0 && (
+            <>
+              <div className="text-[10px] text-[#1B5E4B] mt-1">Neto Total</div>
+              <div className="font-semibold text-[#2D8D68] text-sm">{fmtCurrency(item?.neto_total ?? 0)}</div>
+            </>
+          )}
         </div>
       </div>
 

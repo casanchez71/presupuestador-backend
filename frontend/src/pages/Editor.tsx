@@ -43,6 +43,29 @@ export default function Editor() {
   const [loading, setLoading] = useState(true)
   const [toasts, setToasts] = useState<Toast[]>([])
 
+  /** Return items that belong to a given tree node.
+   *  If the node has children (nested tree), use parent_id matching.
+   *  If the tree is flat, use code-prefix matching to group section items.
+   */
+  const getItemsForNode = useCallback((node: TreeNode, all: BudgetItem[]): BudgetItem[] => {
+    // First try parent_id matching (works when tree is properly nested)
+    const byParent = all.filter((i) => i.parent_id === node.id)
+    if (byParent.length > 0) return byParent
+
+    // For flat trees: if the node looks like a section header (code has no dot),
+    // find items whose code starts with the section number prefix
+    const code = node.code ?? ''
+    // Extract leading number from codes like "1- TAREAS PRELIMINARES" or "3-ESTRUCTURA"
+    const sectionMatch = code.match(/^(\d+)\s*[-.]/)
+    if (sectionMatch) {
+      const prefix = sectionMatch[1] + '.'
+      return all.filter((i) => i.code?.startsWith(prefix) && i.id !== node.id)
+    }
+
+    // Fallback: just return the node itself
+    return all.filter((i) => i.id === node.id)
+  }, [])
+
   const addToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     const tid = ++toastIdCounter
     setToasts((prev) => [...prev, { id: tid, message, type }])
@@ -65,11 +88,11 @@ export default function Editor() {
         setBudget(b)
         setTree(t)
         setAllItems(fetchedItems)
-        // Auto-select first child node and filter its items
-        const firstNode = t[0]?.children?.[0] ?? t[0] ?? null
+        // Auto-select first section node and show its items
+        const firstNode = t[0] ?? null
         if (firstNode) {
           setSelectedNode(firstNode)
-          setItems(fetchedItems.filter((i) => i.parent_id === firstNode.id || i.id === firstNode.id))
+          setItems(getItemsForNode(firstNode, fetchedItems))
         }
       })
       .catch(() => {/* keep empty state */})
@@ -102,7 +125,7 @@ export default function Editor() {
   }, [id, addToast])
 
   const selectedLabel = selectedNode
-    ? `${selectedNode.code ? selectedNode.code + ' ' : ''}${selectedNode.description}`
+    ? `${selectedNode.code ? selectedNode.code + ' ' : ''}${selectedNode.description ?? ''}`
     : '—'
 
   const mat = items.reduce((s, i) => s + i.mat_total, 0)
@@ -218,8 +241,7 @@ export default function Editor() {
               selectedId={selectedNode?.id}
               onSelect={(node) => {
                 setSelectedNode(node)
-                // Filter items for this node from cached list
-                setItems(allItems.filter((i) => i.parent_id === node.id || i.id === node.id))
+                setItems(getItemsForNode(node, allItems))
               }}
             />
           </div>
@@ -234,12 +256,21 @@ export default function Editor() {
                 {items.length} items · {fmtCurrency(directo)} costo directo
               </p>
             </div>
-            <button
-              onClick={() => navigate(`/app/budgets/${id ?? '1'}/item/${selectedNode?.id ?? '1'}`)}
-              className="text-xs bg-[#2D8D68] hover:bg-[#1B5E4B] text-white px-2.5 py-1 rounded font-medium transition-colors"
-            >
-              Ver detalle
-            </button>
+            {items.length === 1 ? (
+              <button
+                onClick={() => navigate(`/app/budgets/${id ?? '1'}/item/${items[0].id}`)}
+                className="text-xs bg-[#2D8D68] hover:bg-[#1B5E4B] text-white px-2.5 py-1 rounded font-medium transition-colors"
+              >
+                Ver detalle
+              </button>
+            ) : selectedNode && (!selectedNode.children || selectedNode.children.length === 0) ? (
+              <button
+                onClick={() => navigate(`/app/budgets/${id ?? '1'}/item/${selectedNode.id}`)}
+                className="text-xs bg-[#2D8D68] hover:bg-[#1B5E4B] text-white px-2.5 py-1 rounded font-medium transition-colors"
+              >
+                Ver detalle
+              </button>
+            ) : null}
           </div>
 
           <CostSummaryBar mat={mat} mo={mo} directo={directo} indirecto={indirecto} neto={neto} indirectoPct={31} />
