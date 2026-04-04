@@ -1,9 +1,11 @@
 """Excel import/export router.
 
-Import understands the Las Heras format:
-  - Catalog sheets: 00_Mat, 00_MO, 00_Eq, 00_Sub
-  - Computation sheet: 01_C&P (multi-level header, rows 4-6, data from row 7)
-  - Detail sheets: numbered (1.1, 1.2, etc.) with materials + labor breakdown
+Import understands multiple formats:
+  - Las Heras: numeric codes (0.1, 1.1, etc.)
+  - Lugones/El Encuentro: date-encoded codes (2025-01-01 = 1.1, day=section, month=item)
+  - All share: catalog sheets (00_*), computation sheet (01_C&P), detail sheets
+
+Auto-detects format based on code column content.
 """
 
 from __future__ import annotations
@@ -125,24 +127,35 @@ def _parse_computation_sheet(
     items: list[dict] = []
     code_to_id_placeholder: dict[str, int] = {}  # code -> index for parent lookup
 
+    date_codes_corrected = 0
+
     for i in range(7, len(df)):
+        # Read RAW value from code column to preserve Timestamps
+        code_raw_val = df.iloc[i, COL_ITEM] if df.shape[1] > COL_ITEM else None
         code_raw = _cell_str(df, i, COL_ITEM)
         desc = _cell_str(df, i, COL_DESC)
         cantidad_val = safe_float(df.iloc[i, COL_CANTIDAD] if df.shape[1] > COL_CANTIDAD else None)
 
+        # Track date-code conversions
+        if isinstance(code_raw_val, (pd.Timestamp,)):
+            date_codes_corrected += 1
+
+        # Use raw value for normalization (preserves Timestamp for date-code detection)
+        code_for_normalize = code_raw_val if isinstance(code_raw_val, pd.Timestamp) else code_raw
+
         # Skip empty rows
-        if not code_raw and not desc:
+        if not code_raw and not desc and not isinstance(code_raw_val, pd.Timestamp):
             continue
 
         # Section title (no code or no cantidad) — create as parent item
         if cantidad_val is None:
-            if code_raw or desc:
+            if code_raw or desc or isinstance(code_raw_val, pd.Timestamp):
                 label = f"{code_raw} {desc}".strip() if desc else code_raw
                 items.append({
                     "budget_id": budget_id,
                     "org_id": org_id,
                     "parent_id": None,
-                    "code": normalize_item_code(code_raw) or None,
+                    "code": normalize_item_code(code_for_normalize) or None,
                     "description": label,
                     "unidad": None,
                     "cantidad": None,
@@ -156,14 +169,15 @@ def _parse_computation_sheet(
                     "neto_total": 0,
                     "notas": "Seccion",
                     "sort_order": len(items),
-                    "_code_norm": normalize_item_code(code_raw),
+                    "_code_norm": normalize_item_code(code_for_normalize),
                 })
-                if code_raw:
-                    code_to_id_placeholder[normalize_item_code(code_raw)] = len(items) - 1
+                norm = normalize_item_code(code_for_normalize)
+                if norm:
+                    code_to_id_placeholder[norm] = len(items) - 1
             continue
 
         # Regular item with data
-        code_norm = normalize_item_code(code_raw)
+        code_norm = normalize_item_code(code_for_normalize)
 
         # Find parent by code hierarchy
         parent_idx = None
@@ -199,7 +213,7 @@ def _parse_computation_sheet(
         if code_norm:
             code_to_id_placeholder[code_norm] = len(items) - 1
 
-    return items
+    return items, date_codes_corrected
 
 
 def _parse_detail_sheets(
@@ -333,7 +347,7 @@ async def import_excel(
     resources_inserted = 0
 
     if "01_C&P" in df_dict:
-        parsed_items = _parse_computation_sheet(df_dict["01_C&P"], budget_id, org_id)
+        parsed_items, date_codes_corrected = _parse_computation_sheet(df_dict["01_C&P"], budget_id, org_id)
 
         # Insert items one by one to resolve parent_id references
         idx_to_db_id: dict[int, str] = {}
@@ -351,12 +365,15 @@ async def import_excel(
                 items_inserted += 1
 
         # 5. Parse detail sheets and insert item_resources
+        system_sheets = {
+            "00_Mat", "00_MO", "00_Eq", "00_Sub", "00_JEF + ESTR",
+            "01_C&P", "01_VENTA", "01_RESUMEN VENTA",
+            "01_RESUMEN MAT.", "01_RESUMEN MAT M.O.",
+            "01_RESUMEN SERV. M.O.", "ESTRUCTURA", "TIEMPOS",
+        }
         detail_sheet_names = [
             s for s in df_dict.keys()
-            if s not in ("00_Mat", "00_MO", "00_Eq", "00_Sub", "00_JEF + ESTR",
-                         "01_C&P", "01_VENTA", "01_RESUMEN VENTA",
-                         "01_RESUMEN MAT.", "01_RESUMEN MAT M.O.",
-                         "01_RESUMEN SERV. M.O.", "ESTRUCTURA")
+            if s not in system_sheets and not s.startswith("00_") and not s.startswith("01_")
         ]
 
         resources_by_code = _parse_detail_sheets(df_dict, detail_sheet_names, org_id)
@@ -388,6 +405,7 @@ async def import_excel(
         "budget_name": budget_name,
         "items_inserted": items_inserted,
         "resources_inserted": resources_inserted,
+        "date_codes_corrected": date_codes_corrected if "01_C&P" in df_dict else 0,
     }
 
 

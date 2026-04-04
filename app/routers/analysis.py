@@ -11,7 +11,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from app.auth import get_current_user
 from app.calculations import calc_budget_summary, calc_item_totals
 from app.db import get_data_db
-from app.schemas import AnalysisResponse, IndirectApplyRequest, VersionCreate
+from app.schemas import AnalysisResponse, IndirectApplyRequest, IndirectConfigUpdate, VersionCreate
 
 router = APIRouter()
 
@@ -28,7 +28,76 @@ def _get_items(budget_id: str, org_id: str) -> list[dict]:
     )
 
 
-# ── Indirect costs ───────────────────────────────────────────────────────────
+# ── Indirect config CRUD ────────────────────────────────────────────────────
+
+
+@router.get("/{budget_id}/indirects")
+async def get_indirects(
+    budget_id: UUID,
+    user: dict = Depends(get_current_user),
+):
+    """Get indirect cost config for this org."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    result = (
+        db.table("indirect_config")
+        .select("*")
+        .eq("org_id", org_id)
+        .limit(1)
+        .execute()
+    )
+    if not result.data:
+        # Return defaults
+        return {
+            "org_id": org_id,
+            "estructura_pct": 0.15,
+            "jefatura_pct": 0.08,
+            "logistica_pct": 0.05,
+            "herramientas_pct": 0.03,
+        }
+    return result.data[0]
+
+
+@router.patch("/{budget_id}/indirects")
+async def update_indirects(
+    budget_id: UUID,
+    payload: IndirectConfigUpdate,
+    user: dict = Depends(get_current_user),
+):
+    """Update indirect cost percentages (upsert)."""
+    db = get_data_db()
+    org_id = user["org_id"]
+
+    update_data = payload.model_dump(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(400, "No hay campos para actualizar")
+
+    existing = (
+        db.table("indirect_config")
+        .select("id")
+        .eq("org_id", org_id)
+        .limit(1)
+        .execute()
+    )
+
+    if existing.data:
+        result = (
+            db.table("indirect_config")
+            .update(update_data)
+            .eq("org_id", org_id)
+            .execute()
+        )
+    else:
+        result = (
+            db.table("indirect_config")
+            .insert({"org_id": org_id, **update_data})
+            .execute()
+        )
+
+    return result.data[0] if result.data else update_data
+
+
+# ── Indirect costs (apply) ──────────────────────────────────────────────────
 
 
 @router.post("/{budget_id}/indirects")

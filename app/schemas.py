@@ -104,6 +104,23 @@ class ApplyCatalogResult(BaseModel):
     total_updated: float
 
 
+# ── Budget update ──────────────────────────────────────────────────────────
+
+class BudgetUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    status: str | None = None
+
+
+# ── Indirect config update ──────────────────────────────────────────────────
+
+class IndirectConfigUpdate(BaseModel):
+    estructura_pct: float | None = None
+    jefatura_pct: float | None = None
+    logistica_pct: float | None = None
+    herramientas_pct: float | None = None
+
+
 # ── Budget copy ─────────────────────────────────────────────────────────────
 
 class BudgetCopyRequest(BaseModel):

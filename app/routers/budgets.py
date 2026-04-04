@@ -8,7 +8,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from app.auth import get_current_user
 from app.calculations import calc_budget_summary, calc_item_totals, recalc_all_items
 from app.db import get_data_db
-from app.schemas import BudgetCopyRequest, BudgetCreate, BudgetItemCreate, BudgetItemUpdate
+from app.schemas import BudgetCopyRequest, BudgetCreate, BudgetItemCreate, BudgetItemUpdate, BudgetUpdate
 from app.tree import build_tree
 
 router = APIRouter()
@@ -69,6 +69,29 @@ async def get_budget(budget_id: UUID, user: dict = Depends(get_current_user)):
     if not result.data:
         raise HTTPException(404, "Presupuesto no encontrado")
     return result.data
+
+
+@router.patch("/{budget_id}")
+async def update_budget(
+    budget_id: UUID,
+    payload: BudgetUpdate,
+    user: dict = Depends(get_current_user),
+):
+    db = get_data_db()
+    update_data = payload.model_dump(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(400, "No hay campos para actualizar")
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    result = (
+        db.table("budgets")
+        .update(update_data)
+        .eq("id", str(budget_id))
+        .eq("org_id", user["org_id"])
+        .execute()
+    )
+    if not result.data:
+        raise HTTPException(404, "Presupuesto no encontrado")
+    return result.data[0]
 
 
 @router.delete("/{budget_id}")
@@ -190,6 +213,64 @@ async def update_item(
     }).execute()
 
     return {"message": "Item actualizado", "item": updated.data}
+
+
+@router.get("/{budget_id}/items")
+async def list_items(budget_id: UUID, user: dict = Depends(get_current_user)):
+    """Return flat list of items (for data tables)."""
+    items = _get_items(str(budget_id), user["org_id"])
+    return items
+
+
+@router.delete("/{budget_id}/items/{item_id}")
+async def delete_item(
+    budget_id: UUID,
+    item_id: UUID,
+    user: dict = Depends(get_current_user),
+):
+    db = get_data_db()
+    org_id = user["org_id"]
+    # Delete resources first (CASCADE should handle it, but be explicit)
+    db.table("item_resources").delete().eq("item_id", str(item_id)).eq("org_id", org_id).execute()
+    result = (
+        db.table("budget_items")
+        .delete()
+        .eq("id", str(item_id))
+        .eq("budget_id", str(budget_id))
+        .eq("org_id", org_id)
+        .execute()
+    )
+    return {"deleted": bool(result.data)}
+
+
+@router.get("/{budget_id}/items/{item_id}/resources")
+async def get_item_resources(
+    budget_id: UUID,
+    item_id: UUID,
+    user: dict = Depends(get_current_user),
+):
+    db = get_data_db()
+    org_id = user["org_id"]
+    # Verify item belongs to budget and org
+    item = (
+        db.table("budget_items")
+        .select("id")
+        .eq("id", str(item_id))
+        .eq("budget_id", str(budget_id))
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not item.data:
+        raise HTTPException(404, "Item no encontrado")
+    result = (
+        db.table("item_resources")
+        .select("*")
+        .eq("item_id", str(item_id))
+        .eq("org_id", org_id)
+        .execute()
+    )
+    return result.data or []
 
 
 # ── Tree ─────────────────────────────────────────────────────────────────────
