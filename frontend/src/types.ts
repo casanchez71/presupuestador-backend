@@ -51,6 +51,7 @@ export interface PriceCatalog {
   id: string
   org_id: string
   name: string
+  tipo?: string
   source_file?: string
   created_at: string
 }
@@ -83,6 +84,7 @@ export interface IndirectConfig {
   jefatura_pct: number
   logistica_pct: number
   herramientas_pct: number
+  beneficio_pct?: number
 }
 
 export interface BudgetVersion {

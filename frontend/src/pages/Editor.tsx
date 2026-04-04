@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Edit3, ChevronRight, Plus, CheckCircle, AlertCircle, X, Loader2, LayoutGrid, MousePointerClick, Command } from 'lucide-react'
+import { Edit3, ChevronRight, Plus, CheckCircle, AlertCircle, X, Loader2, LayoutGrid, MousePointerClick, Command, RefreshCw } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency, fmtNumber } from '../lib/format'
 import type { Budget, TreeNode, BudgetItem } from '../types'
@@ -49,6 +49,18 @@ export default function Editor() {
   const [viewMode, setViewMode] = useState<ViewMode>('rubro')
   const [originalTree, setOriginalTree] = useState<TreeNode[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
+  const [indirectConfig, setIndirectConfig] = useState<{estructura_pct: number, jefatura_pct: number, logistica_pct: number, herramientas_pct: number} | null>(null)
+
+  const [recalculating, setRecalculating] = useState(false)
+  const [showStatusMenu, setShowStatusMenu] = useState(false)
+  const [statusChanging, setStatusChanging] = useState(false)
+
+  const STATUS_OPTIONS = [
+    { value: 'draft', label: 'Borrador', badgeCls: 'bg-gray-100 text-gray-600 border-gray-200' },
+    { value: 'review', label: 'En Revisión', badgeCls: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+    { value: 'approved', label: 'Aprobado', badgeCls: 'bg-green-100 text-green-700 border-green-200' },
+    { value: 'sent', label: 'Enviado', badgeCls: 'bg-blue-100 text-blue-700 border-blue-200' },
+  ]
 
   // Section CRUD state
   const [showSectionForm, setShowSectionForm] = useState(false)
@@ -66,8 +78,13 @@ export default function Editor() {
   /** Return items that belong to a given tree node. */
   const getItemsForNode = useCallback((node: TreeNode, all: BudgetItem[]): BudgetItem[] => {
     // Virtual nodes from regrouping (piso/material/gremio views)
-    if (node.id.startsWith('__virtual_') && node.children.length > 0) {
-      return node.children as BudgetItem[]
+    // children are TreeNode wrappers via itemToLeaf — look up real BudgetItems by ID
+    if (node.id.startsWith('__virtual_')) {
+      if (node.children && node.children.length > 0) {
+        const childIds = new Set(node.children.map((c) => c.id))
+        return all.filter((i) => childIds.has(i.id))
+      }
+      return []
     }
 
     const code = node.code ?? ''
@@ -106,6 +123,26 @@ export default function Editor() {
     setToasts((prev) => prev.filter((t) => t.id !== tid))
   }, [])
 
+  const handleStatusChange = useCallback(async (newStatus: string) => {
+    if (!id) return
+    setStatusChanging(true)
+    setShowStatusMenu(false)
+    try {
+      const updated = await budgetApi.update(id, { status: newStatus })
+      setBudget((prev) => prev ? { ...prev, status: updated.status } : prev)
+      const label = [
+        { value: 'draft', label: 'Borrador' },
+        { value: 'review', label: 'En Revisión' },
+        { value: 'approved', label: 'Aprobado' },
+        { value: 'sent', label: 'Enviado' },
+      ].find((s) => s.value === newStatus)?.label ?? newStatus
+      addToast(`Estado actualizado: ${label}`)
+    } catch {
+      addToast('Error al cambiar estado', 'error')
+    }
+    setStatusChanging(false)
+  }, [id, addToast])
+
   /** Refresh tree and items from the API */
   const refreshData = useCallback(async () => {
     if (!id) return
@@ -133,7 +170,23 @@ export default function Editor() {
       })
       .catch(() => {/* keep empty state */})
       .finally(() => setLoading(false))
+    budgetApi.getIndirects(id).then(config => {
+      if (config) setIndirectConfig(config)
+    }).catch(() => {})
   }, [id, refreshData, getItemsForNode])
+
+  async function handleRecalculate() {
+    if (!id || recalculating) return
+    setRecalculating(true)
+    try {
+      await budgetApi.recalculate(id)
+      await refreshData()
+    } catch (err) {
+      console.error('Error recalculating:', err)
+    } finally {
+      setRecalculating(false)
+    }
+  }
 
   // Handle inline cell edit
   const handleEditItem = useCallback(async (itemId: string, field: string, oldValue: number, newValue: number) => {
@@ -317,6 +370,17 @@ export default function Editor() {
   const indirecto = items.reduce((s, i) => s + i.indirecto_total, 0)
   const neto = items.reduce((s, i) => s + i.neto_total, 0)
 
+  const indirectoPct = indirectConfig
+    ? Math.round((indirectConfig.estructura_pct + indirectConfig.jefatura_pct + indirectConfig.logistica_pct + indirectConfig.herramientas_pct) * 100)
+    : null
+
+  const markupLinks = indirectConfig ? [
+    { label: 'Estructura', pct: Math.round(indirectConfig.estructura_pct * 100) },
+    { label: 'Jefatura', pct: Math.round(indirectConfig.jefatura_pct * 100) },
+    { label: 'Logística', pct: Math.round(indirectConfig.logistica_pct * 100) },
+    { label: 'Herramientas', pct: Math.round(indirectConfig.herramientas_pct * 100) },
+  ] : MARKUP_LINKS
+
   return (
     <div className="p-4 fade-in h-full flex flex-col">
       {/* Toast notifications */}
@@ -397,8 +461,43 @@ export default function Editor() {
           <h1 className="text-xl font-extrabold text-gray-900">
             {budget?.name?.toUpperCase() ?? 'PRESUPUESTO'}
           </h1>
+          {/* Status badge / dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowStatusMenu((v) => !v)}
+              disabled={statusChanging}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium transition-all hover:opacity-80 disabled:opacity-60 ${STATUS_OPTIONS.find((s) => s.value === (budget?.status ?? 'draft'))?.badgeCls ?? 'bg-gray-100 text-gray-600 border-gray-200'}`}
+            >
+              {STATUS_OPTIONS.find((s) => s.value === (budget?.status ?? 'draft'))?.label ?? 'Borrador'}
+              <span className="text-[10px] opacity-60">▾</span>
+            </button>
+            {showStatusMenu && (
+              <>
+              <div className="fixed inset-0 z-20" onClick={() => setShowStatusMenu(false)} />
+              <div className="absolute left-0 top-full mt-1 z-30 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[140px]">
+                {STATUS_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleStatusChange(opt.value)}
+                    className={`w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-gray-50 flex items-center gap-2 ${opt.value === (budget?.status ?? 'draft') ? 'opacity-50 cursor-default' : ''}`}
+                  >
+                    <span className={`px-2 py-0.5 rounded-full border text-xs ${opt.badgeCls}`}>{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+              </>
+            )}
+          </div>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleRecalculate}
+            disabled={recalculating}
+            className="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={13} className={recalculating ? 'animate-spin' : ''} />
+            {recalculating ? 'Recalculando...' : 'Recalcular'}
+          </button>
           <button
             onClick={() => navigate(`/app/budgets/${id ?? '1'}/ai`)}
             className="bg-white border border-gray-200 text-gray-700 px-3.5 py-1.5 rounded-xl text-xs font-medium hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
@@ -432,9 +531,9 @@ export default function Editor() {
         <ViewModeSelector
           mode={viewMode}
           onChange={(m) => {
-            setViewMode(m)
             setSelectedNode(null)
             setItems([])
+            setViewMode(m)
           }}
         />
       </div>
@@ -541,8 +640,8 @@ export default function Editor() {
             </div>
           </div>
 
-          <CostSummaryBar mat={mat} mo={mo} directo={directo} indirecto={indirecto} neto={neto} indirectoPct={31} />
-          <MarkupChainDisplay directo={directo} neto={neto} links={MARKUP_LINKS} budgetId={id} />
+          <CostSummaryBar mat={mat} mo={mo} directo={directo} indirecto={indirecto} neto={neto} indirectoPct={indirectoPct ?? undefined} />
+          <MarkupChainDisplay directo={directo} neto={neto} links={markupLinks} budgetId={id} />
 
           {showAddForm && selectedNode && (
             <AddItemForm

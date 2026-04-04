@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 
 from app.auth import get_current_user
 from app.db import get_data_db
-from app.schemas import CatalogTipo
+from app.schemas import CatalogEntryCreate, CatalogEntryUpdate, CatalogTipo
 
 router = APIRouter()
 
@@ -367,3 +367,74 @@ async def apply_catalog_to_budget(
         "items_unmatched": unmatched,
         "total_updated": round(total_updated, 2),
     }
+
+
+# ── Delete catalog ──────────────────────────────────────────────────────────
+
+
+@router.delete("/{catalog_id}")
+async def delete_catalog(catalog_id: str, user: dict = Depends(get_current_user)):
+    """Delete a catalog and all its entries."""
+    db = get_data_db()
+    # Delete entries first (foreign key constraint)
+    db.table("catalog_entries").delete().eq("catalog_id", catalog_id).execute()
+    # Delete catalog
+    db.table("price_catalogs").delete().eq("id", catalog_id).execute()
+    return {"deleted": True}
+
+
+# ── Create catalog entry ────────────────────────────────────────────────────
+
+
+@router.post("/{catalog_id}/entries")
+async def create_entry(
+    catalog_id: str,
+    entry: CatalogEntryCreate,
+    user: dict = Depends(get_current_user),
+):
+    """Add a single entry to a catalog."""
+    db = get_data_db()
+    data = entry.model_dump()
+    # Map precio_unitario -> precio_sin_iva to match the DB column
+    data["precio_sin_iva"] = data.pop("precio_unitario")
+    data["catalog_id"] = catalog_id
+    data["org_id"] = user["org_id"]
+    result = db.table("catalog_entries").insert(data).execute()
+    return result.data[0] if result.data else {}
+
+
+# ── Update catalog entry ────────────────────────────────────────────────────
+
+
+@router.patch("/{catalog_id}/entries/{entry_id}")
+async def update_entry(
+    catalog_id: str,
+    entry_id: str,
+    entry: CatalogEntryUpdate,
+    user: dict = Depends(get_current_user),
+):
+    """Update a single catalog entry."""
+    db = get_data_db()
+    data = {k: v for k, v in entry.model_dump().items() if v is not None}
+    # Map precio_unitario -> precio_sin_iva to match the DB column
+    if "precio_unitario" in data:
+        data["precio_sin_iva"] = data.pop("precio_unitario")
+    if not data:
+        raise HTTPException(400, "No fields to update")
+    result = db.table("catalog_entries").update(data).eq("id", entry_id).execute()
+    return result.data[0] if result.data else {}
+
+
+# ── Delete catalog entry ────────────────────────────────────────────────────
+
+
+@router.delete("/{catalog_id}/entries/{entry_id}")
+async def delete_entry(
+    catalog_id: str,
+    entry_id: str,
+    user: dict = Depends(get_current_user),
+):
+    """Delete a single catalog entry."""
+    db = get_data_db()
+    db.table("catalog_entries").delete().eq("id", entry_id).execute()
+    return {"deleted": True}

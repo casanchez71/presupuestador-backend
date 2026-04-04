@@ -54,6 +54,7 @@ async def get_indirects(
             "jefatura_pct": 0.08,
             "logistica_pct": 0.05,
             "herramientas_pct": 0.03,
+            "beneficio_pct": 0.10,
         }
     return result.data[0]
 
@@ -129,6 +130,7 @@ async def apply_indirects(
         config.get("jefatura_pct") or 0,
         config.get("logistica_pct") or 0,
         config.get("herramientas_pct") or 0,
+        config.get("beneficio_pct") or 0,
     ])
 
     total_directo = sum(i.get("directo_total") or 0 for i in items)

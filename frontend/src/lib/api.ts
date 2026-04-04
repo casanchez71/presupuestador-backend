@@ -154,4 +154,16 @@ export const catalogApi = {
     get<CatalogEntry[]>(`/catalogs/${id}/search?q=${encodeURIComponent(q)}`),
   apply: (budgetId: string, catalogId: string) =>
     post<{ items_matched: number; items_unmatched: number; total_updated: number }>(`/catalogs/apply/${budgetId}/${catalogId}`),
+  deleteCatalog: (id: string) => del<void>(`/catalogs/${id}`),
+  createEntry: (catalogId: string, entry: { codigo: string; descripcion: string; unidad?: string; precio_unitario: number; tipo?: string }) =>
+    post<CatalogEntry>(`/catalogs/${catalogId}/entries`, entry),
+  updateEntry: (catalogId: string, entryId: string, data: Record<string, unknown>) =>
+    patch<CatalogEntry>(`/catalogs/${catalogId}/entries/${entryId}`, data),
+  deleteEntry: (catalogId: string, entryId: string) =>
+    del<void>(`/catalogs/${catalogId}/entries/${entryId}`),
+  uploadCsv: (file: File, name: string, tipo: string) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return postFile<PriceCatalog>(`/catalogs/upload-csv?name=${encodeURIComponent(name)}&tipo=${encodeURIComponent(tipo)}`, formData)
+  },
 }

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LayoutGrid, Clock, TrendingUp, DollarSign, Plus } from 'lucide-react'
+import { LayoutGrid, Clock, TrendingUp, DollarSign, Plus, Search } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency } from '../lib/format'
 import type { Budget, AnalysisResponse } from '../types'
@@ -26,7 +26,25 @@ export default function Dashboard() {
   const [analyses, setAnalyses] = useState<Record<string, AnalysisResponse>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('todos')
   const navigate = useNavigate()
+
+  const STATUS_PILLS = [
+    { key: 'todos', label: 'Todos' },
+    { key: 'draft', label: 'Borrador' },
+    { key: 'approved', label: 'Aprobado' },
+    { key: 'sent', label: 'Enviado' },
+  ]
+
+  const filteredBudgets = useMemo(() => {
+    return budgets.filter((b) => {
+      const matchesSearch = b.name.toLowerCase().includes(search.toLowerCase())
+      const matchesStatus =
+        statusFilter === 'todos' || (b.status ?? '').toLowerCase() === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [budgets, search, statusFilter])
 
   useEffect(() => {
     budgetApi.list()
@@ -88,6 +106,40 @@ export default function Dashboard() {
         <KpiCard icon={<DollarSign size={16} strokeWidth={1.5} className="text-[#2D8D68]" />} bg="bg-[#E8F5EE]" value={totalNeto > 0 ? fmtCurrency(totalNeto) : '$0'} label="NETO TOTAL CARTERA" />
       </div>
 
+      {/* Search and filter */}
+      <div className="mb-4 flex flex-col gap-3">
+        {/* Search input */}
+        <div className="relative max-w-sm">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Buscar presupuesto..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:border-[#2D8D68] focus:ring-2 focus:ring-[#2D8D68]/20 transition-all"
+          />
+        </div>
+        {/* Status filter pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {STATUS_PILLS.map((pill) => (
+            <button
+              key={pill.key}
+              onClick={() => setStatusFilter(pill.key)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                statusFilter === pill.key
+                  ? 'bg-[#2D8D68] text-white shadow-sm'
+                  : 'bg-white border border-gray-200 text-gray-600 hover:border-[#2D8D68] hover:text-[#2D8D68]'
+              }`}
+            >
+              {pill.label}
+            </button>
+          ))}
+          <span className="ml-auto text-[11px] text-gray-400">
+            Mostrando {filteredBudgets.length} de {budgets.length} presupuestos
+          </span>
+        </div>
+      </div>
+
       {/* Loading / error */}
       {loading && (
         <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
@@ -113,8 +165,13 @@ export default function Dashboard() {
           </button>
         </div>
       )}
+      {!loading && budgets.length > 0 && filteredBudgets.length === 0 && (
+        <div className="mb-6 text-center py-8 bg-white rounded-xl border">
+          <p className="text-gray-500 text-sm">No hay presupuestos que coincidan con la búsqueda.</p>
+        </div>
+      )}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        {budgets.map((b) => {
+        {filteredBudgets.map((b) => {
           const a = analyses[b.id]
           return (
             <BudgetCard

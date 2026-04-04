@@ -122,6 +122,7 @@ class IndirectConfigUpdate(BaseModel):
     jefatura_pct: float | None = None
     logistica_pct: float | None = None
     herramientas_pct: float | None = None
+    beneficio_pct: float | None = None
 
 
 # ── Budget copy ─────────────────────────────────────────────────────────────
@@ -175,3 +176,21 @@ class SectionCreate(BaseModel):
 # ── CSV catalog upload ──────────────────────────────────────────────────────
 
 CatalogTipo = Literal["material", "mano_obra", "equipo", "subcontrato"]
+
+
+# ── Catalog entry write schemas ─────────────────────────────────────────────
+
+class CatalogEntryCreate(BaseModel):
+    codigo: str
+    descripcion: str
+    unidad: str | None = None
+    precio_unitario: float
+    tipo: str | None = None
+
+
+class CatalogEntryUpdate(BaseModel):
+    codigo: str | None = None
+    descripcion: str | None = None
+    unidad: str | None = None
+    precio_unitario: float | None = None
+    tipo: str | None = None

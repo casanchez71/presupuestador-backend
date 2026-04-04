@@ -53,6 +53,9 @@ export default function MarkupChain() {
           { key: 'logistica_pct', label: 'Logística', pct: cfg.logistica_pct, color: 'orange' },
           { key: 'herramientas_pct', label: 'Herramientas', pct: cfg.herramientas_pct, color: 'orange' },
         ])
+        if (cfg.beneficio_pct !== undefined) {
+          setBeneficio(cfg.beneficio_pct || 10)
+        }
       })
       .catch(() => {/* use demo */})
       .finally(() => setLoading(false))
@@ -75,6 +78,7 @@ export default function MarkupChain() {
     setSaving(true)
     const data: Partial<IndirectConfig> = {}
     links.forEach((l) => { data[l.key] = l.pct })
+    data.beneficio_pct = beneficio
     try {
       if (id) {
         await budgetApi.updateIndirects(id, data)
@@ -209,7 +213,7 @@ export default function MarkupChain() {
               <strong className="text-gray-800">{totalPct.toFixed(1)}%</strong>
               {config && (
                 <span className="ml-2 text-gray-400">
-                  (original: {config.estructura_pct + config.jefatura_pct + config.logistica_pct + config.herramientas_pct + 10}%)
+                  (original: {config.estructura_pct + config.jefatura_pct + config.logistica_pct + config.herramientas_pct + (config.beneficio_pct ?? 10)}%)
                 </span>
               )}
             </div>
