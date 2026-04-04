@@ -189,51 +189,37 @@ export default function Analysis() {
         </div>
       )}
 
-      {/* Compact summary row */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="bg-white rounded-xl border px-3 py-2 flex items-center justify-between">
-          <div>
-            <div className="text-[9px] text-gray-400 uppercase tracking-wider">Items</div>
-            <div className="text-lg font-bold text-gray-900">{itemsCount}</div>
+      {/* Summary bar — single compact row */}
+      <div className="bg-white rounded-xl border mb-3 overflow-hidden">
+        <div className="flex divide-x">
+          <div className="flex-1 px-4 py-3">
+            <div className="text-[10px] text-gray-400 uppercase tracking-wider">Items</div>
+            <div className="text-xl font-bold text-gray-900">{itemsCount} <span className="text-xs font-normal text-gray-400">en {sections.length} secciones</span></div>
           </div>
-          <div className="text-[9px] text-gray-400">{sections.length} secciones</div>
-        </div>
-        <div className="bg-white rounded-xl border px-3 py-2">
-          <div className="text-[9px] text-gray-400 uppercase tracking-wider">Costo Directo</div>
-          <div className="text-lg font-bold text-gray-900">{fmtCurrency(directoTotal)}</div>
-          <div className="text-[9px] text-gray-400">MAT {fmtCurrency(matTotal)} + MO {fmtCurrency(moTotal)}</div>
-        </div>
-        <div className="bg-[#2D8D68] rounded-xl px-3 py-2 text-white">
-          <div className="text-[9px] text-[#E0A33A] uppercase tracking-wider">Neto Total</div>
-          <div className="text-lg font-bold">{fmtCurrency(netoTotal)}</div>
-        </div>
-      </div>
-
-      {/* 6 KPI pills - compact */}
-      <div className="flex gap-1.5 mb-3">
-        <div className="flex-1 bg-white rounded-lg border px-2 py-1.5 text-center">
-          <div className="text-[9px] text-gray-400">MAT</div>
-          <div className="text-sm font-bold text-gray-800">{fmtCurrency(matTotal)}</div>
-        </div>
-        <div className="flex-1 bg-white rounded-lg border px-2 py-1.5 text-center">
-          <div className="text-[9px] text-gray-400">MO</div>
-          <div className="text-sm font-bold text-gray-800">{fmtCurrency(moTotal)}</div>
-        </div>
-        <div className="flex-1 bg-blue-50 rounded-lg border border-blue-200 px-2 py-1.5 text-center">
-          <div className="text-[9px] text-blue-500">Directo</div>
-          <div className="text-sm font-bold text-blue-700">{fmtCurrency(directoTotal)}</div>
-        </div>
-        <div className="flex-1 bg-orange-50 rounded-lg border border-orange-200 px-2 py-1.5 text-center">
-          <div className="text-[9px] text-orange-500">Indirecto</div>
-          <div className="text-sm font-bold text-orange-600">{fmtCurrency(indirectoTotal)}</div>
-        </div>
-        <div className="flex-1 bg-white rounded-lg border px-2 py-1.5 text-center">
-          <div className="text-[9px] text-gray-400">Beneficio</div>
-          <div className="text-sm font-bold text-gray-800">{fmtCurrency(beneficioTotal)}</div>
-        </div>
-        <div className="flex-1 bg-[#2D8D68] rounded-lg px-2 py-1.5 text-center text-white">
-          <div className="text-[9px] text-[#E0A33A]">NETO</div>
-          <div className="text-sm font-bold">{fmtCurrency(netoTotal)}</div>
+          <div className="flex-1 px-4 py-3">
+            <div className="text-[10px] text-gray-400 uppercase tracking-wider">Materiales</div>
+            <div className="text-base font-bold text-gray-800">{fmtCurrency(matTotal)}</div>
+          </div>
+          <div className="flex-1 px-4 py-3">
+            <div className="text-[10px] text-gray-400 uppercase tracking-wider">Mano de Obra</div>
+            <div className="text-base font-bold text-gray-800">{fmtCurrency(moTotal)}</div>
+          </div>
+          <div className="flex-1 px-4 py-3 bg-blue-50/50">
+            <div className="text-[10px] text-blue-500 uppercase tracking-wider">Directo</div>
+            <div className="text-base font-bold text-blue-700">{fmtCurrency(directoTotal)}</div>
+          </div>
+          <div className="flex-1 px-4 py-3 bg-orange-50/50">
+            <div className="text-[10px] text-orange-500 uppercase tracking-wider">Indirecto</div>
+            <div className="text-base font-bold text-orange-600">{fmtCurrency(indirectoTotal)}</div>
+          </div>
+          <div className="flex-1 px-4 py-3">
+            <div className="text-[10px] text-gray-400 uppercase tracking-wider">Beneficio</div>
+            <div className="text-base font-bold text-gray-800">{fmtCurrency(beneficioTotal)}</div>
+          </div>
+          <div className="px-5 py-3 bg-[#2D8D68] text-white min-w-[140px]">
+            <div className="text-[10px] text-[#E0A33A] uppercase tracking-wider">Neto Total</div>
+            <div className="text-xl font-bold">{fmtCurrency(netoTotal)}</div>
+          </div>
         </div>
       </div>
 

@@ -65,23 +65,32 @@ export default function Editor() {
 
   /** Return items that belong to a given tree node. */
   const getItemsForNode = useCallback((node: TreeNode, all: BudgetItem[]): BudgetItem[] => {
+    // Virtual nodes from regrouping (piso/material/gremio views)
     if (node.id.startsWith('__virtual_') && node.children.length > 0) {
       return node.children as BudgetItem[]
     }
+
+    const code = node.code ?? ''
+    const isLeafItem = code.includes('.')
+
+    // Leaf item (e.g. "1.1", "3.2"): ALWAYS show itself only
+    if (isLeafItem) {
+      return all.filter((i) => i.id === node.id)
+    }
+
+    // Section header (e.g. "1", "2"): show all items in this section
+    const sectionMatch = code.match(/^(\d+)/)
+    if (sectionMatch) {
+      const prefix = sectionMatch[1] + '.'
+      const byCode = all.filter((i) => i.code?.startsWith(prefix) && i.id !== node.id)
+      if (byCode.length > 0) return byCode
+    }
+
+    // Fallback: items with this node as parent
     const byParent = all.filter((i) => i.parent_id === node.id)
     if (byParent.length > 0) return byParent
-    const code = node.code ?? ''
-    // Only treat as section header if code is just a number (e.g. "1", "2") or "N-" pattern
-    // Items like "1.1" should NOT be treated as sections
-    const isSection = /^\d+\s*[-.]?\s*\D/.test(code) && !code.includes('.')
-    if (isSection) {
-      const sectionMatch = code.match(/^(\d+)/)
-      if (sectionMatch) {
-        const prefix = sectionMatch[1] + '.'
-        return all.filter((i) => i.code?.startsWith(prefix) && i.id !== node.id)
-      }
-    }
-    // Leaf item: show itself in the table
+
+    // Nothing found: show self
     return all.filter((i) => i.id === node.id)
   }, [])
 
@@ -243,6 +252,22 @@ export default function Editor() {
     return `${prefix}${maxSub + 1}`
   }, [selectedNode, items])
 
+  /** Find the section parent for the currently selected node */
+  const findSectionParent = useCallback((): TreeNode | null => {
+    if (!selectedNode) return null
+    const code = selectedNode.code ?? ''
+    // If already a section (no dot in code), use it
+    if (!code.includes('.')) return selectedNode
+    // Extract section number and find the section node
+    const sectionNum = code.split('.')[0]
+    const section = originalTree.find((n) => {
+      const c = n.code ?? ''
+      const m = c.match(/^(\d+)/)
+      return m && m[1] === sectionNum && !c.includes('.')
+    })
+    return section ?? selectedNode
+  }, [selectedNode, originalTree])
+
   /** Handle adding a new item */
   const handleAddItem = useCallback(async (data: {
     code: string
@@ -254,6 +279,9 @@ export default function Editor() {
   }) => {
     if (!id || !selectedNode) throw new Error('No budget/section selected')
 
+    // Always use the section as parent, not the leaf item
+    const sectionNode = findSectionParent()
+
     const newItem = await budgetApi.createItem(id, {
       code: data.code,
       description: data.description,
@@ -261,7 +289,7 @@ export default function Editor() {
       cantidad: data.cantidad,
       mat_unitario: data.mat_unitario,
       mo_unitario: data.mo_unitario,
-      parent_id: selectedNode.id,
+      parent_id: sectionNode?.id ?? selectedNode.id,
     })
 
     const refreshedItems = await budgetApi.getItems(id)
@@ -269,7 +297,7 @@ export default function Editor() {
     setItems(getItemsForNode(selectedNode, refreshedItems))
     setShowAddForm(false)
     addToast(`Item agregado: ${newItem.code ?? data.code} ${data.description}`)
-  }, [id, selectedNode, addToast, getItemsForNode])
+  }, [id, selectedNode, addToast, getItemsForNode, findSectionParent])
 
   // Open section form with suggested code
   const openSectionForm = useCallback(() => {
