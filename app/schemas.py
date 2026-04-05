@@ -182,6 +182,22 @@ class SectionCreate(BaseModel):
 CatalogTipo = Literal["material", "mano_obra", "equipo", "subcontrato"]
 
 
+class CatalogEntryCreate(BaseModel):
+    codigo: Optional[str] = None
+    descripcion: Optional[str] = None
+    unidad: Optional[str] = None
+    precio_unitario: Optional[float] = 0
+    tipo: Optional[str] = "material"
+
+
+class CatalogEntryUpdate(BaseModel):
+    codigo: Optional[str] = None
+    descripcion: Optional[str] = None
+    unidad: Optional[str] = None
+    precio_unitario: Optional[float] = None
+    tipo: Optional[str] = None
+
+
 # ── Item resources CRUD ─────────────────────────────────────────────────────
 
 class ResourceCreate(BaseModel):
