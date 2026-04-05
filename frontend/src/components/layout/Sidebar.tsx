@@ -2,7 +2,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutGrid, Edit3, BarChart2, Layers,
   Download, Upload, Settings, BookOpen, RefreshCw, LogOut, Plus,
-  ArrowLeft,
+  ArrowLeft, Library,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useEffect, useState } from 'react'
@@ -145,6 +145,7 @@ export default function Sidebar() {
         <nav className="space-y-0.5 text-[13px]">
           <NavItem to="/app/settings/markups" icon={<Settings size={15} />} label="Cadena de Markups" />
           <NavItem to="/app/catalogs" icon={<BookOpen size={15} />} label="Catalogos" />
+          <NavItem to="/app/templates" icon={<Library size={15} />} label="Templates" />
         </nav>
       </div>
 

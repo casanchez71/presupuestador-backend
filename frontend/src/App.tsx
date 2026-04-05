@@ -15,6 +15,7 @@ import Export from './pages/Export'
 import MarkupChain from './pages/MarkupChain'
 import Catalogs from './pages/Catalogs'
 import Versions from './pages/Versions'
+import Templates from './pages/Templates'
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="import" element={<ImportExcel />} />
             <Route path="settings/markups" element={<MarkupChain />} />
             <Route path="catalogs" element={<Catalogs />} />
+            <Route path="templates" element={<Templates />} />
           </Route>
 
           {/* 404 */}
