@@ -58,7 +58,7 @@ const fmt = new Intl.NumberFormat('es-AR', {
   currency: 'ARS',
   maximumFractionDigits: 0,
 })
-const fmtARS = (v: number) => fmt.format(v)
+const fmtARS = (v: number | null | undefined) => fmt.format(v ?? 0)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -511,18 +511,18 @@ interface GrandTotalProps {
 }
 
 function GrandTotal({ item, indirects, recursos }: GrandTotalProps) {
-  const matTotal = recursos.filter((r) => r.tipo === 'material').reduce((s, r) => s + r.subtotal, 0)
-  const moTotal = recursos.filter((r) => r.tipo === 'mano_obra').reduce((s, r) => s + r.subtotal, 0)
-  const eqTotal = recursos.filter((r) => r.tipo === 'equipo').reduce((s, r) => s + r.subtotal, 0)
-  const matIndTotal = recursos.filter((r) => r.tipo === 'mo_material').reduce((s, r) => s + r.subtotal, 0)
-  const subTotal = recursos.filter((r) => r.tipo === 'subcontrato').reduce((s, r) => s + r.subtotal, 0)
+  const matTotal = recursos.filter((r) => r.tipo === 'material').reduce((s, r) => s + (r.subtotal ?? 0), 0)
+  const moTotal = recursos.filter((r) => r.tipo === 'mano_obra').reduce((s, r) => s + (r.subtotal ?? 0), 0)
+  const eqTotal = recursos.filter((r) => r.tipo === 'equipo').reduce((s, r) => s + (r.subtotal ?? 0), 0)
+  const matIndTotal = recursos.filter((r) => r.tipo === 'mo_material').reduce((s, r) => s + (r.subtotal ?? 0), 0)
+  const subTotal = recursos.filter((r) => r.tipo === 'subcontrato').reduce((s, r) => s + (r.subtotal ?? 0), 0)
   const directo = matTotal + moTotal + eqTotal + matIndTotal + subTotal
 
   // Prefer item's calculated values if available, otherwise derive from indirects config
-  const indirectoTotal = item.indirecto_total
-  const beneficioTotal = item.beneficio_total
+  const indirectoTotal = item.indirecto_total ?? 0
+  const beneficioTotal = item.beneficio_total ?? 0
   const impuestosTotal = item.impuestos_total ?? 0
-  const netoTotal = item.neto_total
+  const netoTotal = item.neto_total ?? 0
   const ivaTotal = item.iva_total ?? 0
   const totalFinal = item.total_final ?? 0
 
