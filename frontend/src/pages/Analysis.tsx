@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { BarChart2, Download } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency } from '../lib/format'
-import CostSummaryBar from '../components/ui/CostSummaryBar'
 import ViewModeSelector from '../components/ui/ViewModeSelector'
 import { groupByFloor, groupByMaterial, groupByWorkType } from '../lib/viewModes'
 import type { ViewMode } from '../lib/viewModes'
@@ -17,6 +16,7 @@ interface SectionRow {
   indirecto: number
   benef: number
   neto: number
+  total_final: number
 }
 
 /** Build section-level summaries from a flat items list.
@@ -38,7 +38,6 @@ function buildSections(items: BudgetItem[]): SectionRow[] {
   }
 
   if (sectionHeaders.length === 0) {
-    // Fallback: treat all items as one section
     const totals = sumItems(items)
     return [{ name: 'Total', ...totals }]
   }
@@ -64,12 +63,13 @@ function buildSectionsFromTree(nodes: TreeNode[]): SectionRow[] {
       indirecto: node.indirecto_total,
       benef: node.beneficio_total,
       neto: node.neto_total,
+      total_final: node.total_final ?? 0,
     }
   })
 }
 
 function sumItems(items: BudgetItem[]) {
-  let mat = 0, mo = 0, directo = 0, indirecto = 0, benef = 0, neto = 0
+  let mat = 0, mo = 0, directo = 0, indirecto = 0, benef = 0, neto = 0, total_final = 0
   for (const i of items) {
     mat += i.mat_total
     mo += i.mo_total
@@ -77,8 +77,9 @@ function sumItems(items: BudgetItem[]) {
     indirecto += i.indirecto_total
     benef += i.beneficio_total
     neto += i.neto_total
+    total_final += i.total_final ?? 0
   }
-  return { mat, mo, directo, indirecto, benef, neto }
+  return { mat, mo, directo, indirecto, benef, neto, total_final }
 }
 
 export default function Analysis() {
@@ -151,107 +152,156 @@ export default function Analysis() {
   const directoTotal = data?.directo_total ?? 0
   const indirectoTotal = data?.indirecto_total ?? 0
   const beneficioTotal = data?.beneficio_total ?? 0
+  const totalFinalGlobal = data?.total_final ?? allItems.reduce((s, i) => s + (i.total_final ?? 0), 0)
 
   return (
-    <div className="p-4 fade-in h-full flex flex-col">
-      {/* Fixed header area */}
-      <div className="flex-shrink-0">
-        {/* Section label */}
-        <div className="flex items-center gap-2 text-[#2D8D68] text-[11px] font-bold tracking-wider mb-1">
-          <BarChart2 size={14} /> VISTA DE ANALISIS
+    <div className="p-6 fade-in">
+      {/* Section label */}
+      <div className="flex items-center gap-2 text-[#2D8D68] text-[11px] font-bold tracking-wider mb-1">
+        <BarChart2 size={14} /> VISTA DE ANALISIS
+      </div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
+          <h1 className="text-xl font-extrabold text-gray-900">ANALISIS — {budgetName.toUpperCase()}</h1>
         </div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
-            <h1 className="text-xl font-extrabold text-gray-900">ANALISIS — {budgetName.toUpperCase()}</h1>
-          </div>
-          <button
-            onClick={() => navigate(`/app/budgets/${id ?? '1'}/export`)}
-            className="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 flex items-center gap-1.5 transition-colors"
-          >
-            <Download size={13} /> Exportar
-          </button>
+        <button
+          onClick={() => navigate(`/app/budgets/${id ?? '1'}/export`)}
+          className="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 flex items-center gap-1.5 transition-colors"
+        >
+          <Download size={13} /> Exportar
+        </button>
+      </div>
+
+      {/* View Mode Selector */}
+      <div className="mb-4">
+        <ViewModeSelector mode={viewMode} onChange={setViewMode} />
+      </div>
+
+      {loading && (
+        <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
+          <div className="w-4 h-4 border-2 border-[#2D8D68] border-t-transparent rounded-full animate-spin" />
+          Cargando analisis...
         </div>
+      )}
 
-        {/* View Mode Selector */}
-        <div className="mb-3">
-          <ViewModeSelector mode={viewMode} onChange={setViewMode} />
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-sm text-red-700">
+          <p className="font-semibold mb-1">Error al cargar el analisis</p>
+          <p className="text-xs">{error}</p>
         </div>
+      )}
 
-        {loading && (
-          <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
-            <div className="w-4 h-4 border-2 border-[#2D8D68] border-t-transparent rounded-full animate-spin" />
-            Cargando analisis...
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-3 text-sm text-red-700">
-            <p className="font-semibold mb-1">Error al cargar el analisis</p>
-            <p className="text-xs">{error}</p>
-          </div>
-        )}
-
-        {/* Summary bar — same CostSummaryBar as Editor */}
-        <div className="rounded-xl border mb-3 overflow-hidden">
-          <CostSummaryBar mat={matTotal} mo={moTotal} directo={directoTotal} indirecto={indirectoTotal} neto={netoTotal} />
+      {/* Summary cards */}
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="bg-white rounded-xl border p-4">
+          <div className="text-[10px] text-gray-400 mb-1">ITEMS TOTALES</div>
+          <div className="text-2xl font-bold text-gray-900">{itemsCount}</div>
+          <div className="text-[10px] text-gray-500 mt-1">En {sections.length} secciones principales</div>
+        </div>
+        <div className="bg-white rounded-xl border p-4">
+          <div className="text-[10px] text-gray-400 mb-1">COSTO DIRECTO</div>
+          <div className="text-2xl font-bold text-gray-900">{fmtCurrency(directoTotal)}</div>
+          <div className="text-[10px] text-gray-500 mt-1">MAT {fmtCurrency(matTotal)} + MO {fmtCurrency(moTotal)}</div>
+        </div>
+        <div className="bg-[#143D34] rounded-xl p-4 text-white">
+          <div className="text-[10px] text-[#E0A33A] mb-1">TOTAL FINAL c/IVA</div>
+          <div className="text-2xl font-bold">{fmtCurrency(totalFinalGlobal > 0 ? totalFinalGlobal : netoTotal)}</div>
+          <div className="text-[10px] text-[#E0A33A]/70 mt-0.5">Neto: {fmtCurrency(netoTotal)}</div>
         </div>
       </div>
 
-      {/* Scrollable table area */}
-      <div className="flex-1 min-h-0 bg-white rounded-xl border overflow-hidden flex flex-col">
-        <div className="bg-[#E8F5EE]/30 px-3 py-2 border-b flex-shrink-0">
-          <span className="text-[10px] font-bold text-[#2D8D68] tracking-wide">
+      {/* 7 KPI cards */}
+      <div className="grid grid-cols-7 gap-2 mb-4">
+        <div className="bg-white rounded-lg border p-3 text-center">
+          <div className="text-[10px] text-gray-400">Materiales</div>
+          <div className="text-base font-bold text-gray-800">{fmtCurrency(matTotal)}</div>
+        </div>
+        <div className="bg-white rounded-lg border p-3 text-center">
+          <div className="text-[10px] text-gray-400">Mano de Obra</div>
+          <div className="text-base font-bold text-gray-800">{fmtCurrency(moTotal)}</div>
+        </div>
+        <div className="bg-blue-50 rounded-lg border border-blue-200 p-3 text-center">
+          <div className="text-[10px] text-blue-500">Directo</div>
+          <div className="text-base font-bold text-blue-700">{fmtCurrency(directoTotal)}</div>
+        </div>
+        <div className="bg-orange-50 rounded-lg border border-orange-200 p-3 text-center">
+          <div className="text-[10px] text-orange-500">Indirectos</div>
+          <div className="text-base font-bold text-orange-600">{fmtCurrency(indirectoTotal)}</div>
+        </div>
+        <div className="bg-amber-50 rounded-lg border border-amber-200 p-3 text-center">
+          <div className="text-[10px] text-amber-600">Beneficio</div>
+          <div className="text-base font-bold text-amber-700">{fmtCurrency(beneficioTotal)}</div>
+        </div>
+        <div className="bg-emerald-50 rounded-lg border border-emerald-200 p-3 text-center">
+          <div className="text-[10px] text-emerald-600">Neto</div>
+          <div className="text-base font-bold text-emerald-700">{fmtCurrency(netoTotal)}</div>
+        </div>
+        <div className="bg-[#143D34] rounded-lg p-3 text-center text-white">
+          <div className="text-[10px] text-[#E0A33A]">TOTAL c/IVA</div>
+          <div className="text-base font-bold">{fmtCurrency(totalFinalGlobal > 0 ? totalFinalGlobal : netoTotal)}</div>
+        </div>
+      </div>
+
+      {/* Section table */}
+      <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-gray-50 px-3 py-2 border-b">
+          <span className="text-[10px] font-bold text-gray-500 tracking-wide">
             DESGLOSE POR {VIEW_MODE_LABELS[viewMode].toUpperCase()}
           </span>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          <table className="w-full text-xs">
-            <thead className="bg-[#E8F5EE] text-[#143D34] sticky top-0">
+        <table className="w-full text-xs">
+          <thead className="bg-gray-100 text-gray-600">
+            <tr>
+              <th className="px-3 py-2 text-left font-semibold">Seccion</th>
+              <th className="px-3 py-2 text-right font-semibold">MAT</th>
+              <th className="px-3 py-2 text-right font-semibold">MO</th>
+              <th className="px-3 py-2 text-right font-semibold">Directo</th>
+              <th className="px-3 py-2 text-right font-semibold">Indirecto</th>
+              <th className="px-3 py-2 text-right font-semibold">Beneficio</th>
+              <th className="px-3 py-2 text-right font-semibold">Neto</th>
+              <th className="px-3 py-2 text-right font-bold">Total c/IVA</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sections.length === 0 ? (
               <tr>
-                <th className="px-3 py-2 text-left font-semibold text-[11px] tracking-wide">Seccion</th>
-                <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">MAT</th>
-                <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">MO</th>
-                <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Directo</th>
-                <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Indirecto</th>
-                <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Beneficio</th>
-                <th className="px-3 py-2 text-right font-bold text-[11px] tracking-wide">Neto</th>
+                <td colSpan={8} className="px-3 py-8 text-center text-gray-400">
+                  No hay datos para agrupar con esta vista.
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {sections.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-3 py-8 text-center text-gray-400">
-                    No hay datos para agrupar con esta vista.
+            ) : (
+              sections.map((s, i) => (
+                <tr key={i} className="border-b hover:bg-gray-50">
+                  <td className="px-3 py-2 font-medium text-gray-800">{s.name}</td>
+                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mat)}</td>
+                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mo)}</td>
+                  <td className="px-3 py-2 cost-cell text-blue-700 font-medium">{fmtCurrency(s.directo)}</td>
+                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.indirecto)}</td>
+                  <td className="px-3 py-2 cost-cell text-amber-700">{fmtCurrency(s.benef)}</td>
+                  <td className="px-3 py-2 cost-cell text-emerald-700 font-medium">{fmtCurrency(s.neto)}</td>
+                  <td className="px-3 py-2 cost-cell font-bold text-[#143D34]">
+                    {s.total_final > 0 ? fmtCurrency(s.total_final) : '—'}
                   </td>
                 </tr>
-              ) : (
-                sections.map((s, i) => (
-                  <tr key={i} className={`hover:bg-[#E8F5EE]/20 transition-colors duration-150 ${i % 2 === 1 ? 'bg-gray-50/30' : 'bg-white'}`}>
-                    <td className="px-3 py-2 font-medium text-gray-800">{s.name}</td>
-                    <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mat)}</td>
-                    <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mo)}</td>
-                    <td className="px-3 py-2 cost-cell text-blue-700 font-medium">{fmtCurrency(s.directo)}</td>
-                    <td className="px-3 py-2 cost-cell">{fmtCurrency(s.indirecto)}</td>
-                    <td className="px-3 py-2 cost-cell">{fmtCurrency(s.benef)}</td>
-                    <td className="px-3 py-2 cost-cell font-bold">{fmtCurrency(s.neto)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-            <tfoot className="bg-[#E8F5EE] font-semibold text-xs border-t border-[#2D8D68]/20 sticky bottom-0 z-10">
-              <tr>
-                <td className="px-3 py-2.5 text-[#2D8D68] uppercase text-[10px] tracking-wider font-bold">TOTAL OBRA</td>
-                <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(matTotal)}</td>
-                <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(moTotal)}</td>
-                <td className="px-3 py-2.5 cost-cell text-blue-700 font-bold">{fmtCurrency(directoTotal)}</td>
-                <td className="px-3 py-2.5 cost-cell text-[#E8663C] font-bold">{fmtCurrency(indirectoTotal)}</td>
-                <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(beneficioTotal)}</td>
-                <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(netoTotal)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+          <tfoot className="bg-[#143D34] text-white font-semibold">
+            <tr>
+              <td className="px-3 py-3">TOTAL OBRA</td>
+              <td className="px-3 py-3 cost-cell">{fmtCurrency(matTotal)}</td>
+              <td className="px-3 py-3 cost-cell">{fmtCurrency(moTotal)}</td>
+              <td className="px-3 py-3 cost-cell text-green-200">{fmtCurrency(directoTotal)}</td>
+              <td className="px-3 py-3 cost-cell">{fmtCurrency(indirectoTotal)}</td>
+              <td className="px-3 py-3 cost-cell text-amber-300">{fmtCurrency(beneficioTotal)}</td>
+              <td className="px-3 py-3 cost-cell text-emerald-300">{fmtCurrency(netoTotal)}</td>
+              <td className="px-3 py-3 cost-cell text-[#E0A33A] text-base font-bold">
+                {fmtCurrency(totalFinalGlobal > 0 ? totalFinalGlobal : netoTotal)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
     </div>
   )

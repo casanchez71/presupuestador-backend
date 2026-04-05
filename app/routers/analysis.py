@@ -3,17 +3,39 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app.auth import get_current_user
-from app.calculations import calc_budget_summary, calc_item_totals
+from app.calculations import (
+    calc_budget_summary,
+    calc_cascade_indirects,
+    calc_item_from_resources,
+    calc_item_totals,
+    calc_resource_subtotal,
+)
 from app.db import get_data_db
 from app.schemas import AnalysisResponse, IndirectApplyRequest, IndirectConfigUpdate, VersionCreate
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
+
+# Default values for indirect config fields that may not exist in older DB rows
+_CONFIG_DEFAULTS: dict[str, float] = {
+    "imprevistos_pct": 3,
+    "estructura_pct": 15,
+    "jefatura_pct": 8,
+    "logistica_pct": 5,
+    "herramientas_pct": 3,
+    "beneficio_pct": 10,
+    "ingresos_brutos_pct": 7,
+    "imp_cheque_pct": 1.2,
+    "iva_pct": 21,
+}
 
 
 def _get_items(budget_id: str, org_id: str) -> list[dict]:
@@ -28,6 +50,20 @@ def _get_items(budget_id: str, org_id: str) -> list[dict]:
     )
 
 
+def _apply_config_defaults(config: dict) -> dict:
+    """Fill in missing config keys with defaults (does not mutate original)."""
+    result = dict(config)
+    for key, default in _CONFIG_DEFAULTS.items():
+        if result.get(key) is None:
+            result[key] = default
+    return result
+
+
+def _is_leaf_item(item: dict) -> bool:
+    """Leaf items have cantidad > 0 and represent actual work items (not sections)."""
+    return (item.get("notas") != "Seccion") and (float(item.get("cantidad") or 0) > 0)
+
+
 # ── Indirect config CRUD ────────────────────────────────────────────────────
 
 
@@ -36,7 +72,7 @@ async def get_indirects(
     budget_id: UUID,
     user: dict = Depends(get_current_user),
 ):
-    """Get indirect cost config for this org."""
+    """Get indirect cost config for this org (all fields including cascade fields)."""
     db = get_data_db()
     org_id = user["org_id"]
     result = (
@@ -47,16 +83,9 @@ async def get_indirects(
         .execute()
     )
     if not result.data:
-        # Return defaults (whole numbers: 15 means 15%)
-        return {
-            "org_id": org_id,
-            "estructura_pct": 15,
-            "jefatura_pct": 8,
-            "logistica_pct": 5,
-            "herramientas_pct": 3,
-            "beneficio_pct": 10,
-        }
-    return result.data[0]
+        # Return all defaults
+        return {"org_id": org_id, **_CONFIG_DEFAULTS}
+    return _apply_config_defaults(result.data[0])
 
 
 @router.patch("/{budget_id}/indirects")
@@ -95,7 +124,8 @@ async def update_indirects(
             .execute()
         )
 
-    return result.data[0] if result.data else update_data
+    row = result.data[0] if result.data else update_data
+    return _apply_config_defaults(row)
 
 
 # ── Indirect costs (apply) ──────────────────────────────────────────────────
@@ -107,62 +137,212 @@ async def apply_indirects(
     request: IndirectApplyRequest = Body(default=IndirectApplyRequest()),
     user: dict = Depends(get_current_user),
 ):
-    """Apply indirect cost percentages to all items in a budget."""
+    """Apply cascade indirect cost percentages to all leaf items in a budget."""
     db = get_data_db()
     org_id = user["org_id"]
     bid = str(budget_id)
 
-    # Get indirect config
+    # Load indirect config
     q = db.table("indirect_config").select("*").eq("org_id", org_id)
     if request.config_id:
         q = q.eq("id", str(request.config_id))
     config_result = q.limit(1).execute()
     if not config_result.data:
         raise HTTPException(404, "Configuracion de indirectos no encontrada")
-    config = config_result.data[0]
+
+    config = _apply_config_defaults(config_result.data[0])
 
     items = _get_items(bid, org_id)
     if not items:
         raise HTTPException(404, "Presupuesto sin items")
 
-    # DB stores whole numbers (15 = 15%), divide by 100 to get the multiplier
-    pct_indirecto = sum([
-        config.get("estructura_pct") or 0,
-        config.get("jefatura_pct") or 0,
-        config.get("logistica_pct") or 0,
-        config.get("herramientas_pct") or 0,
-    ]) / 100
+    # Only process leaf items (actual work items, not sections)
+    leaf_items = [i for i in items if _is_leaf_item(i)]
 
-    pct_beneficio = (config.get("beneficio_pct") or 0) / 100
+    total_directo = sum(float(i.get("directo_total") or 0) for i in leaf_items)
 
-    total_directo = sum(i.get("directo_total") or 0 for i in items)
-
-    # Build batch of updates — indirecto and beneficio calculated separately
+    # Apply cascade indirects and batch-update
     updates = []
-    for item in items:
-        directo = item.get("directo_total") or 0
-        indirecto = round(directo * pct_indirecto, 2)
-        beneficio = round(directo * pct_beneficio, 2)
-        neto = directo + indirecto + beneficio
+    for item in leaf_items:
+        recalculated = calc_cascade_indirects(dict(item), config)
         updates.append({
             "id": item["id"],
-            "indirecto_total": indirecto,
-            "beneficio_total": beneficio,
-            "neto_total": neto,
+            "indirecto_total": recalculated["indirecto_total"],
+            "beneficio_total": recalculated["beneficio_total"],
+            "impuestos_total": recalculated.get("impuestos_total", 0),
+            "neto_total": recalculated["neto_total"],
+            "iva_total": recalculated.get("iva_total", 0),
+            "total_final": recalculated.get("total_final", 0),
         })
 
-    # Update in batches (Supabase doesn't support bulk UPDATE, so we batch)
     for upd in updates:
         item_id = upd.pop("id")
-        db.table("budget_items").update(upd).eq("id", item_id).execute()
+        try:
+            db.table("budget_items").update(upd).eq("id", item_id).execute()
+        except Exception:
+            # Columns impuestos_total / iva_total / total_final may not exist yet
+            # Fall back to updating only the legacy fields
+            logger.warning(
+                "Full cascade update failed for item %s, falling back to legacy fields",
+                item_id,
+                exc_info=True,
+            )
+            db.table("budget_items").update({
+                "indirecto_total": upd["indirecto_total"],
+                "beneficio_total": upd["beneficio_total"],
+                "neto_total": upd["neto_total"],
+            }).eq("id", item_id).execute()
+
+    total_indirecto = sum(u.get("indirecto_total", 0) for u in updates)
+    total_beneficio = sum(u.get("beneficio_total", 0) for u in updates)
+    total_neto = sum(u.get("neto_total", 0) for u in updates)
+    total_final = sum(u.get("total_final", 0) for u in updates)
 
     return {
-        "total_directo": total_directo,
-        "total_indirectos": sum(u["indirecto_total"] for u in updates),
-        "total_beneficio": sum(u["beneficio_total"] for u in updates),
-        "pct_indirecto": round(pct_indirecto * 100, 2),
-        "pct_beneficio": round(pct_beneficio * 100, 2),
+        "total_directo": round(total_directo, 2),
+        "total_indirectos": round(total_indirecto, 2),
+        "total_beneficio": round(total_beneficio, 2),
+        "total_neto": round(total_neto, 2),
+        "total_final": round(total_final, 2),
         "items_updated": len(updates),
+        "config_id": config_result.data[0].get("id"),
+    }
+
+
+# ── Cascade recalculate (nuclear option) ────────────────────────────────────
+
+
+@router.post("/{budget_id}/cascade-recalculate")
+async def cascade_recalculate(
+    budget_id: UUID,
+    user: dict = Depends(get_current_user),
+):
+    """Full cascade recalculation from scratch.
+
+    For every leaf item:
+      1. Recalculate each resource subtotal (cantidad_efectiva, subtotal)
+      2. Derive item unit prices and directo from resources
+      3. Apply cascade indirects (indirecto → beneficio → taxes → IVA → total)
+    All DB records are updated in place.
+    """
+    db = get_data_db()
+    org_id = user["org_id"]
+    bid = str(budget_id)
+
+    # Verify budget ownership
+    budget = (
+        db.table("budgets")
+        .select("id")
+        .eq("id", bid)
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not budget.data:
+        raise HTTPException(404, "Presupuesto no encontrado")
+
+    items = _get_items(bid, org_id)
+    if not items:
+        raise HTTPException(404, "Presupuesto sin items")
+
+    # Load indirect config (with defaults)
+    config_result = (
+        db.table("indirect_config")
+        .select("*")
+        .eq("org_id", org_id)
+        .limit(1)
+        .execute()
+    )
+    config = _apply_config_defaults(config_result.data[0] if config_result.data else {})
+
+    resources_updated = 0
+    items_updated = 0
+    items_skipped = 0
+
+    for item in items:
+        if not _is_leaf_item(item):
+            items_skipped += 1
+            continue
+
+        item_id = item["id"]
+
+        # Step 1: Load and recalculate resources
+        resources_result = (
+            db.table("item_resources")
+            .select("*")
+            .eq("item_id", item_id)
+            .eq("org_id", org_id)
+            .execute()
+        )
+        resources = resources_result.data or []
+
+        recalc_resources = []
+        for res in resources:
+            updated_res = calc_resource_subtotal(dict(res))
+            recalc_resources.append(updated_res)
+            try:
+                db.table("item_resources").update({
+                    "cantidad_efectiva": updated_res["cantidad_efectiva"],
+                    "subtotal": updated_res["subtotal"],
+                }).eq("id", res["id"]).execute()
+                resources_updated += 1
+            except Exception:
+                logger.warning(
+                    "Failed to update resource %s", res["id"], exc_info=True
+                )
+
+        # Step 2: Derive item unit prices and directo from resources
+        item_copy = dict(item)
+        if recalc_resources:
+            calc_item_from_resources(item_copy, recalc_resources)
+        else:
+            # No resources — use existing unit prices to recalc totals
+            item_copy = calc_item_totals(item_copy)
+
+        # Step 3: Apply cascade indirects
+        calc_cascade_indirects(item_copy, config)
+
+        # Patch fields to update in DB
+        patch = {
+            "mat_unitario": item_copy.get("mat_unitario", item.get("mat_unitario") or 0),
+            "mo_unitario": item_copy.get("mo_unitario", item.get("mo_unitario") or 0),
+            "mat_total": item_copy.get("mat_total", 0),
+            "mo_total": item_copy.get("mo_total", 0),
+            "directo_total": item_copy.get("directo_total", 0),
+            "indirecto_total": item_copy.get("indirecto_total", 0),
+            "beneficio_total": item_copy.get("beneficio_total", 0),
+            "neto_total": item_copy.get("neto_total", 0),
+        }
+        # Include new cascade fields if they exist (require DB migration)
+        cascade_extras = {
+            "impuestos_total": item_copy.get("impuestos_total"),
+            "iva_total": item_copy.get("iva_total"),
+            "total_final": item_copy.get("total_final"),
+        }
+
+        try:
+            db.table("budget_items").update({**patch, **cascade_extras}).eq("id", item_id).execute()
+        except Exception:
+            # New columns not yet in DB — fall back to legacy fields only
+            logger.warning(
+                "Cascade extra fields failed for item %s, using legacy fields",
+                item_id,
+                exc_info=True,
+            )
+            db.table("budget_items").update(patch).eq("id", item_id).execute()
+
+        items_updated += 1
+
+    # Build summary from freshly updated items
+    all_items = _get_items(bid, org_id)
+    summary = calc_budget_summary(all_items)
+
+    return {
+        "items_total": len(items),
+        "items_updated": items_updated,
+        "items_skipped": items_skipped,
+        "resources_updated": resources_updated,
+        "summary": summary,
     }
 
 

@@ -1,0 +1,46 @@
+<svg width="1200" height="360" viewBox="0 0 1200 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>SOLE INTHEGROW Horizontal Logo</title>
+  <desc>Horizontal SOLE INTHEGROW wordmark with sun and growth symbol.</desc>
+  <defs>
+    <linearGradient id="soleRingH" x1="70" y1="50" x2="250" y2="250" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E0A33A"/>
+      <stop offset="1" stop-color="#C57F18"/>
+    </linearGradient>
+    <linearGradient id="soleLeafH" x1="125" y1="105" x2="195" y2="215" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2D8D68"/>
+      <stop offset="1" stop-color="#174B3D"/>
+    </linearGradient>
+  </defs>
+  <path
+    d="M160 43C99.801 43 51 91.801 51 152C51 212.199 99.801 261 160 261C202.55 261 239.393 236.611 257.511 201.052"
+    stroke="url(#soleRingH)"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+  <circle cx="255" cy="118" r="20" fill="#E0A33A"/>
+  <path
+    d="M157 228V169C157 149.118 173.118 133 193 133H205"
+    stroke="#143D34"
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M136 190C111.451 190 91.5 170.049 91.5 145.5V137.5C116.049 137.5 136 157.451 136 182V190Z"
+    fill="url(#soleLeafH)"
+  />
+  <path
+    d="M162 168C162 140.386 184.386 118 212 118H220C220 145.614 197.614 168 170 168H162Z"
+    fill="url(#soleLeafH)"
+  />
+  <path
+    d="M137 241C147.48 247.118 152.976 251.27 158.62 263.944C164.264 251.27 169.76 247.118 180.24 241"
+    stroke="#143D34"
+    stroke-width="12"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <text x="320" y="148" fill="#143D34" font-family="Avenir Next, Montserrat, Poppins, Segoe UI, sans-serif" font-size="106" font-weight="800" letter-spacing="2">SOLE</text>
+  <text x="325" y="208" fill="#9D7A32" font-family="Avenir Next, Montserrat, Poppins, Segoe UI, sans-serif" font-size="34" font-weight="700" letter-spacing="7">IN THE GROW</text>
+  <path d="M325 230H1038" stroke="#D8C29A" stroke-width="3" stroke-linecap="round"/>
+</svg>

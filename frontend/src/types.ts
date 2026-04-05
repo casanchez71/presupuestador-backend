@@ -20,12 +20,21 @@ export interface BudgetItem {
   cantidad?: number
   mat_unitario: number
   mo_unitario: number
+  eq_unitario?: number
+  mat_ind_unitario?: number
+  sub_unitario?: number
   mat_total: number
   mo_total: number
+  eq_total?: number
+  mat_ind_total?: number
+  sub_total?: number
   directo_total: number
   indirecto_total: number
   beneficio_total: number
+  impuestos_total?: number
   neto_total: number
+  iva_total?: number
+  total_final?: number
   notas?: string
   notas_calculo?: string
   sort_order: number
@@ -36,22 +45,27 @@ export interface ItemResource {
   id: string
   item_id: string
   org_id: string
-  tipo: 'material' | 'mano_obra' | 'equipo' | 'subcontrato'
-  codigo?: string
-  descripcion?: string
-  unidad?: string
-  cantidad?: number
+  tipo: 'material' | 'mano_obra' | 'equipo' | 'subcontrato' | 'mo_material'
+  codigo: string | null
+  descripcion: string | null
+  unidad: string | null
+  cantidad: number
   desperdicio_pct: number
-  cantidad_efectiva?: number
-  precio_unitario?: number
+  cantidad_efectiva: number
+  precio_unitario: number
   subtotal: number
+  // Labor-specific
+  trabajadores: number
+  dias: number
+  cargas_sociales_pct: number
+  // Catalog link
+  catalog_entry_id: string | null
 }
 
 export interface PriceCatalog {
   id: string
   org_id: string
   name: string
-  tipo?: string
   source_file?: string
   created_at: string
 }
@@ -73,8 +87,23 @@ export interface AnalysisResponse {
   directo_total: number
   indirecto_total: number
   beneficio_total: number
+  impuestos_total?: number
   neto_total: number
+  iva_total?: number
+  total_final?: number
   items_count: number
+}
+
+export interface CostSummary {
+  mat_total: number
+  mo_total: number
+  directo_total: number
+  indirecto_total: number
+  beneficio_total: number
+  impuestos_total?: number
+  neto_total: number
+  iva_total?: number
+  total_final?: number
 }
 
 export interface IndirectConfig {
@@ -85,6 +114,10 @@ export interface IndirectConfig {
   logistica_pct: number
   herramientas_pct: number
   beneficio_pct?: number
+  imprevistos_pct?: number
+  ingresos_brutos_pct?: number
+  imp_cheque_pct?: number
+  iva_pct?: number
 }
 
 export interface BudgetVersion {

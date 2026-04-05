@@ -100,6 +100,18 @@ export const budgetApi = {
   getItemResources: (budgetId: string, itemId: string) =>
     get<ItemResource[]>(`/budgets/${budgetId}/items/${itemId}/resources`),
 
+  createResource: (budgetId: string, itemId: string, data: Partial<ItemResource>) =>
+    post<ItemResource>(`/budgets/${budgetId}/items/${itemId}/resources`, data),
+
+  updateResource: (budgetId: string, itemId: string, resourceId: string, data: Partial<ItemResource>) =>
+    patch<ItemResource>(`/budgets/${budgetId}/items/${itemId}/resources/${resourceId}`, data),
+
+  deleteResource: (budgetId: string, itemId: string, resourceId: string) =>
+    del<void>(`/budgets/${budgetId}/items/${itemId}/resources/${resourceId}`),
+
+  cascadeRecalculate: (budgetId: string) =>
+    post<Budget>(`/budgets/${budgetId}/recalculate`),
+
   // Audits
   getItemAudits: (budgetId: string, itemId: string) =>
     get<ItemAudit[]>(`/budgets/${budgetId}/items/${itemId}/audits`),
@@ -127,7 +139,8 @@ export const budgetApi = {
   getIndirects: (id: string) => get<IndirectConfig>(`/budgets/${id}/indirects`),
   updateIndirects: (id: string, data: Partial<IndirectConfig>) =>
     patch<IndirectConfig>(`/budgets/${id}/indirects`, data),
-  applyIndirects: (id: string) => post<{ total_directo: number; total_indirectos: number; pct_applied: number; items_updated: number }>(`/budgets/${id}/indirects`),
+  applyIndirects: (id: string) =>
+    post<{ items_updated: number; total_neto: number }>(`/budgets/${id}/indirects`),
 
   // Analysis
   getAnalysis: (id: string) => get<AnalysisResponse>(`/budgets/${id}/analysis`),
@@ -146,6 +159,22 @@ export const budgetApi = {
   getVersion: (id: string, vid: string) => get<BudgetVersion>(`/budgets/${id}/versions/${vid}`),
 }
 
+// ─── Template API ──────────────────────────────────────────────────────────────
+
+export const templateApi = {
+  list: (categoria?: string) =>
+    get<any[]>(`/templates${categoria ? `?categoria=${encodeURIComponent(categoria)}` : ''}`),
+  categories: () => get<string[]>('/templates/categories'),
+  get: (id: string) => get<any>(`/templates/${id}`),
+  create: (data: any) => post<any>('/templates', data),
+  update: (id: string, data: any) => patch<any>(`/templates/${id}`, data),
+  remove: (id: string) => del<{ ok: boolean }>(`/templates/${id}`),
+  apply: (templateId: string, budgetId: string, itemId: string) =>
+    post<{ resources_created: number; item_updated: boolean }>(
+      `/templates/${templateId}/apply/${budgetId}/items/${itemId}`
+    ),
+}
+
 // ─── Catalog API ───────────────────────────────────────────────────────────────
 
 export const catalogApi = {
@@ -155,16 +184,4 @@ export const catalogApi = {
     get<CatalogEntry[]>(`/catalogs/${id}/search?q=${encodeURIComponent(q)}`),
   apply: (budgetId: string, catalogId: string) =>
     post<{ items_matched: number; items_unmatched: number; total_updated: number }>(`/catalogs/apply/${budgetId}/${catalogId}`),
-  deleteCatalog: (id: string) => del<void>(`/catalogs/${id}`),
-  createEntry: (catalogId: string, entry: { codigo: string; descripcion: string; unidad?: string; precio_unitario: number; tipo?: string }) =>
-    post<CatalogEntry>(`/catalogs/${catalogId}/entries`, entry),
-  updateEntry: (catalogId: string, entryId: string, data: Record<string, unknown>) =>
-    patch<CatalogEntry>(`/catalogs/${catalogId}/entries/${entryId}`, data),
-  deleteEntry: (catalogId: string, entryId: string) =>
-    del<void>(`/catalogs/${catalogId}/entries/${entryId}`),
-  uploadCsv: (file: File, name: string, tipo: string) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    return postFile<PriceCatalog>(`/catalogs/upload-csv?name=${encodeURIComponent(name)}&tipo=${encodeURIComponent(tipo)}`, formData)
-  },
 }

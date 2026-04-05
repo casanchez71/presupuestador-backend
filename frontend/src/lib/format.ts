@@ -3,8 +3,8 @@
  * e.g. 142_200_000 → "$142.2M"
  *      3_500 → "$3.500"
  */
-export function fmtCurrency(value: number): string {
-  if (value === 0) return '$0'
+export function fmtCurrency(value: number | null | undefined): string {
+  if (!value) return '$0'
   const abs = Math.abs(value)
   const sign = value < 0 ? '-' : ''
 
@@ -21,8 +21,8 @@ export function fmtCurrency(value: number): string {
  * Format a number with Argentine locale (dot thousands, comma decimal).
  * e.g. 2663.25 → "2.663,25"
  */
-export function fmtNumber(value: number, decimals = 2): string {
-  return value.toLocaleString('es-AR', {
+export function fmtNumber(value: number | null | undefined, decimals = 2): string {
+  return (value ?? 0).toLocaleString('es-AR', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   })
@@ -32,8 +32,8 @@ export function fmtNumber(value: number, decimals = 2): string {
  * Format as percent.
  * e.g. 0.31 → "31%" or 31 → "31%"
  */
-export function fmtPercent(value: number): string {
-  // Accept both 0.31 and 31
+export function fmtPercent(value: number | null | undefined): string {
+  if (!value) return '0%'
   const pct = value > 1 ? value : value * 100
   return `${pct.toLocaleString('es-AR', { maximumFractionDigits: 1 })}%`
 }

@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presupuestador Inteligente — Mockup</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        sole: { dark: '#143D34', gold: '#E0A33A', light: '#F5F0E8', green: '#1B5E4B' }
+      }
+    }
+  }
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  body { font-family: 'Inter', sans-serif; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .nav-btn.active { background-color: #1B5E4B; color: white; }
+  .tree-item { cursor: pointer; transition: background 0.15s; }
+  .tree-item:hover { background-color: #F5F0E8; }
+  .editable { border-bottom: 1px dashed #ccc; cursor: text; }
+  .editable:hover { background-color: #FEFCE8; }
+  .fade-in { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .mockup-badge { position: fixed; top: 0; left: 0; right: 0; background: #E0A33A; color: #143D34; text-align: center; padding: 8px; font-weight: 700; font-size: 14px; z-index: 9999; }
+  .cost-cell { text-align: right; font-variant-numeric: tabular-nums; }
+  .tab-active { border-bottom: 3px solid #E0A33A; color: #143D34; font-weight: 600; }
+</style>
+</head>
+<body class="bg-gray-50 pt-10">
+
+<!-- MOCKUP BADGE -->
+<div class="mockup-badge">
+  ⚠️ ESTO ES UNA MOCKUP — Así se va a ver la app real. Hacé click en las pantallas de abajo para navegar.
+</div>
+
+<!-- TOP HEADER -->
+<header class="bg-sole-dark text-white px-6 py-3 flex items-center justify-between shadow-lg">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 bg-sole-gold rounded-full flex items-center justify-center font-bold text-sole-dark text-sm">S</div>
+    <span class="text-lg font-semibold">SOLE</span>
+    <span class="text-sole-gold text-sm ml-2">/ Presupuestador</span>
+  </div>
+  <div class="flex items-center gap-4">
+    <span class="text-sm text-gray-300">INTHEGROW S.R.L.</span>
+    <div class="w-8 h-8 bg-sole-green rounded-full flex items-center justify-center text-sm font-medium">CS</div>
+  </div>
+</header>
+
+<!-- NAVIGATION TABS -->
+<nav class="bg-white border-b px-6 flex gap-1 shadow-sm">
+  <button onclick="showScreen('dashboard')" class="nav-btn px-4 py-3 rounded-t text-sm font-medium text-gray-600 hover:text-sole-dark transition active" id="nav-dashboard">
+    📋 Mis Presupuestos
+  </button>
+  <button onclick="showScreen('editor')" class="nav-btn px-4 py-3 rounded-t text-sm font-medium text-gray-600 hover:text-sole-dark transition" id="nav-editor">
+    🏗️ Editor de Presupuesto
+  </button>
+  <button onclick="showScreen('analysis')" class="nav-btn px-4 py-3 rounded-t text-sm font-medium text-gray-600 hover:text-sole-dark transition" id="nav-analysis">
+    📊 Vista Análisis
+  </button>
+  <button onclick="showScreen('ai')" class="nav-btn px-4 py-3 rounded-t text-sm font-medium text-gray-600 hover:text-sole-dark transition" id="nav-ai">
+    🤖 IA + Planos
+  </button>
+  <button onclick="showScreen('config')" class="nav-btn px-4 py-3 rounded-t text-sm font-medium text-gray-600 hover:text-sole-dark transition" id="nav-config">
+    ⚙️ Configuración
+  </button>
+</nav>
+
+<!-- ==================== PANTALLA 1: DASHBOARD ==================== -->
+<div id="screen-dashboard" class="screen active fade-in">
+  <div class="max-w-7xl mx-auto p-6">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-sole-dark">Mis Presupuestos</h1>
+        <p class="text-gray-500 text-sm mt-1">3 presupuestos activos · última actualización hace 2 horas</p>
+      </div>
+      <button class="bg-sole-gold hover:bg-yellow-500 text-sole-dark font-semibold px-6 py-3 rounded-lg shadow transition flex items-center gap-2">
+        <span class="text-xl">+</span> Nuevo Presupuesto
+      </button>
+    </div>
+
+    <!-- CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Card 1 -->
+      <div onclick="showScreen('editor')" class="bg-white rounded-xl shadow-sm border hover:shadow-md transition cursor-pointer p-5">
+        <div class="flex justify-between items-start mb-3">
+          <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full">Activo</span>
+          <span class="text-xs text-gray-400">v3 · hace 2 hs</span>
+        </div>
+        <h3 class="font-semibold text-lg text-sole-dark">Edificio Las Heras</h3>
+        <p class="text-gray-500 text-sm mt-1">4 pisos · 108 ítems · 323 materiales</p>
+        <div class="mt-4 pt-3 border-t flex justify-between">
+          <div>
+            <div class="text-xs text-gray-400">Directo</div>
+            <div class="font-semibold text-sole-dark">$284.500.000</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-400">Neto Total</div>
+            <div class="font-bold text-sole-gold text-lg">$372.695.000</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="bg-white rounded-xl shadow-sm border hover:shadow-md transition cursor-pointer p-5">
+        <div class="flex justify-between items-start mb-3">
+          <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-1 rounded-full">Borrador</span>
+          <span class="text-xs text-gray-400">v1 · hace 3 días</span>
+        </div>
+        <h3 class="font-semibold text-lg text-sole-dark">Casa Country Pilar</h3>
+        <p class="text-gray-500 text-sm mt-1">2 pisos · 45 ítems · Sin precios</p>
+        <div class="mt-4 pt-3 border-t flex justify-between">
+          <div>
+            <div class="text-xs text-gray-400">Directo</div>
+            <div class="font-semibold text-gray-400">Sin calcular</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-400">Neto Total</div>
+            <div class="font-bold text-gray-400">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="bg-white rounded-xl shadow-sm border hover:shadow-md transition cursor-pointer p-5">
+        <div class="flex justify-between items-start mb-3">
+          <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full">Presentado</span>
+          <span class="text-xs text-gray-400">v5 · 15 mar</span>
+        </div>
+        <h3 class="font-semibold text-lg text-sole-dark">Refacción Oficina Centro</h3>
+        <p class="text-gray-500 text-sm mt-1">1 piso · 32 ítems · 89 materiales</p>
+        <div class="mt-4 pt-3 border-t flex justify-between">
+          <div>
+            <div class="text-xs text-gray-400">Directo</div>
+            <div class="font-semibold text-sole-dark">$45.200.000</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-400">Neto Total</div>
+            <div class="font-bold text-sole-gold text-lg">$59.212.000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT ACTIVITY -->
+    <div class="mt-8 bg-white rounded-xl shadow-sm border p-5">
+      <h3 class="font-semibold text-sole-dark mb-3">Actividad reciente</h3>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between py-2 border-b border-gray-50">
+          <span>📝 <strong>Edificio Las Heras</strong> — Se actualizaron precios de materiales desde catálogo Mar-2026</span>
+          <span class="text-gray-400">hace 2 hs</span>
+        </div>
+        <div class="flex justify-between py-2 border-b border-gray-50">
+          <span>📸 <strong>Casa Country Pilar</strong> — IA analizó plano de planta baja: 23 ítems sugeridos</span>
+          <span class="text-gray-400">hace 3 días</span>
+        </div>
+        <div class="flex justify-between py-2">
+          <span>💾 <strong>Refacción Oficina Centro</strong> — Versión 5 guardada por Carlos</span>
+          <span class="text-gray-400">15 mar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PANTALLA 2: EDITOR ==================== -->
+<div id="screen-editor" class="screen fade-in">
+  <div class="max-w-full mx-auto p-4">
+    <!-- Breadcrumb + Actions -->
+    <div class="flex justify-between items-center mb-4">
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-gray-400 cursor-pointer hover:text-sole-dark" onclick="showScreen('dashboard')">Presupuestos</span>
+        <span class="text-gray-300">/</span>
+        <span class="font-semibold text-sole-dark">Edificio Las Heras</span>
+        <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full ml-2">v3</span>
+      </div>
+      <div class="flex gap-2">
+        <button class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 transition">📥 Importar Excel</button>
+        <button class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 transition">📤 Exportar PDF</button>
+        <button class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 transition">📤 Exportar Excel</button>
+        <button class="bg-sole-gold text-sole-dark font-medium px-4 py-2 rounded-lg text-sm hover:bg-yellow-500 transition">💾 Guardar versión</button>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <!-- LEFT: TREE -->
+      <div class="w-72 bg-white rounded-xl shadow-sm border flex-shrink-0 overflow-hidden">
+        <div class="bg-sole-dark text-white px-4 py-3 flex justify-between items-center">
+          <span class="font-semibold text-sm">Estructura de Obra</span>
+          <button class="text-sole-gold text-xs hover:underline">+ Sección</button>
+        </div>
+        <div class="p-2 text-sm max-h-[600px] overflow-y-auto">
+          <!-- Tree -->
+          <div class="tree-item rounded px-2 py-1.5 bg-sole-light font-semibold text-sole-dark">
+            📁 Edificio Las Heras
+          </div>
+          <div class="ml-3">
+            <div class="tree-item rounded px-2 py-1.5 font-medium text-sole-dark" onclick="toggleTree(this)">
+              ▼ 1. Trabajos Preliminares
+            </div>
+            <div class="ml-4">
+              <div class="tree-item rounded px-2 py-1 text-gray-600">1.1 Obrador y cerco</div>
+              <div class="tree-item rounded px-2 py-1 text-gray-600">1.2 Limpieza terreno</div>
+              <div class="tree-item rounded px-2 py-1 text-gray-600">1.3 Replanteo</div>
+            </div>
+
+            <div class="tree-item rounded px-2 py-1.5 font-medium text-sole-dark bg-sole-light border-l-2 border-sole-gold" onclick="toggleTree(this)">
+              ▼ 2. Estructura
+            </div>
+            <div class="ml-4">
+              <div class="tree-item rounded px-2 py-1 text-sole-dark font-medium bg-yellow-50">2.1 Fundaciones</div>
+              <div class="tree-item rounded px-2 py-1 text-gray-600">2.2 Columnas PB</div>
+              <div class="tree-item rounded px-2 py-1 text-gray-600">2.3 Vigas PB</div>
+              <div class="tree-item rounded px-2 py-1 text-gray-600">2.4 Losa PB</div>
+              <div class="tree-item rounded px-2 py-1 text-gray-600">2.5 Columnas P1</div>
+              <div class="tree-item rounded px-2 py-1 text-gray-600">2.6 Vigas P1</div>
+              <div class="tree-item rounded px-2 py-1 text-gray-600">2.7 Losa P1</div>
+            </div>
+
+            <div class="tree-item rounded px-2 py-1.5 font-medium text-sole-dark" onclick="toggleTree(this)">
+              ▶ 3. Mampostería
+            </div>
+            <div class="tree-item rounded px-2 py-1.5 font-medium text-sole-dark" onclick="toggleTree(this)">
+              ▶ 4. Instalación Sanitaria
+            </div>
+            <div class="tree-item rounded px-2 py-1.5 font-medium text-sole-dark" onclick="toggleTree(this)">
+              ▶ 5. Instalación Eléctrica
+            </div>
+            <div class="tree-item rounded px-2 py-1.5 font-medium text-sole-dark" onclick="toggleTree(this)">
+              ▶ 6. Revoques y Revestimientos
+            </div>
+            <div class="tree-item rounded px-2 py-1.5 font-medium text-sole-dark" onclick="toggleTree(this)">
+              ▶ 7. Pisos
+            </div>
+            <div class="tree-item rounded px-2 py-1.5 font-medium text-sole-dark" onclick="toggleTree(this)">
+              ▶ 8. Carpintería
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: DETAIL TABLE -->
+      <div class="flex-1 bg-white rounded-xl shadow-sm border overflow-hidden">
+        <!-- Section Header -->
+        <div class="bg-gray-50 border-b px-4 py-3 flex justify-between items-center">
+          <div>
+            <h2 class="font-semibold text-sole-dark">2.1 Fundaciones</h2>
+            <p class="text-xs text-gray-400 mt-0.5">Hormigón armado H-30 para bases y zapatas</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="text-xs bg-sole-green text-white px-3 py-1.5 rounded-lg hover:bg-sole-dark transition">+ Recurso</button>
+            <button class="text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">🤖 Sugerir con IA</button>
+          </div>
+        </div>
+
+        <!-- Sub-tabs -->
+        <div class="border-b px-4 flex gap-4 text-sm">
+          <button class="py-2 tab-active">Resumen de Costos</button>
+          <button class="py-2 text-gray-400 hover:text-gray-600">Materiales (12)</button>
+          <button class="py-2 text-gray-400 hover:text-gray-600">Mano de Obra (4)</button>
+          <button class="py-2 text-gray-400 hover:text-gray-600">Equipos (2)</button>
+        </div>
+
+        <!-- Cost Summary -->
+        <div class="grid grid-cols-4 gap-3 p-4 bg-gray-50 border-b">
+          <div class="bg-white rounded-lg p-3 border">
+            <div class="text-xs text-gray-400">Materiales</div>
+            <div class="text-lg font-bold text-sole-dark">$8.450.000</div>
+          </div>
+          <div class="bg-white rounded-lg p-3 border">
+            <div class="text-xs text-gray-400">Mano de Obra</div>
+            <div class="text-lg font-bold text-sole-dark">$3.200.000</div>
+          </div>
+          <div class="bg-white rounded-lg p-3 border">
+            <div class="text-xs text-gray-400">Costo Directo</div>
+            <div class="text-lg font-bold text-blue-700">$11.650.000</div>
+          </div>
+          <div class="bg-white rounded-lg p-3 border border-sole-gold">
+            <div class="text-xs text-gray-400">Neto Total</div>
+            <div class="text-lg font-bold text-sole-gold">$15.261.500</div>
+            <div class="text-xs text-gray-400 mt-0.5">+31% indirectos</div>
+          </div>
+        </div>
+
+        <!-- Detail Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-sole-dark text-white text-xs">
+              <tr>
+                <th class="px-3 py-2 text-left">Código</th>
+                <th class="px-3 py-2 text-left">Descripción</th>
+                <th class="px-3 py-2 text-left">Unidad</th>
+                <th class="px-3 py-2 text-right">Cantidad</th>
+                <th class="px-3 py-2 text-right">MAT Unit.</th>
+                <th class="px-3 py-2 text-right">MO Unit.</th>
+                <th class="px-3 py-2 text-right">Directo</th>
+                <th class="px-3 py-2 text-right">Indirecto</th>
+                <th class="px-3 py-2 text-right">Neto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b hover:bg-yellow-50 transition">
+                <td class="px-3 py-2.5 font-mono text-xs text-gray-500">2.1.1</td>
+                <td class="px-3 py-2.5 font-medium editable">Hormigón H-30 elaborado</td>
+                <td class="px-3 py-2.5 text-gray-500">m³</td>
+                <td class="px-3 py-2.5 cost-cell editable font-medium">42.5</td>
+                <td class="px-3 py-2.5 cost-cell text-gray-600">$85.000</td>
+                <td class="px-3 py-2.5 cost-cell text-gray-600">$32.000</td>
+                <td class="px-3 py-2.5 cost-cell font-medium">$4.972.500</td>
+                <td class="px-3 py-2.5 cost-cell text-gray-500">$1.541.475</td>
+                <td class="px-3 py-2.5 cost-cell font-bold text-sole-dark">$6.513.975</td>
+              </tr>
+              <tr class="border-b hover:bg-yellow-50 transition">
+                <td class="px-3 py-2.5 font-mono text-xs text-gray-500">2.1.2</td>
+                <td class="px-3 py-2.5 font-medium editable">Acero ADN 420 ø12</td>
+                <td class="px-3 py-2.5 text-gray-500">kg</td>
+                <td class="px-3 py-2.5 cost-cell editable font-medium">3.200</td>
+                <td class="px-3 py-2.5 cost-cell text-gray-600">$1.250</td>
+                <td class="px-3 py-2.5 cost-cell text-gray-600">$380</td>
+                <td class="px-3 py-2.5 cost-cell font-medium">$5.216.000</td>
+                <td class="px-3 py-2.5 cost-cell text-gray-500">$1.616.960</td>
+                <td class="px-3 py-2.5 cost-cell font-bold text-sole-dark">$6.832.960</td>
+              </tr>
+              <tr class="border-b hover:bg-yellow-50 transition">
+                <td class="px-3 py-2.5 font-mono text-xs text-gray-500">2.1.3</td>
+                <td class="px-3 py-2.5 font-medium editable">Encofrado metálico</td>
+                <td class="px-3 py-2.5 text-gray-500">m²</td>
+                <td class="px-3 py-2.5 cost-cell editable font-medium">85</td>
+                <td class="px-3 py-2.5 cost-cell text-gray-600">$12.000</td>
+                <td class="px-3 py-2.5 cost-cell text-gray-600">$5.200</td>
+                <td class="px-3 py-2.5 cost-cell font-medium">$1.462.000</td>
+                <td class="px-3 py-2.5 cost-cell text-gray-500">$453.220</td>
+                <td class="px-3 py-2.5 cost-cell font-bold text-sole-dark">$1.915.220</td>
+              </tr>
+            </tbody>
+            <tfoot class="bg-gray-50 font-semibold">
+              <tr>
+                <td colspan="6" class="px-3 py-3 text-right text-gray-500">TOTAL SECCIÓN 2.1</td>
+                <td class="px-3 py-3 cost-cell text-blue-700">$11.650.500</td>
+                <td class="px-3 py-3 cost-cell text-gray-500">$3.611.655</td>
+                <td class="px-3 py-3 cost-cell text-sole-gold text-lg">$15.262.155</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="p-3 bg-blue-50 text-xs text-blue-700 flex items-center gap-2 border-t">
+          💡 Hacé click en las celdas con <span class="editable px-1">línea punteada</span> para editar. Los totales se recalculan automáticamente.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PANTALLA 3: ANÁLISIS ==================== -->
+<div id="screen-analysis" class="screen fade-in">
+  <div class="max-w-7xl mx-auto p-6">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-sole-dark">Vista Análisis — Edificio Las Heras</h1>
+        <p class="text-gray-500 text-sm mt-1">Equivalente a la hoja 01_C&P del Excel · 108 ítems</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-sm">📤 Exportar PDF</button>
+        <button class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-sm">📤 Exportar Excel</button>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-6 gap-3 mb-6">
+      <div class="bg-white rounded-xl border p-4 text-center">
+        <div class="text-xs text-gray-400 mb-1">Materiales</div>
+        <div class="text-xl font-bold text-sole-dark">$142.2M</div>
+        <div class="text-xs text-gray-400">50%</div>
+      </div>
+      <div class="bg-white rounded-xl border p-4 text-center">
+        <div class="text-xs text-gray-400 mb-1">Mano de Obra</div>
+        <div class="text-xl font-bold text-sole-dark">$85.3M</div>
+        <div class="text-xs text-gray-400">30%</div>
+      </div>
+      <div class="bg-white rounded-xl border p-4 text-center">
+        <div class="text-xs text-gray-400 mb-1">Equipos</div>
+        <div class="text-xl font-bold text-sole-dark">$28.5M</div>
+        <div class="text-xs text-gray-400">10%</div>
+      </div>
+      <div class="bg-blue-50 rounded-xl border border-blue-200 p-4 text-center">
+        <div class="text-xs text-blue-600 mb-1">Costo Directo</div>
+        <div class="text-xl font-bold text-blue-700">$284.5M</div>
+      </div>
+      <div class="bg-orange-50 rounded-xl border border-orange-200 p-4 text-center">
+        <div class="text-xs text-orange-600 mb-1">Indirectos (31%)</div>
+        <div class="text-xl font-bold text-orange-700">$88.2M</div>
+        <div class="text-xs text-orange-400">Estr 15% + Jef 8% + Log 5% + Herr 3%</div>
+      </div>
+      <div class="bg-sole-dark rounded-xl p-4 text-center">
+        <div class="text-xs text-sole-gold mb-1">NETO TOTAL</div>
+        <div class="text-2xl font-bold text-white">$372.7M</div>
+      </div>
+    </div>
+
+    <!-- Pie Chart + Table -->
+    <div class="grid grid-cols-3 gap-4">
+      <!-- Chart placeholder -->
+      <div class="bg-white rounded-xl border p-4">
+        <h3 class="font-semibold text-sm text-sole-dark mb-3">Distribución de Costos</h3>
+        <div class="flex items-center justify-center h-48">
+          <!-- Simple CSS pie chart -->
+          <div class="relative w-40 h-40">
+            <div class="w-40 h-40 rounded-full" style="background: conic-gradient(#143D34 0% 50%, #1B5E4B 50% 80%, #E0A33A 80% 90%, #F59E0B 90% 100%)"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center">
+                <span class="text-xs font-bold text-sole-dark">$372.7M</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-1 text-xs mt-2">
+          <div class="flex justify-between"><span>🟢 Materiales</span><span>50%</span></div>
+          <div class="flex justify-between"><span>🟩 Mano de Obra</span><span>30%</span></div>
+          <div class="flex justify-between"><span>🟡 Indirectos</span><span>10%</span></div>
+          <div class="flex justify-between"><span>🟠 Equipos + Otros</span><span>10%</span></div>
+        </div>
+      </div>
+
+      <!-- Main Analysis Table -->
+      <div class="col-span-2 bg-white rounded-xl border overflow-hidden">
+        <table class="w-full text-xs">
+          <thead class="bg-sole-dark text-white">
+            <tr>
+              <th class="px-2 py-2 text-left">Sección</th>
+              <th class="px-2 py-2 text-right">MAT</th>
+              <th class="px-2 py-2 text-right">MO</th>
+              <th class="px-2 py-2 text-right">Equipo</th>
+              <th class="px-2 py-2 text-right">Directo</th>
+              <th class="px-2 py-2 text-right">Indirecto</th>
+              <th class="px-2 py-2 text-right">Beneficio</th>
+              <th class="px-2 py-2 text-right font-bold">Neto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b hover:bg-gray-50">
+              <td class="px-2 py-2 font-medium">1. Trabajos Preliminares</td>
+              <td class="px-2 py-2 cost-cell">$2.1M</td>
+              <td class="px-2 py-2 cost-cell">$1.8M</td>
+              <td class="px-2 py-2 cost-cell">$0.5M</td>
+              <td class="px-2 py-2 cost-cell text-blue-700">$4.4M</td>
+              <td class="px-2 py-2 cost-cell">$1.4M</td>
+              <td class="px-2 py-2 cost-cell">$0.4M</td>
+              <td class="px-2 py-2 cost-cell font-bold">$6.2M</td>
+            </tr>
+            <tr class="border-b hover:bg-gray-50 bg-yellow-50">
+              <td class="px-2 py-2 font-semibold text-sole-dark">2. Estructura</td>
+              <td class="px-2 py-2 cost-cell">$48.5M</td>
+              <td class="px-2 py-2 cost-cell">$22.3M</td>
+              <td class="px-2 py-2 cost-cell">$8.2M</td>
+              <td class="px-2 py-2 cost-cell text-blue-700 font-medium">$79.0M</td>
+              <td class="px-2 py-2 cost-cell">$24.5M</td>
+              <td class="px-2 py-2 cost-cell">$7.9M</td>
+              <td class="px-2 py-2 cost-cell font-bold text-sole-dark">$111.4M</td>
+            </tr>
+            <tr class="border-b hover:bg-gray-50">
+              <td class="px-2 py-2 font-medium">3. Mampostería</td>
+              <td class="px-2 py-2 cost-cell">$28.3M</td>
+              <td class="px-2 py-2 cost-cell">$18.5M</td>
+              <td class="px-2 py-2 cost-cell">$2.1M</td>
+              <td class="px-2 py-2 cost-cell text-blue-700">$48.9M</td>
+              <td class="px-2 py-2 cost-cell">$15.2M</td>
+              <td class="px-2 py-2 cost-cell">$4.9M</td>
+              <td class="px-2 py-2 cost-cell font-bold">$69.0M</td>
+            </tr>
+            <tr class="border-b hover:bg-gray-50">
+              <td class="px-2 py-2 font-medium">4. Inst. Sanitaria</td>
+              <td class="px-2 py-2 cost-cell">$15.8M</td>
+              <td class="px-2 py-2 cost-cell">$12.2M</td>
+              <td class="px-2 py-2 cost-cell">$1.8M</td>
+              <td class="px-2 py-2 cost-cell text-blue-700">$29.8M</td>
+              <td class="px-2 py-2 cost-cell">$9.2M</td>
+              <td class="px-2 py-2 cost-cell">$3.0M</td>
+              <td class="px-2 py-2 cost-cell font-bold">$42.0M</td>
+            </tr>
+            <tr class="border-b hover:bg-gray-50">
+              <td class="px-2 py-2 font-medium">5. Inst. Eléctrica</td>
+              <td class="px-2 py-2 cost-cell">$18.2M</td>
+              <td class="px-2 py-2 cost-cell">$10.5M</td>
+              <td class="px-2 py-2 cost-cell">$3.2M</td>
+              <td class="px-2 py-2 cost-cell text-blue-700">$31.9M</td>
+              <td class="px-2 py-2 cost-cell">$9.9M</td>
+              <td class="px-2 py-2 cost-cell">$3.2M</td>
+              <td class="px-2 py-2 cost-cell font-bold">$45.0M</td>
+            </tr>
+            <tr class="border-b hover:bg-gray-50">
+              <td class="px-2 py-2 font-medium">6. Revoques</td>
+              <td class="px-2 py-2 cost-cell">$12.1M</td>
+              <td class="px-2 py-2 cost-cell">$9.8M</td>
+              <td class="px-2 py-2 cost-cell">$1.5M</td>
+              <td class="px-2 py-2 cost-cell text-blue-700">$23.4M</td>
+              <td class="px-2 py-2 cost-cell">$7.3M</td>
+              <td class="px-2 py-2 cost-cell">$2.3M</td>
+              <td class="px-2 py-2 cost-cell font-bold">$33.0M</td>
+            </tr>
+            <tr class="border-b hover:bg-gray-50">
+              <td class="px-2 py-2 font-medium">7. Pisos</td>
+              <td class="px-2 py-2 cost-cell">$10.5M</td>
+              <td class="px-2 py-2 cost-cell">$6.2M</td>
+              <td class="px-2 py-2 cost-cell">$1.2M</td>
+              <td class="px-2 py-2 cost-cell text-blue-700">$17.9M</td>
+              <td class="px-2 py-2 cost-cell">$5.5M</td>
+              <td class="px-2 py-2 cost-cell">$1.8M</td>
+              <td class="px-2 py-2 cost-cell font-bold">$25.2M</td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-2 py-2 font-medium">8. Carpintería</td>
+              <td class="px-2 py-2 cost-cell">$6.7M</td>
+              <td class="px-2 py-2 cost-cell">$4.0M</td>
+              <td class="px-2 py-2 cost-cell">$0.0M</td>
+              <td class="px-2 py-2 cost-cell text-blue-700">$10.7M</td>
+              <td class="px-2 py-2 cost-cell">$3.3M</td>
+              <td class="px-2 py-2 cost-cell">$1.1M</td>
+              <td class="px-2 py-2 cost-cell font-bold">$15.1M</td>
+            </tr>
+          </tbody>
+          <tfoot class="bg-sole-dark text-white font-semibold">
+            <tr>
+              <td class="px-2 py-3">TOTAL OBRA</td>
+              <td class="px-2 py-3 cost-cell">$142.2M</td>
+              <td class="px-2 py-3 cost-cell">$85.3M</td>
+              <td class="px-2 py-3 cost-cell">$18.5M</td>
+              <td class="px-2 py-3 cost-cell text-blue-300">$284.5M</td>
+              <td class="px-2 py-3 cost-cell">$88.2M</td>
+              <td class="px-2 py-3 cost-cell">$24.6M</td>
+              <td class="px-2 py-3 cost-cell text-sole-gold text-base">$372.7M</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PANTALLA 4: IA + PLANOS ==================== -->
+<div id="screen-ai" class="screen fade-in">
+  <div class="max-w-5xl mx-auto p-6">
+    <h1 class="text-2xl font-bold text-sole-dark mb-2">Análisis de Planos con IA</h1>
+    <p class="text-gray-500 text-sm mb-6">Subí una foto o imagen del plano y la IA extrae las secciones y cantidades automáticamente</p>
+
+    <div class="grid grid-cols-2 gap-6">
+      <!-- Left: Upload -->
+      <div>
+        <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-sole-gold transition cursor-pointer bg-white">
+          <div class="text-5xl mb-3">📐</div>
+          <p class="font-semibold text-sole-dark">Arrastrá el plano acá</p>
+          <p class="text-sm text-gray-400 mt-1">JPG, PNG o WEBP · máximo 20 MB</p>
+          <button class="mt-4 bg-sole-gold text-sole-dark font-medium px-4 py-2 rounded-lg text-sm">Seleccionar archivo</button>
+        </div>
+
+        <!-- Simulated uploaded image -->
+        <div class="mt-4 bg-gray-100 rounded-xl p-3 border">
+          <div class="bg-gray-300 rounded-lg h-48 flex items-center justify-center text-gray-500">
+            <span class="text-sm">Vista previa del plano subido</span>
+          </div>
+          <div class="flex justify-between items-center mt-2 text-xs text-gray-500">
+            <span>plano_planta_baja.jpg · 4.2 MB</span>
+            <button class="text-sole-green font-medium hover:underline">🤖 Analizar con IA</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: AI Results -->
+      <div class="bg-white rounded-xl border shadow-sm">
+        <div class="bg-sole-green text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
+          <span class="font-semibold text-sm">🤖 Resultado del análisis</span>
+          <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full">23 ítems detectados · 12 seg</span>
+        </div>
+        <div class="p-4 max-h-[400px] overflow-y-auto">
+          <div class="space-y-2">
+            <!-- AI Suggestion Items -->
+            <div class="bg-green-50 border border-green-200 rounded-lg p-3 flex justify-between items-start">
+              <div>
+                <div class="font-medium text-sm">2.1 Fundaciones — H-30</div>
+                <div class="text-xs text-gray-500 mt-0.5">m³ · ~42.5 estimado por IA</div>
+              </div>
+              <div class="flex gap-1">
+                <button class="text-xs bg-green-600 text-white px-2 py-1 rounded">✓ Aceptar</button>
+                <button class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">✕</button>
+              </div>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-3 flex justify-between items-start">
+              <div>
+                <div class="font-medium text-sm">2.2 Columnas PB — H-30</div>
+                <div class="text-xs text-gray-500 mt-0.5">m³ · ~18 estimado por IA</div>
+              </div>
+              <div class="flex gap-1">
+                <button class="text-xs bg-green-600 text-white px-2 py-1 rounded">✓ Aceptar</button>
+                <button class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">✕</button>
+              </div>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-3 flex justify-between items-start">
+              <div>
+                <div class="font-medium text-sm">3.1 Mampostería ext — LP 18</div>
+                <div class="text-xs text-gray-500 mt-0.5">m² · ~320 estimado por IA</div>
+              </div>
+              <div class="flex gap-1">
+                <button class="text-xs bg-green-600 text-white px-2 py-1 rounded">✓ Aceptar</button>
+                <button class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">✕</button>
+              </div>
+            </div>
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex justify-between items-start">
+              <div>
+                <div class="font-medium text-sm">4.1 Cañerías agua fría — Termofusión</div>
+                <div class="text-xs text-yellow-600 mt-0.5">⚠️ ml · ~85 — baja confianza, verificar</div>
+              </div>
+              <div class="flex gap-1">
+                <button class="text-xs bg-green-600 text-white px-2 py-1 rounded">✓ Aceptar</button>
+                <button class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">✕</button>
+              </div>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-3 flex justify-between items-start">
+              <div>
+                <div class="font-medium text-sm">5.1 Tablero principal</div>
+                <div class="text-xs text-gray-500 mt-0.5">u · 1 estimado por IA</div>
+              </div>
+              <div class="flex gap-1">
+                <button class="text-xs bg-green-600 text-white px-2 py-1 rounded">✓ Aceptar</button>
+                <button class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-3 border-t bg-gray-50 flex justify-between items-center">
+          <span class="text-xs text-gray-400">5 de 23 ítems mostrados</span>
+          <button class="bg-sole-gold text-sole-dark font-medium px-4 py-2 rounded-lg text-sm">✓ Aceptar todos y agregar al presupuesto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PANTALLA 5: CONFIGURACIÓN ==================== -->
+<div id="screen-config" class="screen fade-in">
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-2xl font-bold text-sole-dark mb-6">Configuración</h1>
+
+    <div class="grid grid-cols-2 gap-6">
+      <!-- Indirectos -->
+      <div class="bg-white rounded-xl border shadow-sm p-5">
+        <h3 class="font-semibold text-sole-dark mb-4">⚙️ Costos Indirectos</h3>
+        <p class="text-xs text-gray-400 mb-4">Estos porcentajes se aplican sobre el costo directo de cada ítem</p>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <label class="text-sm text-gray-700">Estructura</label>
+            <div class="flex items-center gap-2">
+              <input type="number" value="15" class="w-16 text-right border rounded px-2 py-1 text-sm" />
+              <span class="text-sm text-gray-400">%</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <label class="text-sm text-gray-700">Jefatura de obra</label>
+            <div class="flex items-center gap-2">
+              <input type="number" value="8" class="w-16 text-right border rounded px-2 py-1 text-sm" />
+              <span class="text-sm text-gray-400">%</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <label class="text-sm text-gray-700">Logística</label>
+            <div class="flex items-center gap-2">
+              <input type="number" value="5" class="w-16 text-right border rounded px-2 py-1 text-sm" />
+              <span class="text-sm text-gray-400">%</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <label class="text-sm text-gray-700">Herramientas</label>
+            <div class="flex items-center gap-2">
+              <input type="number" value="3" class="w-16 text-right border rounded px-2 py-1 text-sm" />
+              <span class="text-sm text-gray-400">%</span>
+            </div>
+          </div>
+          <div class="pt-3 border-t flex justify-between items-center">
+            <span class="font-semibold text-sole-dark">Total indirectos</span>
+            <span class="font-bold text-sole-gold text-lg">31%</span>
+          </div>
+        </div>
+        <button class="mt-4 w-full bg-sole-dark text-white py-2 rounded-lg text-sm font-medium hover:bg-sole-green transition">Guardar configuración</button>
+      </div>
+
+      <!-- Catálogos de Precios -->
+      <div class="bg-white rounded-xl border shadow-sm p-5">
+        <h3 class="font-semibold text-sole-dark mb-4">📋 Catálogos de Precios</h3>
+        <p class="text-xs text-gray-400 mb-4">Listas de precios importadas desde Excel</p>
+        <div class="space-y-2">
+          <div class="border rounded-lg p-3 flex justify-between items-center hover:bg-gray-50">
+            <div>
+              <div class="text-sm font-medium">Materiales Mar-2026</div>
+              <div class="text-xs text-gray-400">323 ítems · Importado 01/03/2026</div>
+            </div>
+            <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">Activo</span>
+          </div>
+          <div class="border rounded-lg p-3 flex justify-between items-center hover:bg-gray-50">
+            <div>
+              <div class="text-sm font-medium">Mano de Obra Mar-2026</div>
+              <div class="text-xs text-gray-400">4 categorías · Importado 01/03/2026</div>
+            </div>
+            <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">Activo</span>
+          </div>
+          <div class="border rounded-lg p-3 flex justify-between items-center hover:bg-gray-50">
+            <div>
+              <div class="text-sm font-medium">Equipos Mar-2026</div>
+              <div class="text-xs text-gray-400">27 ítems · Importado 01/03/2026</div>
+            </div>
+            <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">Activo</span>
+          </div>
+          <div class="border rounded-lg p-3 flex justify-between items-center hover:bg-gray-50 opacity-50">
+            <div>
+              <div class="text-sm font-medium">Materiales Feb-2026</div>
+              <div class="text-xs text-gray-400">318 ítems · Importado 01/02/2026</div>
+            </div>
+            <span class="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">Anterior</span>
+          </div>
+        </div>
+        <button class="mt-4 w-full bg-sole-gold text-sole-dark py-2 rounded-lg text-sm font-medium hover:bg-yellow-500 transition">📥 Importar nuevo catálogo (Excel)</button>
+      </div>
+
+      <!-- Beneficio / Margen -->
+      <div class="bg-white rounded-xl border shadow-sm p-5">
+        <h3 class="font-semibold text-sole-dark mb-4">💰 Margen de Beneficio</h3>
+        <p class="text-xs text-gray-400 mb-4">Porcentaje de ganancia sobre el costo directo + indirecto</p>
+        <div class="flex justify-between items-center">
+          <label class="text-sm text-gray-700">Beneficio general</label>
+          <div class="flex items-center gap-2">
+            <input type="number" value="10" class="w-16 text-right border rounded px-2 py-1 text-sm" />
+            <span class="text-sm text-gray-400">%</span>
+          </div>
+        </div>
+        <button class="mt-4 w-full bg-sole-dark text-white py-2 rounded-lg text-sm font-medium hover:bg-sole-green transition">Guardar</button>
+      </div>
+
+      <!-- Versiones -->
+      <div class="bg-white rounded-xl border shadow-sm p-5">
+        <h3 class="font-semibold text-sole-dark mb-4">📸 Historial de Versiones</h3>
+        <p class="text-xs text-gray-400 mb-4">Edificio Las Heras</p>
+        <div class="space-y-2">
+          <div class="border rounded-lg p-3 flex justify-between items-center bg-green-50 border-green-200">
+            <div>
+              <div class="text-sm font-medium">v3 — Precios actualizados Mar-2026</div>
+              <div class="text-xs text-gray-400">Carlos · 03/04/2026 14:30</div>
+            </div>
+            <span class="text-xs text-green-700 font-medium">Actual</span>
+          </div>
+          <div class="border rounded-lg p-3 flex justify-between items-center hover:bg-gray-50">
+            <div>
+              <div class="text-sm font-medium">v2 — Ajuste estructura P2</div>
+              <div class="text-xs text-gray-400">Carlos · 28/03/2026 10:15</div>
+            </div>
+            <button class="text-xs text-sole-green hover:underline">Ver</button>
+          </div>
+          <div class="border rounded-lg p-3 flex justify-between items-center hover:bg-gray-50">
+            <div>
+              <div class="text-sm font-medium">v1 — Importación inicial Excel</div>
+              <div class="text-xs text-gray-400">Carlos · 20/03/2026 16:00</div>
+            </div>
+            <button class="text-xs text-sole-green hover:underline">Ver</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showScreen(name) {
+  // Hide all
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  // Show selected
+  document.getElementById('screen-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+}
+
+function toggleTree(el) {
+  const text = el.textContent.trim();
+  if (text.startsWith('▶')) {
+    el.textContent = el.textContent.replace('▶', '▼');
+  } else if (text.startsWith('▼')) {
+    el.textContent = el.textContent.replace('▼', '▶');
+  }
+}
+</script>
+
+</body>
+</html>

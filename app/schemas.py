@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -123,6 +123,10 @@ class IndirectConfigUpdate(BaseModel):
     logistica_pct: float | None = None
     herramientas_pct: float | None = None
     beneficio_pct: float | None = None
+    imprevistos_pct: float | None = None
+    ingresos_brutos_pct: float | None = None
+    imp_cheque_pct: float | None = None
+    iva_pct: float | None = None
 
 
 # ── Budget copy ─────────────────────────────────────────────────────────────
@@ -178,19 +182,54 @@ class SectionCreate(BaseModel):
 CatalogTipo = Literal["material", "mano_obra", "equipo", "subcontrato"]
 
 
-# ── Catalog entry write schemas ─────────────────────────────────────────────
+# ── Item resources CRUD ─────────────────────────────────────────────────────
 
-class CatalogEntryCreate(BaseModel):
-    codigo: str
-    descripcion: str
-    unidad: str | None = None
-    precio_unitario: float
-    tipo: str | None = None
+class ResourceCreate(BaseModel):
+    tipo: str  # material, mano_obra, equipo, subcontrato, mo_material
+    codigo: Optional[str] = None
+    descripcion: Optional[str] = None
+    unidad: Optional[str] = None
+    cantidad: Optional[float] = 0
+    desperdicio_pct: Optional[float] = 0
+    precio_unitario: Optional[float] = 0
+    # Labor-specific
+    trabajadores: Optional[float] = 0
+    dias: Optional[float] = 0
+    cargas_sociales_pct: Optional[float] = 25
+    catalog_entry_id: Optional[str] = None
 
 
-class CatalogEntryUpdate(BaseModel):
-    codigo: str | None = None
-    descripcion: str | None = None
-    unidad: str | None = None
-    precio_unitario: float | None = None
-    tipo: str | None = None
+class ResourceUpdate(BaseModel):
+    tipo: Optional[str] = None
+    codigo: Optional[str] = None
+    descripcion: Optional[str] = None
+    unidad: Optional[str] = None
+    cantidad: Optional[float] = None
+    desperdicio_pct: Optional[float] = None
+    precio_unitario: Optional[float] = None
+    trabajadores: Optional[float] = None
+    dias: Optional[float] = None
+    cargas_sociales_pct: Optional[float] = None
+    catalog_entry_id: Optional[str] = None
+
+
+class BulkResourceCreate(BaseModel):
+    resources: list[ResourceCreate]
+
+
+# ── Item templates ───────────────────────────────────────────────────────────
+
+class TemplateCreate(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+    unidad: Optional[str] = None
+    categoria: Optional[str] = None
+    recursos: list[dict] = []
+
+
+class TemplateUpdate(BaseModel):
+    nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    unidad: Optional[str] = None
+    categoria: Optional[str] = None
+    recursos: Optional[list[dict]] = None

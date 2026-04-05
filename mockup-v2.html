@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presupuestador SOLE — Mockup V2 Completa</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        sole: { dark: '#143D34', gold: '#E0A33A', light: '#F5F0E8', green: '#1B5E4B', leaf: '#2D8D68', muted: '#9D7A32', line: '#D8C29A' }
+      }
+    }
+  }
+}
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+body{font-family:'Inter',sans-serif;background:#F5F0E8;}
+.screen{display:none}.screen.active{display:block}
+.sidebar-btn{transition:all .15s}
+.sidebar-btn:hover{background:#1B5E4B}
+.sidebar-btn.active{background:#1B5E4B;border-left:3px solid #E0A33A}
+.tree-item{cursor:pointer;transition:background .15s}
+.tree-item:hover{background:rgba(224,163,58,0.1)}
+.editable{border-bottom:1px dashed #D8C29A;cursor:text}
+.editable:hover{background:#FEFCE8}
+.badge-universal{background:#E8F5E9;color:#2E7D32;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600}
+.badge-config{background:#FFF3E0;color:#E65100;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600}
+.badge-client{background:#E3F2FD;color:#1565C0;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600}
+.cost-cell{text-align:right;font-variant-numeric:tabular-nums}
+.fade-in{animation:fadeIn .3s ease-in}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.topbar-banner{background:linear-gradient(90deg,#143D34,#1B5E4B);color:#E0A33A;text-align:center;padding:6px;font-size:12px;font-weight:600}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#D8C29A;border-radius:3px}
+</style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+<!-- TOP BANNER -->
+<div class="topbar-banner">MOCKUP V2 — Navegá con el menú de la izquierda. Las etiquetas de color indican: <span class="badge-universal mx-1">UNIVERSAL</span> <span class="badge-config mx-1">CONFIGURABLE</span> <span class="badge-client mx-1">TERRAC</span></div>
+
+<!-- MAIN LAYOUT -->
+<div class="flex flex-1 overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside class="w-56 bg-sole-dark flex flex-col flex-shrink-0">
+  <!-- Logo -->
+  <div class="p-4 border-b border-sole-green flex items-center gap-2">
+    <svg width="32" height="32" viewBox="0 0 512 512" fill="none"><path d="M256 72C170.947 72 102 140.947 102 226C102 311.053 170.947 380 256 380C316.134 380 368.215 345.533 393.832 295.282" stroke="#E0A33A" stroke-width="28" stroke-linecap="round"/><circle cx="390" cy="179" r="28" fill="#E0A33A"/><path d="M251 334V250C251 221.768 273.768 199 302 199H319" stroke="#F5F0E8" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/><path d="M251 280C216.14 280 188 251.86 188 217V206C222.86 206 251 234.14 251 269V280Z" fill="#2D8D68"/><path d="M257 248C257 209.34 288.34 178 327 178H338C338 216.66 306.66 248 268 248H257Z" fill="#2D8D68"/></svg>
+    <div>
+      <div class="text-white font-extrabold text-sm tracking-wide">SOLE</div>
+      <div class="text-sole-muted text-[10px] tracking-widest font-bold">IN THE GROW</div>
+    </div>
+  </div>
+  <div class="px-3 py-2">
+    <div class="text-sole-gold text-[10px] font-bold tracking-wider mb-2">PRESUPUESTADOR</div>
+  </div>
+  <nav class="flex-1 px-2 space-y-0.5 text-sm">
+    <button onclick="show('dashboard')" id="sb-dashboard" class="sidebar-btn active w-full text-left px-3 py-2.5 rounded text-white flex items-center gap-2">
+      <span>📋</span> Mis Presupuestos
+    </button>
+    <button onclick="show('nuevo')" id="sb-nuevo" class="sidebar-btn w-full text-left px-3 py-2.5 rounded text-gray-300 flex items-center gap-2">
+      <span>➕</span> Nuevo Presupuesto
+    </button>
+    <button onclick="show('editor')" id="sb-editor" class="sidebar-btn w-full text-left px-3 py-2.5 rounded text-gray-300 flex items-center gap-2">
+      <span>🏗️</span> Editor de Obra
+    </button>
+    <button onclick="show('detalle')" id="sb-detalle" class="sidebar-btn w-full text-left px-3 py-2.5 rounded text-gray-300 flex items-center gap-2">
+      <span>🔍</span> Detalle de Ítem
+    </button>
+    <button onclick="show('analysis')" id="sb-analysis" class="sidebar-btn w-full text-left px-3 py-2.5 rounded text-gray-300 flex items-center gap-2">
+      <span>📊</span> Vista Análisis
+    </button>
+    <button onclick="show('ai')" id="sb-ai" class="sidebar-btn w-full text-left px-3 py-2.5 rounded text-gray-300 flex items-center gap-2">
+      <span>🤖</span> IA + Planos
+    </button>
+    <button onclick="show('import')" id="sb-import" class="sidebar-btn w-full text-left px-3 py-2.5 rounded text-gray-300 flex items-center gap-2">
+      <span>📥</span> Importar Excel
+    </button>
+    <button onclick="show('export')" id="sb-export" class="sidebar-btn w-full text-left px-3 py-2.5 rounded text-gray-300 flex items-center gap-2">
+      <span>📤</span> Exportar
+    </button>
+    <div class="border-t border-sole-green my-2"></div>
+    <div class="text-sole-gold text-[10px] font-bold tracking-wider mb-2 px-1">CONFIGURACION</div>
+    <button onclick="show('markups')" id="sb-markups" class="sidebar-btn w-full text-left px-3 py-2.5 rounded text-gray-300 flex items-center gap-2">
+      <span>⚙️</span> Cadena de Markups
+    </button>
+    <button onclick="show('catalogos')" id="sb-catalogos" class="sidebar-btn w-full text-left px-3 py-2.5 rounded text-gray-300 flex items-center gap-2">
+      <span>📋</span> Catálogos de Precios
+    </button>
+    <button onclick="show('orgconfig')" id="sb-orgconfig" class="sidebar-btn w-full text-left px-3 py-2.5 rounded text-gray-300 flex items-center gap-2">
+      <span>🏢</span> Config. Organización
+    </button>
+    <button onclick="show('versiones')" id="sb-versiones" class="sidebar-btn w-full text-left px-3 py-2.5 rounded text-gray-300 flex items-center gap-2">
+      <span>📸</span> Versiones
+    </button>
+  </nav>
+  <!-- User -->
+  <div class="p-3 border-t border-sole-green flex items-center gap-2">
+    <div class="w-8 h-8 bg-sole-gold rounded-full flex items-center justify-center font-bold text-sole-dark text-xs">CS</div>
+    <div>
+      <div class="text-white text-xs font-medium">Carlos Sanchez</div>
+      <div class="text-gray-400 text-[10px]">INTHEGROW S.R.L.</div>
+    </div>
+  </div>
+</aside>
+
+<!-- CONTENT -->
+<main class="flex-1 overflow-y-auto bg-gray-50">
+
+<!-- ===== 1. DASHBOARD ===== -->
+<div id="s-dashboard" class="screen active fade-in p-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-sole-dark">Mis Presupuestos</h1>
+      <p class="text-gray-500 text-sm mt-1">3 obras activas · Cliente: Terrac / Arq. Yanibeli</p>
+    </div>
+    <button onclick="show('nuevo')" class="bg-sole-gold hover:bg-yellow-500 text-sole-dark font-semibold px-6 py-3 rounded-lg shadow transition flex items-center gap-2"><span class="text-xl">+</span> Nuevo Presupuesto</button>
+  </div>
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <!-- Las Heras -->
+    <div onclick="show('editor')" class="bg-white rounded-xl shadow-sm border hover:shadow-md transition cursor-pointer p-5">
+      <div class="flex justify-between items-start mb-2">
+        <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">Activo</span>
+        <span class="text-xs text-gray-400">v3 · 55 hojas</span>
+      </div>
+      <h3 class="font-semibold text-lg text-sole-dark">Edificio Las Heras</h3>
+      <p class="text-gray-500 text-sm mt-1">Obra gris · 10 pisos · 108 ítems · 325 materiales</p>
+      <div class="mt-3 flex gap-2 text-[10px]">
+        <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">44 hojas detalle</span>
+        <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">5 catálogos</span>
+      </div>
+      <div class="mt-4 pt-3 border-t flex justify-between">
+        <div><div class="text-xs text-gray-400">Directo</div><div class="font-semibold text-sole-dark">$284.500.000</div></div>
+        <div class="text-right"><div class="text-xs text-gray-400">Neto Total</div><div class="font-bold text-sole-gold text-lg">$372.7M</div></div>
+      </div>
+    </div>
+    <!-- Lugones -->
+    <div onclick="show('editor')" class="bg-white rounded-xl shadow-sm border hover:shadow-md transition cursor-pointer p-5">
+      <div class="flex justify-between items-start mb-2">
+        <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">Borrador</span>
+        <span class="text-xs text-gray-400">v1 · 67 hojas</span>
+      </div>
+      <h3 class="font-semibold text-lg text-sole-dark">Casa Lugones</h3>
+      <p class="text-gray-500 text-sm mt-1">Refacción completa · 2 pisos · 72 ítems · 297 materiales</p>
+      <div class="mt-3 flex gap-2 text-[10px]">
+        <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">56 hojas detalle</span>
+        <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">8 rubros</span>
+      </div>
+      <div class="mt-4 pt-3 border-t flex justify-between">
+        <div><div class="text-xs text-gray-400">Directo</div><div class="font-semibold text-sole-dark">$198.200.000</div></div>
+        <div class="text-right"><div class="text-xs text-gray-400">Neto Total</div><div class="font-bold text-sole-gold text-lg">$259.6M</div></div>
+      </div>
+    </div>
+    <!-- El Encuentro -->
+    <div class="bg-white rounded-xl shadow-sm border hover:shadow-md transition cursor-pointer p-5">
+      <div class="flex justify-between items-start mb-2">
+        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">Presentado</span>
+        <span class="text-xs text-gray-400">v2 · 25 hojas</span>
+      </div>
+      <h3 class="font-semibold text-lg text-sole-dark">El Encuentro</h3>
+      <p class="text-gray-500 text-sm mt-1">Exterior/paisajismo · Pilar · 30 ítems · 279 materiales</p>
+      <div class="mt-3 flex gap-2 text-[10px]">
+        <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">14 hojas detalle</span>
+        <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">6 rubros</span>
+        <span class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">+ Cronograma</span>
+      </div>
+      <div class="mt-4 pt-3 border-t flex justify-between">
+        <div><div class="text-xs text-gray-400">Directo</div><div class="font-semibold text-sole-dark">$258.800.000</div></div>
+        <div class="text-right"><div class="text-xs text-gray-400">Neto Total</div><div class="font-bold text-sole-gold text-lg">$409.0M</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border p-5">
+    <h3 class="font-semibold text-sole-dark mb-3">Actividad reciente</h3>
+    <div class="space-y-2 text-sm">
+      <div class="flex justify-between py-2 border-b border-gray-50"><span>📝 <strong>Las Heras</strong> — Catálogo Mar-2026 aplicado: 108 ítems recalculados</span><span class="text-gray-400">hace 2 hs</span></div>
+      <div class="flex justify-between py-2 border-b border-gray-50"><span>📸 <strong>El Encuentro</strong> — IA analizó plano exterior: 23 ítems sugeridos</span><span class="text-gray-400">hace 3 días</span></div>
+      <div class="flex justify-between py-2"><span>💾 <strong>Casa Lugones</strong> — Importación Excel completada: 72 ítems, 297 materiales</span><span class="text-gray-400">15 mar</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 2. NUEVO PRESUPUESTO ===== -->
+<div id="s-nuevo" class="screen fade-in p-6">
+  <h1 class="text-2xl font-bold text-sole-dark mb-6">Nuevo Presupuesto</h1>
+  <div class="max-w-2xl bg-white rounded-xl border shadow-sm p-6">
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-medium text-gray-700 flex items-center gap-2">Nombre de la obra <span class="badge-universal">UNIVERSAL</span></label>
+        <input type="text" placeholder="Ej: Edificio Las Heras" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm" value="Torre Belgrano Centro"/>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium text-gray-700 flex items-center gap-2">Tipo de obra <span class="badge-config">CONFIGURABLE</span></label>
+          <select class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+            <option>Edificio residencial</option><option>Casa unifamiliar</option><option>Exterior / Paisajismo</option><option>Nave industrial</option><option>Refacción</option><option>Otro</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 flex items-center gap-2">Ubicación <span class="badge-config">CONFIGURABLE</span></label>
+          <input type="text" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ciudad, Provincia" value="Pilar, Buenos Aires"/>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium text-gray-700 flex items-center gap-2">Moneda <span class="badge-config">CONFIGURABLE</span></label>
+          <select class="mt-1 w-full border rounded-lg px-3 py-2 text-sm"><option>ARS — Peso argentino</option><option>USD — Dólar</option><option>EUR — Euro</option></select>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 flex items-center gap-2">Sistema de unidades <span class="badge-config">CONFIGURABLE</span></label>
+          <select class="mt-1 w-full border rounded-lg px-3 py-2 text-sm"><option>Métrico (m, m², m³, kg)</option><option>Imperial (ft, sf, cf, lbs)</option></select>
+        </div>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 flex items-center gap-2">Cadena de markups <span class="badge-config">CONFIGURABLE</span></label>
+        <div class="mt-2 bg-gray-50 rounded-lg p-3 text-sm">
+          <p class="text-gray-500 text-xs mb-2">Se hereda de la configuración de tu organización. Podés personalizarla por obra.</p>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">Costo Directo</span>
+            <span class="text-gray-400">→</span>
+            <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-medium">Estructura 15%</span>
+            <span class="text-gray-400">→</span>
+            <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-medium">Jefatura 8%</span>
+            <span class="text-gray-400">→</span>
+            <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-medium">Logística 5%</span>
+            <span class="text-gray-400">→</span>
+            <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-medium">Herramientas 3%</span>
+            <span class="text-gray-400">→</span>
+            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Beneficio 10%</span>
+            <span class="text-gray-400">→</span>
+            <span class="bg-sole-dark text-white px-2 py-1 rounded text-xs font-medium">NETO</span>
+          </div>
+          <p class="text-xs text-gray-400 mt-2 flex items-center gap-1"><span class="badge-client">TERRAC</span> Estos % son los valores por defecto de Terrac. Otro cliente puede tener una cadena distinta.</p>
+        </div>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 flex items-center gap-2">Descripción <span class="badge-universal">UNIVERSAL</span></label>
+        <textarea class="mt-1 w-full border rounded-lg px-3 py-2 text-sm h-16" placeholder="Descripción libre de la obra..."></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium text-gray-700 flex items-center gap-2">Cliente <span class="badge-universal">UNIVERSAL</span></label>
+          <input type="text" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm" value="Arq. Andrés Yanibeli"/>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 flex items-center gap-2">Duración estimada <span class="badge-universal">UNIVERSAL</span></label>
+          <input type="text" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: 16 meses" value="16 meses"/>
+        </div>
+      </div>
+      <div class="pt-4 flex gap-3">
+        <button class="bg-sole-gold text-sole-dark font-semibold px-6 py-3 rounded-lg hover:bg-yellow-500 transition">Crear Presupuesto</button>
+        <button class="bg-white border text-gray-600 px-6 py-3 rounded-lg hover:bg-gray-50 transition">Crear desde Excel importado</button>
+        <button class="bg-white border text-gray-600 px-6 py-3 rounded-lg hover:bg-gray-50 transition">Duplicar obra existente</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 3. EDITOR ===== -->
+<div id="s-editor" class="screen fade-in">
+  <div class="p-4">
+    <div class="flex justify-between items-center mb-3">
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-gray-400 cursor-pointer" onclick="show('dashboard')">Presupuestos</span><span class="text-gray-300">/</span>
+        <span class="font-semibold text-sole-dark">Edificio Las Heras — Obra Gris</span>
+        <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">v3</span>
+        <span class="badge-universal">UNIVERSAL</span>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="show('import')" class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs">📥 Importar Excel</button>
+        <button onclick="show('export')" class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs">📤 Exportar</button>
+        <button onclick="show('ai')" class="bg-blue-50 border-blue-200 border text-blue-700 px-3 py-2 rounded-lg text-xs">🤖 Analizar plano</button>
+        <button class="bg-sole-gold text-sole-dark font-medium px-4 py-2 rounded-lg text-xs">💾 Guardar versión</button>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <!-- TREE -->
+      <div class="w-64 bg-white rounded-xl shadow-sm border flex-shrink-0 overflow-hidden">
+        <div class="bg-sole-dark text-white px-3 py-2 flex justify-between items-center">
+          <span class="font-semibold text-xs">Estructura de Obra <span class="badge-universal">UNIVERSAL</span></span>
+          <button class="text-sole-gold text-xs">+ Sección</button>
+        </div>
+        <div class="p-1.5 text-xs max-h-[550px] overflow-y-auto">
+          <div class="tree-item rounded px-2 py-1.5 bg-sole-light font-semibold text-sole-dark text-xs">📁 Edificio Las Heras</div>
+          <div class="ml-2">
+            <div class="tree-item rounded px-2 py-1 font-medium text-sole-dark">▼ 0. Tareas Preliminares</div>
+            <div class="ml-3">
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">0.8 Estructura encofrado</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">0.9 Excavación bases</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">0.10 Excavación tensores</div>
+            </div>
+            <div class="tree-item rounded px-2 py-1 font-medium text-sole-dark">▼ 1. Subsuelo</div>
+            <div class="ml-3">
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">1.1 Columnas y tabiques</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">1.2 Vigas</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">1.3 Losa</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">1.4 Mampostería</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">1.5 Contrapiso</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">1.6 Carpeta</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">1.7 Revoque interior</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">1.8 Revoque exterior</div>
+            </div>
+            <div class="tree-item rounded px-2 py-1 font-medium text-sole-dark bg-sole-light border-l-2 border-sole-gold">▼ 2. Planta Baja</div>
+            <div class="ml-3">
+              <div class="tree-item rounded px-2 py-0.5 text-sole-dark font-medium bg-yellow-50">2.1 Columnas y tabiques</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">2.2 Vigas</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">2.3 Losa</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">2.4 Mampostería</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">2.5 Contrapiso</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">2.6 Carpeta</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">2.7 Revoque interior</div>
+              <div class="tree-item rounded px-2 py-0.5 text-gray-500">2.8 Revoque exterior</div>
+            </div>
+            <div class="tree-item rounded px-2 py-1 font-medium text-gray-600">▶ 3. Piso 1 (=2 a 8)</div>
+            <div class="tree-item rounded px-2 py-1 font-medium text-gray-600">▶ 4. Azotea</div>
+          </div>
+        </div>
+        <div class="p-2 border-t bg-gray-50 text-[10px] text-gray-400 flex items-center gap-1">
+          <span class="badge-client">TERRAC</span> Jerarquía por piso (este cliente). Otros usan por rubro.
+        </div>
+      </div>
+      <!-- TABLE -->
+      <div class="flex-1 bg-white rounded-xl shadow-sm border overflow-hidden">
+        <div class="bg-gray-50 border-b px-4 py-2 flex justify-between items-center">
+          <div>
+            <h2 class="font-semibold text-sole-dark text-sm">2.1 Columnas y Tabiques — Planta Baja</h2>
+            <p class="text-[10px] text-gray-400">Hormigón armado H-30 · Datos reales Las Heras</p>
+          </div>
+          <div class="flex gap-1">
+            <button onclick="show('detalle')" class="text-xs bg-sole-green text-white px-2 py-1 rounded">🔍 Ver detalle</button>
+            <button class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">🤖 Sugerir IA</button>
+          </div>
+        </div>
+        <!-- Cost cards -->
+        <div class="grid grid-cols-5 gap-2 p-3 bg-gray-50 border-b">
+          <div class="bg-white rounded p-2 border text-center"><div class="text-[10px] text-gray-400">Materiales</div><div class="font-bold text-sm text-sole-dark">$8.45M</div></div>
+          <div class="bg-white rounded p-2 border text-center"><div class="text-[10px] text-gray-400">Mano de Obra</div><div class="font-bold text-sm text-sole-dark">$3.20M</div></div>
+          <div class="bg-white rounded p-2 border text-center"><div class="text-[10px] text-gray-400">Directo</div><div class="font-bold text-sm text-blue-700">$11.65M</div></div>
+          <div class="bg-white rounded p-2 border text-center"><div class="text-[10px] text-gray-400">Indirecto (31%)</div><div class="font-bold text-sm text-orange-600">$3.61M</div></div>
+          <div class="bg-white rounded p-2 border border-sole-gold text-center"><div class="text-[10px] text-sole-gold">Neto</div><div class="font-bold text-sm text-sole-gold">$15.26M</div></div>
+        </div>
+        <!-- Markup chain visual -->
+        <div class="px-3 py-1.5 bg-sole-light border-b flex items-center gap-1 text-[10px]">
+          <span class="badge-config">CADENA</span>
+          <span class="font-medium">$11.65M</span>
+          <span class="text-gray-400">→ +Estr 15%</span>
+          <span class="text-gray-400">→ +Jef 8%</span>
+          <span class="text-gray-400">→ +Log 5%</span>
+          <span class="text-gray-400">→ +Herr 3%</span>
+          <span class="text-gray-400">→ +Benef 10%</span>
+          <span class="text-gray-400">→</span>
+          <span class="font-bold text-sole-gold">$15.26M</span>
+        </div>
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-sole-dark text-white">
+              <tr>
+                <th class="px-2 py-2 text-left">Código</th><th class="px-2 py-2 text-left">Descripción</th>
+                <th class="px-2 py-2 text-left">Unidad</th><th class="px-2 py-2 text-right">Cant.</th>
+                <th class="px-2 py-2 text-right">MAT Unit</th><th class="px-2 py-2 text-right">MO Unit</th>
+                <th class="px-2 py-2 text-right">Directo</th><th class="px-2 py-2 text-right">Indirecto</th>
+                <th class="px-2 py-2 text-right">Neto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b hover:bg-yellow-50"><td class="px-2 py-2 font-mono text-gray-400">2.1.1</td><td class="px-2 py-2 font-medium editable">Hormigón H-30 elaborado</td><td class="px-2 py-2 text-gray-500">m³</td><td class="px-2 py-2 cost-cell editable">42.5</td><td class="px-2 py-2 cost-cell">$85.000</td><td class="px-2 py-2 cost-cell">$32.000</td><td class="px-2 py-2 cost-cell font-medium">$4.972.500</td><td class="px-2 py-2 cost-cell text-gray-500">$1.541.475</td><td class="px-2 py-2 cost-cell font-bold text-sole-dark">$6.513.975</td></tr>
+              <tr class="border-b hover:bg-yellow-50"><td class="px-2 py-2 font-mono text-gray-400">2.1.2</td><td class="px-2 py-2 font-medium editable">Acero ADN 420 ø12</td><td class="px-2 py-2 text-gray-500">kg</td><td class="px-2 py-2 cost-cell editable">3.200</td><td class="px-2 py-2 cost-cell">$1.250</td><td class="px-2 py-2 cost-cell">$380</td><td class="px-2 py-2 cost-cell font-medium">$5.216.000</td><td class="px-2 py-2 cost-cell text-gray-500">$1.616.960</td><td class="px-2 py-2 cost-cell font-bold text-sole-dark">$6.832.960</td></tr>
+              <tr class="border-b hover:bg-yellow-50"><td class="px-2 py-2 font-mono text-gray-400">2.1.3</td><td class="px-2 py-2 font-medium editable">Encofrado metálico</td><td class="px-2 py-2 text-gray-500">m²</td><td class="px-2 py-2 cost-cell editable">85</td><td class="px-2 py-2 cost-cell">$12.000</td><td class="px-2 py-2 cost-cell">$5.200</td><td class="px-2 py-2 cost-cell font-medium">$1.462.000</td><td class="px-2 py-2 cost-cell text-gray-500">$453.220</td><td class="px-2 py-2 cost-cell font-bold text-sole-dark">$1.915.220</td></tr>
+            </tbody>
+            <tfoot class="bg-gray-50 font-semibold text-xs">
+              <tr><td colspan="6" class="px-2 py-2 text-right text-gray-500">TOTAL 2.1</td><td class="px-2 py-2 cost-cell text-blue-700">$11.650.500</td><td class="px-2 py-2 cost-cell text-orange-600">$3.611.655</td><td class="px-2 py-2 cost-cell text-sole-gold">$15.262.155</td></tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="p-2 bg-blue-50 text-[10px] text-blue-700 border-t">💡 Click en celdas <span class="editable px-1">punteadas</span> para editar. Totales se recalculan por la cadena de markups automáticamente.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 4. DETALLE DE ÍTEM ===== -->
+<div id="s-detalle" class="screen fade-in p-6">
+  <div class="flex items-center gap-2 text-sm mb-4">
+    <span class="text-gray-400 cursor-pointer" onclick="show('dashboard')">Presupuestos</span><span class="text-gray-300">/</span>
+    <span class="text-gray-400 cursor-pointer" onclick="show('editor')">Las Heras</span><span class="text-gray-300">/</span>
+    <span class="font-semibold text-sole-dark">2.1 Columnas y Tabiques PB — Detalle de recursos</span>
+  </div>
+  <div class="grid grid-cols-2 gap-4">
+    <!-- Materiales -->
+    <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
+      <div class="bg-sole-dark text-white px-4 py-2 flex justify-between items-center">
+        <span class="font-semibold text-sm">Materiales <span class="badge-universal">UNIVERSAL</span></span>
+        <span class="text-xs text-sole-gold">12 recursos</span>
+      </div>
+      <table class="w-full text-xs">
+        <thead class="bg-gray-50"><tr><th class="px-2 py-1.5 text-left">Código</th><th class="px-2 py-1.5 text-left">Descripción</th><th class="px-2 py-1.5 text-right">Cant</th><th class="px-2 py-1.5 text-right">Desp%</th><th class="px-2 py-1.5 text-right">Precio</th><th class="px-2 py-1.5 text-right">Subtotal</th></tr></thead>
+        <tbody>
+          <tr class="border-b"><td class="px-2 py-1.5 font-mono text-gray-400">H-30</td><td class="px-2 py-1.5">Hormigón H-30 elaborado</td><td class="px-2 py-1.5 cost-cell">42.5</td><td class="px-2 py-1.5 cost-cell">5%</td><td class="px-2 py-1.5 cost-cell">$85.000</td><td class="px-2 py-1.5 cost-cell font-medium">$3.793.750</td></tr>
+          <tr class="border-b"><td class="px-2 py-1.5 font-mono text-gray-400">AC-12</td><td class="px-2 py-1.5">Acero ADN 420 ø12</td><td class="px-2 py-1.5 cost-cell">3.200</td><td class="px-2 py-1.5 cost-cell">3%</td><td class="px-2 py-1.5 cost-cell">$1.250</td><td class="px-2 py-1.5 cost-cell font-medium">$4.120.000</td></tr>
+          <tr><td class="px-2 py-1.5 font-mono text-gray-400">AL-R</td><td class="px-2 py-1.5">Alambre recocido ø16</td><td class="px-2 py-1.5 cost-cell">48</td><td class="px-2 py-1.5 cost-cell">10%</td><td class="px-2 py-1.5 cost-cell">$950</td><td class="px-2 py-1.5 cost-cell font-medium">$50.160</td></tr>
+        </tbody>
+        <tfoot class="bg-sole-light"><tr><td colspan="5" class="px-2 py-1.5 text-right font-semibold text-xs">TOTAL MAT</td><td class="px-2 py-1.5 cost-cell font-bold text-sole-dark">$8.450.000</td></tr></tfoot>
+      </table>
+      <div class="px-3 py-1.5 text-[10px] text-gray-400 flex items-center gap-1 border-t"><span class="badge-client">TERRAC</span> Columna "Desperdicio%" es específica de este cliente. No todos la usan.</div>
+    </div>
+    <!-- Mano de Obra -->
+    <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
+      <div class="bg-sole-dark text-white px-4 py-2 flex justify-between items-center">
+        <span class="font-semibold text-sm">Mano de Obra <span class="badge-universal">UNIVERSAL</span></span>
+        <span class="text-xs text-sole-gold">4 categorías</span>
+      </div>
+      <table class="w-full text-xs">
+        <thead class="bg-gray-50"><tr><th class="px-2 py-1.5 text-left">Categoría</th><th class="px-2 py-1.5 text-right">Personas</th><th class="px-2 py-1.5 text-right">Días</th><th class="px-2 py-1.5 text-right">Desp%</th><th class="px-2 py-1.5 text-right">Jornal</th><th class="px-2 py-1.5 text-right">Subtotal</th></tr></thead>
+        <tbody>
+          <tr class="border-b"><td class="px-2 py-1.5 font-medium">Capataz</td><td class="px-2 py-1.5 cost-cell">1</td><td class="px-2 py-1.5 cost-cell">5</td><td class="px-2 py-1.5 cost-cell">10%</td><td class="px-2 py-1.5 cost-cell">$120.000</td><td class="px-2 py-1.5 cost-cell font-medium">$660.000</td></tr>
+          <tr class="border-b"><td class="px-2 py-1.5 font-medium">Oficial</td><td class="px-2 py-1.5 cost-cell">3</td><td class="px-2 py-1.5 cost-cell">5</td><td class="px-2 py-1.5 cost-cell">10%</td><td class="px-2 py-1.5 cost-cell">$90.000</td><td class="px-2 py-1.5 cost-cell font-medium">$1.485.000</td></tr>
+          <tr class="border-b"><td class="px-2 py-1.5 font-medium">Ayudante</td><td class="px-2 py-1.5 cost-cell">3</td><td class="px-2 py-1.5 cost-cell">5</td><td class="px-2 py-1.5 cost-cell">10%</td><td class="px-2 py-1.5 cost-cell">$60.000</td><td class="px-2 py-1.5 cost-cell font-medium">$990.000</td></tr>
+          <tr><td class="px-2 py-1.5 font-medium">Puntero</td><td class="px-2 py-1.5 cost-cell">0</td><td class="px-2 py-1.5 cost-cell">0</td><td class="px-2 py-1.5 cost-cell">0%</td><td class="px-2 py-1.5 cost-cell">$105.000</td><td class="px-2 py-1.5 cost-cell font-medium">$0</td></tr>
+        </tbody>
+        <tfoot class="bg-sole-light"><tr><td colspan="5" class="px-2 py-1.5 text-right font-semibold text-xs">TOTAL MO</td><td class="px-2 py-1.5 cost-cell font-bold text-sole-dark">$3.135.000</td></tr></tfoot>
+      </table>
+      <div class="px-3 py-1.5 text-[10px] text-gray-400 flex items-center gap-1 border-t"><span class="badge-client">TERRAC</span> Categorías Capataz/Puntero/Oficial/Ayudante son de este cliente. Otros usan Foreman/Journeyman/etc.</div>
+    </div>
+    <!-- Equipos -->
+    <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
+      <div class="bg-sole-dark text-white px-4 py-2"><span class="font-semibold text-sm">Equipos <span class="badge-universal">UNIVERSAL</span></span></div>
+      <table class="w-full text-xs"><thead class="bg-gray-50"><tr><th class="px-2 py-1.5 text-left">Equipo</th><th class="px-2 py-1.5 text-right">Días</th><th class="px-2 py-1.5 text-right">Precio/día</th><th class="px-2 py-1.5 text-right">Subtotal</th></tr></thead>
+        <tbody><tr class="border-b"><td class="px-2 py-1.5">Vibrador de hormigón</td><td class="px-2 py-1.5 cost-cell">3</td><td class="px-2 py-1.5 cost-cell">$18.000</td><td class="px-2 py-1.5 cost-cell font-medium">$54.000</td></tr></tbody>
+        <tfoot class="bg-sole-light"><tr><td colspan="3" class="px-2 py-1.5 text-right font-semibold text-xs">TOTAL EQ</td><td class="px-2 py-1.5 cost-cell font-bold">$54.000</td></tr></tfoot>
+      </table>
+    </div>
+    <!-- Subcontratos -->
+    <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
+      <div class="bg-sole-dark text-white px-4 py-2"><span class="font-semibold text-sm">Subcontratos <span class="badge-universal">UNIVERSAL</span></span></div>
+      <table class="w-full text-xs"><thead class="bg-gray-50"><tr><th class="px-2 py-1.5 text-left">Servicio</th><th class="px-2 py-1.5 text-right">Cant</th><th class="px-2 py-1.5 text-right">Precio</th><th class="px-2 py-1.5 text-right">Subtotal</th></tr></thead>
+        <tbody><tr><td class="px-2 py-1.5 text-gray-400 italic" colspan="4">Sin subcontratos para este ítem</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 5. ANÁLISIS ===== -->
+<div id="s-analysis" class="screen fade-in p-6">
+  <div class="flex justify-between items-center mb-4">
+    <div><h1 class="text-2xl font-bold text-sole-dark">Vista Análisis — Las Heras <span class="badge-universal">UNIVERSAL</span></h1><p class="text-gray-500 text-xs mt-1">Equivale a hoja 01_C&P · 108 ítems · Datos reales</p></div>
+    <div class="flex gap-2"><button onclick="show('export')" class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs">📤 Exportar</button></div>
+  </div>
+  <div class="grid grid-cols-6 gap-2 mb-4">
+    <div class="bg-white rounded-lg border p-3 text-center"><div class="text-[10px] text-gray-400">Materiales</div><div class="text-lg font-bold text-sole-dark">$142.2M</div></div>
+    <div class="bg-white rounded-lg border p-3 text-center"><div class="text-[10px] text-gray-400">Mano de Obra</div><div class="text-lg font-bold text-sole-dark">$85.3M</div></div>
+    <div class="bg-white rounded-lg border p-3 text-center"><div class="text-[10px] text-gray-400">Equipos</div><div class="text-lg font-bold text-sole-dark">$28.5M</div></div>
+    <div class="bg-blue-50 rounded-lg border border-blue-200 p-3 text-center"><div class="text-[10px] text-blue-600">Directo</div><div class="text-lg font-bold text-blue-700">$284.5M</div></div>
+    <div class="bg-orange-50 rounded-lg border border-orange-200 p-3 text-center"><div class="text-[10px] text-orange-600">Indirectos</div><div class="text-lg font-bold text-orange-700">$88.2M</div><div class="text-[10px] text-orange-400">Cadena: 31%</div></div>
+    <div class="bg-sole-dark rounded-lg p-3 text-center"><div class="text-[10px] text-sole-gold">NETO TOTAL</div><div class="text-xl font-bold text-white">$372.7M</div></div>
+  </div>
+  <div class="bg-white rounded-xl border overflow-hidden">
+    <table class="w-full text-xs">
+      <thead class="bg-sole-dark text-white"><tr><th class="px-2 py-2 text-left">Sección</th><th class="px-2 py-2 text-right">MAT</th><th class="px-2 py-2 text-right">MO</th><th class="px-2 py-2 text-right">Equipo</th><th class="px-2 py-2 text-right">Sub</th><th class="px-2 py-2 text-right">Directo</th><th class="px-2 py-2 text-right">Indirecto</th><th class="px-2 py-2 text-right">Beneficio</th><th class="px-2 py-2 text-right font-bold">Neto</th></tr></thead>
+      <tbody>
+        <tr class="border-b hover:bg-gray-50"><td class="px-2 py-2">0. Tareas Preliminares</td><td class="px-2 py-2 cost-cell">$3.2M</td><td class="px-2 py-2 cost-cell">$2.1M</td><td class="px-2 py-2 cost-cell">$1.8M</td><td class="px-2 py-2 cost-cell">$0</td><td class="px-2 py-2 cost-cell text-blue-700">$7.1M</td><td class="px-2 py-2 cost-cell">$2.2M</td><td class="px-2 py-2 cost-cell">$0.7M</td><td class="px-2 py-2 cost-cell font-bold">$10.0M</td></tr>
+        <tr class="border-b hover:bg-gray-50 bg-yellow-50"><td class="px-2 py-2 font-semibold">1. Subsuelo</td><td class="px-2 py-2 cost-cell">$18.5M</td><td class="px-2 py-2 cost-cell">$9.2M</td><td class="px-2 py-2 cost-cell">$3.1M</td><td class="px-2 py-2 cost-cell">$0.5M</td><td class="px-2 py-2 cost-cell text-blue-700">$31.3M</td><td class="px-2 py-2 cost-cell">$9.7M</td><td class="px-2 py-2 cost-cell">$3.1M</td><td class="px-2 py-2 cost-cell font-bold">$44.1M</td></tr>
+        <tr class="border-b hover:bg-gray-50"><td class="px-2 py-2 font-semibold">2. Planta Baja</td><td class="px-2 py-2 cost-cell">$22.3M</td><td class="px-2 py-2 cost-cell">$11.8M</td><td class="px-2 py-2 cost-cell">$4.2M</td><td class="px-2 py-2 cost-cell">$1.2M</td><td class="px-2 py-2 cost-cell text-blue-700">$39.5M</td><td class="px-2 py-2 cost-cell">$12.2M</td><td class="px-2 py-2 cost-cell">$4.0M</td><td class="px-2 py-2 cost-cell font-bold">$55.7M</td></tr>
+        <tr class="border-b hover:bg-gray-50"><td class="px-2 py-2">3. Pisos 1-8 (×8)</td><td class="px-2 py-2 cost-cell">$85.4M</td><td class="px-2 py-2 cost-cell">$52.8M</td><td class="px-2 py-2 cost-cell">$16.2M</td><td class="px-2 py-2 cost-cell">$6.8M</td><td class="px-2 py-2 cost-cell text-blue-700">$161.2M</td><td class="px-2 py-2 cost-cell">$50.0M</td><td class="px-2 py-2 cost-cell">$16.1M</td><td class="px-2 py-2 cost-cell font-bold">$227.3M</td></tr>
+        <tr class="hover:bg-gray-50"><td class="px-2 py-2">4. Azotea</td><td class="px-2 py-2 cost-cell">$12.8M</td><td class="px-2 py-2 cost-cell">$9.4M</td><td class="px-2 py-2 cost-cell">$3.2M</td><td class="px-2 py-2 cost-cell">$0</td><td class="px-2 py-2 cost-cell text-blue-700">$25.4M</td><td class="px-2 py-2 cost-cell">$7.9M</td><td class="px-2 py-2 cost-cell">$2.5M</td><td class="px-2 py-2 cost-cell font-bold">$35.8M</td></tr>
+      </tbody>
+      <tfoot class="bg-sole-dark text-white font-semibold"><tr><td class="px-2 py-3">TOTAL OBRA</td><td class="px-2 py-3 cost-cell">$142.2M</td><td class="px-2 py-3 cost-cell">$85.3M</td><td class="px-2 py-3 cost-cell">$28.5M</td><td class="px-2 py-3 cost-cell">$8.5M</td><td class="px-2 py-3 cost-cell text-blue-300">$284.5M</td><td class="px-2 py-3 cost-cell">$88.2M</td><td class="px-2 py-3 cost-cell">$24.6M</td><td class="px-2 py-3 cost-cell text-sole-gold text-base">$372.7M</td></tr></tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 6. IA + PLANOS ===== -->
+<div id="s-ai" class="screen fade-in p-6">
+  <h1 class="text-2xl font-bold text-sole-dark mb-2">Análisis de Planos con IA <span class="badge-universal">UNIVERSAL</span></h1>
+  <p class="text-gray-500 text-sm mb-4">Subí una foto o imagen del plano. La IA extrae secciones y cantidades.</p>
+  <div class="grid grid-cols-2 gap-6">
+    <div>
+      <div class="border-2 border-dashed border-sole-line rounded-xl p-8 text-center hover:border-sole-gold transition cursor-pointer bg-white">
+        <div class="text-5xl mb-3">📐</div>
+        <p class="font-semibold text-sole-dark">Arrastrá el plano acá</p>
+        <p class="text-sm text-gray-400 mt-1">JPG, PNG o WEBP · máximo 20 MB</p>
+        <button class="mt-4 bg-sole-gold text-sole-dark font-medium px-4 py-2 rounded-lg text-sm">Seleccionar archivo</button>
+      </div>
+      <div class="mt-3 bg-gray-100 rounded-xl p-3 border"><div class="bg-gray-300 rounded-lg h-40 flex items-center justify-center text-gray-500 text-sm">Vista previa: plano_planta_baja_las_heras.jpg</div></div>
+    </div>
+    <div class="bg-white rounded-xl border shadow-sm">
+      <div class="bg-sole-green text-white px-4 py-3 rounded-t-xl flex justify-between items-center"><span class="font-semibold text-sm">🤖 Resultado IA</span><span class="text-xs bg-white/20 px-2 py-0.5 rounded-full">8 ítems · 11 seg</span></div>
+      <div class="p-3 space-y-2 max-h-[320px] overflow-y-auto">
+        <div class="bg-green-50 border border-green-200 rounded-lg p-2 flex justify-between items-center text-xs"><div><div class="font-medium">2.1 Columnas PB — H-30</div><div class="text-gray-500">m³ · ~42.5 · confianza: alta</div></div><div class="flex gap-1"><button class="bg-green-600 text-white px-2 py-1 rounded">✓</button><button class="bg-gray-200 px-2 py-1 rounded">✕</button></div></div>
+        <div class="bg-green-50 border border-green-200 rounded-lg p-2 flex justify-between items-center text-xs"><div><div class="font-medium">2.2 Vigas PB — H-30</div><div class="text-gray-500">m³ · ~28 · confianza: alta</div></div><div class="flex gap-1"><button class="bg-green-600 text-white px-2 py-1 rounded">✓</button><button class="bg-gray-200 px-2 py-1 rounded">✕</button></div></div>
+        <div class="bg-green-50 border border-green-200 rounded-lg p-2 flex justify-between items-center text-xs"><div><div class="font-medium">2.3 Losa PB</div><div class="text-gray-500">m³ · ~65 · confianza: alta</div></div><div class="flex gap-1"><button class="bg-green-600 text-white px-2 py-1 rounded">✓</button><button class="bg-gray-200 px-2 py-1 rounded">✕</button></div></div>
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-2 flex justify-between items-center text-xs"><div><div class="font-medium">2.4 Mampostería exterior LP18</div><div class="text-yellow-700">⚠️ m² · ~320 · confianza: media</div></div><div class="flex gap-1"><button class="bg-green-600 text-white px-2 py-1 rounded">✓</button><button class="bg-gray-200 px-2 py-1 rounded">✕</button></div></div>
+        <div class="bg-green-50 border border-green-200 rounded-lg p-2 flex justify-between items-center text-xs"><div><div class="font-medium">2.5 Contrapiso H8</div><div class="text-gray-500">m² · ~180 · confianza: alta</div></div><div class="flex gap-1"><button class="bg-green-600 text-white px-2 py-1 rounded">✓</button><button class="bg-gray-200 px-2 py-1 rounded">✕</button></div></div>
+      </div>
+      <div class="p-3 border-t bg-gray-50 flex justify-between items-center"><span class="text-[10px] text-gray-400">5 de 8</span><button class="bg-sole-gold text-sole-dark font-medium px-4 py-2 rounded-lg text-xs">✓ Aceptar y agregar al presupuesto</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 7. IMPORTAR ===== -->
+<div id="s-import" class="screen fade-in p-6">
+  <h1 class="text-2xl font-bold text-sole-dark mb-2">Importar Excel <span class="badge-universal">UNIVERSAL</span></h1>
+  <p class="text-gray-500 text-sm mb-6">El sistema detecta el formato automáticamente</p>
+  <div class="max-w-3xl">
+    <div class="border-2 border-dashed border-sole-line rounded-xl p-8 text-center bg-white mb-6"><div class="text-5xl mb-3">📊</div><p class="font-semibold text-sole-dark">Arrastrá tu Excel acá</p><p class="text-sm text-gray-400 mt-1">.xlsx o .xls</p><button class="mt-4 bg-sole-gold text-sole-dark font-medium px-4 py-2 rounded-lg text-sm">Seleccionar archivo</button></div>
+    <div class="bg-white rounded-xl border p-5">
+      <h3 class="font-semibold text-sole-dark mb-3">Formato detectado: <span class="text-sole-gold">Terrac — Cómputo y Presupuesto</span> <span class="badge-client">TERRAC</span></h3>
+      <div class="grid grid-cols-3 gap-3 text-sm mb-4">
+        <div class="bg-green-50 rounded-lg p-3 border border-green-200"><div class="text-green-800 font-medium">✓ 5 catálogos detectados</div><div class="text-xs text-gray-500 mt-1">00_Mat (325), 00_MO (4), 00_Eq (27), 00_Sub (70), 00_JEF+ESTR</div></div>
+        <div class="bg-green-50 rounded-lg p-3 border border-green-200"><div class="text-green-800 font-medium">✓ Hoja 01_C&P detectada</div><div class="text-xs text-gray-500 mt-1">26 columnas · 108 ítems · formato Las Heras</div></div>
+        <div class="bg-green-50 rounded-lg p-3 border border-green-200"><div class="text-green-800 font-medium">✓ 44 hojas detalle</div><div class="text-xs text-gray-500 mt-1">78 filas c/u · 5 secciones por hoja</div></div>
+      </div>
+      <div class="bg-yellow-50 rounded-lg p-3 border border-yellow-200 text-sm mb-4"><span class="text-yellow-800 font-medium">⚠️ 12 códigos de ítem detectados como fechas por Excel</span><div class="text-xs text-gray-500 mt-1">El sistema los corrige automáticamente: 2024-01-01 → 1.1, 2024-02-01 → 1.2, etc.</div></div>
+      <div class="flex gap-3"><button class="bg-sole-gold text-sole-dark font-semibold px-6 py-3 rounded-lg text-sm">Importar como presupuesto nuevo</button><button class="bg-white border text-gray-600 px-6 py-3 rounded-lg text-sm">Solo importar catálogos</button></div>
+    </div>
+    <div class="mt-4 bg-gray-50 rounded-xl border p-4">
+      <h4 class="font-medium text-sm text-gray-600 mb-2">Formatos soportados <span class="badge-universal">UNIVERSAL</span></h4>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="flex items-center gap-2"><span class="text-green-600">✓</span> Formato Terrac (26 col + 78 filas) <span class="badge-client">TERRAC</span></div>
+        <div class="flex items-center gap-2"><span class="text-green-600">✓</span> CSV genérico (código, desc, unidad, cant, precio)</div>
+        <div class="flex items-center gap-2"><span class="text-gray-400">◻</span> BIM / IFC (futuro)</div>
+        <div class="flex items-center gap-2"><span class="text-gray-400">◻</span> RSMeans import (futuro)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 8. EXPORTAR ===== -->
+<div id="s-export" class="screen fade-in p-6">
+  <h1 class="text-2xl font-bold text-sole-dark mb-6">Exportar Presupuesto <span class="badge-universal">UNIVERSAL</span></h1>
+  <div class="max-w-2xl grid grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border p-5 hover:shadow-md transition cursor-pointer"><div class="text-3xl mb-2">📄</div><h3 class="font-semibold text-sole-dark">PDF Profesional</h3><p class="text-xs text-gray-500 mt-1">Header + resumen + tabla completa + pie de página. Con branding SOLE.</p><span class="badge-universal mt-2 inline-block">UNIVERSAL</span></div>
+    <div class="bg-white rounded-xl border p-5 hover:shadow-md transition cursor-pointer"><div class="text-3xl mb-2">📊</div><h3 class="font-semibold text-sole-dark">Excel Estándar (BoQ)</h3><p class="text-xs text-gray-500 mt-1">Bill of Quantities genérico. Compatible con cualquier software.</p><span class="badge-universal mt-2 inline-block">UNIVERSAL</span></div>
+    <div class="bg-white rounded-xl border p-5 hover:shadow-md transition cursor-pointer"><div class="text-3xl mb-2">📋</div><h3 class="font-semibold text-sole-dark">Excel Formato Terrac</h3><p class="text-xs text-gray-500 mt-1">26 columnas + hojas detalle 78 filas. Idéntico al Excel original.</p><span class="badge-client mt-2 inline-block">TERRAC</span></div>
+    <div class="bg-white rounded-xl border p-5 hover:shadow-md transition cursor-pointer"><div class="text-3xl mb-2">👤</div><h3 class="font-semibold text-sole-dark">Vista Cliente (Venta)</h3><p class="text-xs text-gray-500 mt-1">Solo netos, sin costos internos. Para presentar al comitente.</p><span class="badge-universal mt-2 inline-block">UNIVERSAL</span></div>
+  </div>
+</div>
+
+<!-- ===== 9. CADENA DE MARKUPS ===== -->
+<div id="s-markups" class="screen fade-in p-6">
+  <h1 class="text-2xl font-bold text-sole-dark mb-2">Cadena de Markups <span class="badge-config">CONFIGURABLE</span></h1>
+  <p class="text-gray-500 text-sm mb-6">Definí qué cargos se aplican sobre el costo directo. Podés agregar, quitar o reordenar.</p>
+  <div class="max-w-3xl">
+    <div class="bg-white rounded-xl border p-5 mb-4">
+      <div class="flex items-center gap-2 mb-4 flex-wrap">
+        <div class="bg-blue-100 text-blue-800 px-3 py-2 rounded-lg font-medium text-sm">Costo Directo</div>
+        <span class="text-gray-400 text-lg">→</span>
+        <div class="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg text-sm border-2 border-orange-200">Estructura <strong>15%</strong> <button class="ml-1 text-orange-400 hover:text-red-500">×</button></div>
+        <span class="text-gray-400 text-lg">→</span>
+        <div class="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg text-sm border-2 border-orange-200">Jefatura <strong>8%</strong> <button class="ml-1 text-orange-400 hover:text-red-500">×</button></div>
+        <span class="text-gray-400 text-lg">→</span>
+        <div class="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg text-sm border-2 border-orange-200">Logística <strong>5%</strong> <button class="ml-1 text-orange-400 hover:text-red-500">×</button></div>
+        <span class="text-gray-400 text-lg">→</span>
+        <div class="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg text-sm border-2 border-orange-200">Herramientas <strong>3%</strong> <button class="ml-1 text-orange-400 hover:text-red-500">×</button></div>
+        <span class="text-gray-400 text-lg">→</span>
+        <div class="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-sm border-2 border-green-200">Beneficio <strong>10%</strong> <button class="ml-1 text-green-400 hover:text-red-500">×</button></div>
+        <span class="text-gray-400 text-lg">→</span>
+        <div class="bg-sole-dark text-white px-3 py-2 rounded-lg font-bold text-sm">NETO TOTAL</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="bg-sole-light text-sole-dark px-3 py-2 rounded-lg text-sm border border-dashed border-sole-line hover:border-sole-gold transition">+ Agregar eslabón</button>
+        <span class="text-xs text-gray-400 ml-2">Arrastrá para reordenar · Click en × para quitar</span>
+      </div>
+    </div>
+    <div class="bg-sole-light rounded-xl border border-sole-line p-4">
+      <div class="flex items-center gap-2 mb-2"><span class="badge-client">TERRAC</span><span class="text-sm font-medium text-sole-dark">Esta es la cadena por defecto de Terrac</span></div>
+      <p class="text-xs text-gray-500">Otro cliente puede tener una cadena completamente diferente. Ejemplo:</p>
+      <div class="mt-2 flex items-center gap-1 text-[10px]">
+        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">Directo</span><span class="text-gray-400">→</span>
+        <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded">Overhead 12%</span><span class="text-gray-400">→</span>
+        <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded">Contingency 8%</span><span class="text-gray-400">→</span>
+        <span class="bg-green-100 text-green-800 px-2 py-1 rounded">Profit 15%</span><span class="text-gray-400">→</span>
+        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">Bond 2%</span><span class="text-gray-400">→</span>
+        <span class="bg-red-100 text-red-800 px-2 py-1 rounded">Tax 10%</span><span class="text-gray-400">→</span>
+        <span class="bg-gray-800 text-white px-2 py-1 rounded font-bold">NET</span>
+      </div>
+      <p class="text-[10px] text-gray-400 mt-1">Ejemplo de cadena para empresa constructora en Estados Unidos</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 10. CATÁLOGOS ===== -->
+<div id="s-catalogos" class="screen fade-in p-6">
+  <h1 class="text-2xl font-bold text-sole-dark mb-6">Catálogos de Precios <span class="badge-universal">UNIVERSAL</span></h1>
+  <div class="max-w-3xl space-y-3">
+    <div class="bg-white rounded-xl border p-4 flex justify-between items-center"><div><div class="font-medium text-sm">Materiales Corralón — Mar 2026</div><div class="text-xs text-gray-400">325 ítems · Terrac · Importado 01/03/2026 <span class="badge-client">TERRAC</span></div></div><span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">Activo</span></div>
+    <div class="bg-white rounded-xl border p-4 flex justify-between items-center"><div><div class="font-medium text-sm">Mano de Obra — Mar 2026</div><div class="text-xs text-gray-400">4 categorías: Capataz $120k, Puntero $105k, Oficial $90k, Ayudante $60k <span class="badge-client">TERRAC</span></div></div><span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">Activo</span></div>
+    <div class="bg-white rounded-xl border p-4 flex justify-between items-center"><div><div class="font-medium text-sm">Equipos — Mar 2026</div><div class="text-xs text-gray-400">27 ítems: Mini cargadora, compactador, camión, grúa, etc.</div></div><span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">Activo</span></div>
+    <div class="bg-white rounded-xl border p-4 flex justify-between items-center"><div><div class="font-medium text-sm">Subcontratos — Mar 2026</div><div class="text-xs text-gray-400">70 ítems: Pintura, durlock, plomería, electricidad, vidrios, etc.</div></div><span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">Activo</span></div>
+    <div class="bg-white rounded-xl border p-4 flex justify-between items-center opacity-50"><div><div class="font-medium text-sm">Materiales Corralón — Feb 2026</div><div class="text-xs text-gray-400">318 ítems · versión anterior</div></div><span class="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">Anterior</span></div>
+    <button class="w-full bg-sole-gold text-sole-dark py-3 rounded-lg font-medium text-sm hover:bg-yellow-500 transition">📥 Importar nuevo catálogo de precios</button>
+    <p class="text-xs text-gray-400 text-center flex items-center justify-center gap-1"><span class="badge-universal">UNIVERSAL</span> Los catálogos son genéricos. Cualquier cliente importa sus propias listas.</p>
+  </div>
+</div>
+
+<!-- ===== 11. CONFIG ORGANIZACIÓN ===== -->
+<div id="s-orgconfig" class="screen fade-in p-6">
+  <h1 class="text-2xl font-bold text-sole-dark mb-6">Configuración de Organización <span class="badge-config">CONFIGURABLE</span></h1>
+  <div class="max-w-2xl grid grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border p-5">
+      <h3 class="font-semibold text-sm text-sole-dark mb-3">Datos generales</h3>
+      <div class="space-y-3">
+        <div><label class="text-xs text-gray-500">Nombre</label><input class="w-full border rounded px-2 py-1.5 text-sm" value="INTHEGROW S.R.L."/></div>
+        <div><label class="text-xs text-gray-500">País</label><select class="w-full border rounded px-2 py-1.5 text-sm"><option>Argentina</option></select></div>
+        <div><label class="text-xs text-gray-500">Moneda por defecto</label><select class="w-full border rounded px-2 py-1.5 text-sm"><option>ARS</option><option>USD</option></select></div>
+        <div><label class="text-xs text-gray-500">Unidades</label><select class="w-full border rounded px-2 py-1.5 text-sm"><option>Métrico</option><option>Imperial</option></select></div>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border p-5">
+      <h3 class="font-semibold text-sm text-sole-dark mb-3">Tipos de recurso <span class="badge-config">CONFIGURABLE</span></h3>
+      <p class="text-xs text-gray-400 mb-2">Definí las categorías de costo directo.</p>
+      <div class="space-y-2 text-sm">
+        <div class="flex items-center gap-2 bg-gray-50 rounded px-2 py-1.5"><span class="w-3 h-3 rounded-full bg-blue-500"></span>Materiales<button class="ml-auto text-gray-400 text-xs">×</button></div>
+        <div class="flex items-center gap-2 bg-gray-50 rounded px-2 py-1.5"><span class="w-3 h-3 rounded-full bg-green-500"></span>Mano de Obra<button class="ml-auto text-gray-400 text-xs">×</button></div>
+        <div class="flex items-center gap-2 bg-gray-50 rounded px-2 py-1.5"><span class="w-3 h-3 rounded-full bg-yellow-500"></span>Equipos<button class="ml-auto text-gray-400 text-xs">×</button></div>
+        <div class="flex items-center gap-2 bg-gray-50 rounded px-2 py-1.5"><span class="w-3 h-3 rounded-full bg-purple-500"></span>Subcontratos<button class="ml-auto text-gray-400 text-xs">×</button></div>
+        <button class="text-xs text-sole-green hover:underline">+ Agregar tipo de recurso</button>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border p-5 col-span-2">
+      <h3 class="font-semibold text-sm text-sole-dark mb-3">Categorías de Mano de Obra <span class="badge-client">TERRAC</span></h3>
+      <p class="text-xs text-gray-400 mb-2">Estas son las categorías de MO de Terrac. Otro cliente puede definir otras.</p>
+      <div class="grid grid-cols-4 gap-2 text-sm">
+        <div class="bg-gray-50 rounded p-2 text-center"><div class="font-medium">Capataz</div><div class="text-xs text-gray-400">$120.000/día</div></div>
+        <div class="bg-gray-50 rounded p-2 text-center"><div class="font-medium">Puntero</div><div class="text-xs text-gray-400">$105.000/día</div></div>
+        <div class="bg-gray-50 rounded p-2 text-center"><div class="font-medium">Oficial</div><div class="text-xs text-gray-400">$90.000/día</div></div>
+        <div class="bg-gray-50 rounded p-2 text-center"><div class="font-medium">Ayudante</div><div class="text-xs text-gray-400">$60.000/día</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 12. VERSIONES ===== -->
+<div id="s-versiones" class="screen fade-in p-6">
+  <h1 class="text-2xl font-bold text-sole-dark mb-6">Historial de Versiones — Las Heras <span class="badge-universal">UNIVERSAL</span></h1>
+  <div class="max-w-2xl space-y-3">
+    <div class="bg-white rounded-xl border p-4 border-l-4 border-l-green-500">
+      <div class="flex justify-between items-center"><div><div class="font-medium text-sm">v3 — Precios actualizados Mar-2026</div><div class="text-xs text-gray-400">Carlos · 03/04/2026 14:30 · Neto: $372.7M</div></div><span class="text-xs text-green-700 font-medium bg-green-50 px-2 py-0.5 rounded">Actual</span></div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex justify-between items-center"><div><div class="font-medium text-sm">v2 — Ajuste cantidades estructura P2-P8</div><div class="text-xs text-gray-400">Carlos · 28/03/2026 10:15 · Neto: $358.1M</div><div class="text-xs text-red-500 mt-0.5">Δ -$14.6M (-3.9%) respecto a v3</div></div><div class="flex gap-2"><button class="text-xs text-sole-green border px-2 py-1 rounded">Ver</button><button class="text-xs text-blue-600 border px-2 py-1 rounded">Comparar con v3</button></div></div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex justify-between items-center"><div><div class="font-medium text-sm">v1 — Importación inicial Excel Las Heras</div><div class="text-xs text-gray-400">Carlos · 20/03/2026 16:00 · Neto: $341.5M</div><div class="text-xs text-red-500 mt-0.5">Δ -$31.2M (-8.4%) respecto a v3</div></div><div class="flex gap-2"><button class="text-xs text-sole-green border px-2 py-1 rounded">Ver</button><button class="text-xs text-blue-600 border px-2 py-1 rounded">Comparar con v3</button></div></div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+function show(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(b=>b.classList.remove('active'));
+  const screen=document.getElementById('s-'+name);
+  const btn=document.getElementById('sb-'+name);
+  if(screen)screen.classList.add('active');
+  if(btn)btn.classList.add('active');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOLE — Presupuestador PRO</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        sole: { coral: '#E8663C', coralLight: '#FFF0EB', dark: '#143D34', gold: '#E0A33A', teal: '#2D8D68', tealLight: '#E8F5EE', tealDark: '#1B5E4B', line: '#E5E7EB', muted: '#9D7A32', bg: '#F5F6F8' }
+      }
+    }
+  }
+}
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+body{font-family:'Inter',sans-serif;background:#F5F6F8;}
+.screen{display:none}.screen.active{display:block}
+.sb-item{transition:all .15s;border-left:3px solid transparent}
+.sb-item:hover{background:#F0FAF5}
+.sb-item.active{background:#E8F5EE;border-left-color:#2D8D68;color:#143D34;font-weight:600}
+.cost-cell{text-align:right;font-variant-numeric:tabular-nums}
+.fade-in{animation:fadeIn .25s ease-out}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.excel-tag{background:#FFF7ED;color:#C2410C;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;border:1px solid #FDBA74;display:inline-flex;align-items:center;gap:3px}
+.excel-tag::before{content:'📊'}
+.badge-u{background:#E8F5EE;color:#166534;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600}
+.badge-c{background:#FFF7ED;color:#9A3412;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600}
+.badge-t{background:#EFF6FF;color:#1D4ED8;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}
+.editable{border-bottom:1px dashed #CBD5E1;cursor:text}.editable:hover{background:#FEFCE8}
+</style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+<!-- TOP BAR (same as SOLE) -->
+<header class="bg-white border-b flex items-center justify-between px-4 h-14 flex-shrink-0">
+  <div class="flex items-center gap-3">
+    <div class="flex items-center gap-1.5 text-sole-teal">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </div>
+    <div>
+      <div class="font-bold text-gray-900 text-sm tracking-tight">PRESUPUESTADOR PRO</div>
+      <div class="text-sole-coral text-[10px] font-semibold">YOPACTO SAS</div>
+    </div>
+  </div>
+  <div class="flex items-center gap-2">
+    <!-- AI icon like SOLE -->
+    <div class="relative">
+      <div class="w-9 h-9 bg-gradient-to-br from-sole-teal to-sole-tealDark rounded-full flex items-center justify-center">
+        <svg width="18" height="18" viewBox="0 0 512 512" fill="none"><path d="M256 72C170.947 72 102 140.947 102 226C102 311.053 170.947 380 256 380C316.134 380 368.215 345.533 393.832 295.282" stroke="#E0A33A" stroke-width="28" stroke-linecap="round"/><circle cx="390" cy="179" r="28" fill="#E0A33A"/></svg>
+      </div>
+      <div class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+      <div class="absolute -bottom-1 -right-1 bg-sole-coral text-white text-[7px] font-bold px-1 rounded">IA</div>
+    </div>
+  </div>
+  <div class="flex items-center gap-3">
+    <button class="text-gray-400 hover:text-gray-600"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+    <button class="border rounded-lg px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-1.5">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      VER 360
+    </button>
+    <button class="text-gray-400 hover:text-gray-600 relative">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="absolute -top-1 -right-1 w-2 h-2 bg-sole-coral rounded-full"></span>
+    </button>
+    <button class="bg-sole-teal hover:bg-sole-tealDark text-white font-semibold px-4 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition">+ NUEVO</button>
+    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600">CS</div>
+  </div>
+</header>
+
+<div class="flex flex-1 overflow-hidden">
+
+<!-- SIDEBAR (SOLE style: white bg, sections) -->
+<aside class="w-56 bg-white border-r flex flex-col flex-shrink-0">
+  <!-- Logo -->
+  <div class="px-4 py-3 flex items-center gap-2 border-b">
+    <svg width="28" height="28" viewBox="0 0 512 512" fill="none"><path d="M256 72C170.947 72 102 140.947 102 226C102 311.053 170.947 380 256 380C316.134 380 368.215 345.533 393.832 295.282" stroke="#E0A33A" stroke-width="28" stroke-linecap="round"/><circle cx="390" cy="179" r="28" fill="#E0A33A"/><path d="M251 334V250C251 221.768 273.768 199 302 199H319" stroke="#143D34" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/><path d="M251 280C216.14 280 188 251.86 188 217V206C222.86 206 251 234.14 251 269V280Z" fill="#2D8D68"/><path d="M257 248C257 209.34 288.34 178 327 178H338C338 216.66 306.66 248 268 248H257Z" fill="#2D8D68"/></svg>
+    <div>
+      <div class="text-sole-dark font-extrabold text-xs tracking-wide leading-tight">SOLE</div>
+      <div class="text-sole-muted text-[8px] tracking-[0.2em] font-bold">IN THE GROW</div>
+    </div>
+  </div>
+
+  <!-- SOLE GENERAL nav (collapsed, just top items) -->
+  <div class="px-3 pt-3 pb-1">
+    <div class="text-[10px] font-bold text-gray-400 tracking-wider mb-1.5">OPERACIÓN SEMANAL</div>
+  </div>
+  <nav class="px-2 space-y-0.5 text-[13px]">
+    <a href="#" class="sb-item flex items-center gap-2.5 px-3 py-2 rounded text-gray-500">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+      Iniciar
+    </a>
+    <a href="#" class="sb-item flex items-center gap-2.5 px-3 py-2 rounded text-gray-500">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      SOLE HQ
+    </a>
+  </nav>
+
+  <!-- Divider + PRESUPUESTADOR section -->
+  <div class="px-3 pt-4 pb-1">
+    <div class="text-[10px] font-bold text-sole-teal tracking-wider mb-1.5 flex items-center gap-1">
+      <span class="w-1.5 h-1.5 bg-sole-teal rounded-full"></span>
+      PRESUPUESTADOR PRO
+    </div>
+  </div>
+  <nav class="px-2 space-y-0.5 text-[13px] flex-1">
+    <button onclick="show('dashboard')" id="sb-dashboard" class="sb-item active w-full text-left flex items-center gap-2.5 px-3 py-2 rounded text-gray-700">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Mis Presupuestos
+    </button>
+    <button onclick="show('editor')" id="sb-editor" class="sb-item w-full text-left flex items-center gap-2.5 px-3 py-2 rounded text-gray-500">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Editor de Obra
+    </button>
+    <button onclick="show('detalle')" id="sb-detalle" class="sb-item w-full text-left flex items-center gap-2.5 px-3 py-2 rounded text-gray-500">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Detalle de Ítem
+    </button>
+    <button onclick="show('analysis')" id="sb-analysis" class="sb-item w-full text-left flex items-center gap-2.5 px-3 py-2 rounded text-gray-500">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      Análisis
+    </button>
+    <button onclick="show('ai')" id="sb-ai" class="sb-item w-full text-left flex items-center gap-2.5 px-3 py-2 rounded text-gray-500">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      IA + Planos
+    </button>
+    <button onclick="show('import')" id="sb-import" class="sb-item w-full text-left flex items-center gap-2.5 px-3 py-2 rounded text-gray-500">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Importar Excel
+    </button>
+    <button onclick="show('export')" id="sb-export" class="sb-item w-full text-left flex items-center gap-2.5 px-3 py-2 rounded text-gray-500">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+      Exportar
+    </button>
+    <div class="border-t my-2 mx-1"></div>
+    <div class="text-[10px] font-bold text-gray-400 tracking-wider mb-1 px-1">CONFIGURACIÓN</div>
+    <button onclick="show('markups')" id="sb-markups" class="sb-item w-full text-left flex items-center gap-2.5 px-3 py-2 rounded text-gray-500">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Cadena de Markups
+    </button>
+    <button onclick="show('catalogos')" id="sb-catalogos" class="sb-item w-full text-left flex items-center gap-2.5 px-3 py-2 rounded text-gray-500">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      Catálogos
+    </button>
+    <button onclick="show('versiones')" id="sb-versiones" class="sb-item w-full text-left flex items-center gap-2.5 px-3 py-2 rounded text-gray-500">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+      Versiones
+    </button>
+  </nav>
+
+  <!-- Bottom user (SOLE style) -->
+  <div class="p-3 border-t flex items-center gap-2">
+    <div class="w-8 h-8 bg-sole-teal rounded-full flex items-center justify-center font-bold text-white text-[10px]">Y</div>
+    <div class="flex-1 min-w-0">
+      <div class="text-xs font-semibold text-gray-800 truncate">YOPACTO SAS</div>
+      <div class="text-[10px] text-sole-teal font-medium">ADMIN</div>
+    </div>
+    <svg width="14" height="14" class="text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+  </div>
+  <button class="px-4 py-2 text-[11px] text-gray-400 hover:text-gray-600 flex items-center gap-1.5 border-t">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    CERRAR SESIÓN
+  </button>
+</aside>
+
+<!-- CONTENT -->
+<main class="flex-1 overflow-y-auto bg-sole-bg">
+
+<!-- ===== 1. DASHBOARD ===== -->
+<div id="s-dashboard" class="screen active fade-in p-6">
+  <!-- Section label + title (SOLE pattern) -->
+  <div class="flex items-center gap-2 text-sole-teal text-[11px] font-bold tracking-wider mb-1">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    CENTRO DE PRESUPUESTOS
+  </div>
+  <div class="flex items-center gap-3 mb-6">
+    <div class="w-1 h-8 bg-sole-teal rounded-full"></div>
+    <h1 class="text-2xl font-extrabold text-gray-900">MIS PRESUPUESTOS</h1>
+    <span class="bg-sole-tealLight text-sole-tealDark text-xs font-medium px-2 py-0.5 rounded-full">3 obras</span>
+  </div>
+
+  <!-- Focus cards (SOLE "Foco de la semana" pattern) -->
+  <div class="text-[10px] font-bold text-gray-400 tracking-wider mb-2">RESUMEN GENERAL</div>
+  <div class="grid grid-cols-4 gap-3 mb-6">
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex items-center gap-2 mb-1">
+        <div class="w-8 h-8 bg-sole-tealLight rounded-lg flex items-center justify-center"><svg width="16" height="16" fill="none" stroke="#2D8D68" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg></div>
+      </div>
+      <div class="text-2xl font-bold text-sole-teal">3</div>
+      <div class="text-[11px] text-gray-500">OBRAS ACTIVAS</div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex items-center gap-2 mb-1">
+        <div class="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center"><svg width="16" height="16" fill="none" stroke="#EA580C" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      </div>
+      <div class="text-2xl font-bold text-orange-600">1</div>
+      <div class="text-[11px] text-gray-500">PENDIENTE REVISIÓN</div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex items-center gap-2 mb-1">
+        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center"><svg width="16" height="16" fill="none" stroke="#2563EB" stroke-width="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
+      </div>
+      <div class="text-2xl font-bold text-blue-600">210</div>
+      <div class="text-[11px] text-gray-500">ÍTEMS TOTALES</div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex items-center gap-2 mb-1">
+        <div class="w-8 h-8 bg-sole-tealLight rounded-lg flex items-center justify-center"><svg width="16" height="16" fill="none" stroke="#2D8D68" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+      </div>
+      <div class="text-2xl font-bold text-sole-dark">$1.041M</div>
+      <div class="text-[11px] text-gray-500">NETO TOTAL CARTERA</div>
+    </div>
+  </div>
+
+  <!-- Project cards -->
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <!-- Las Heras -->
+    <div onclick="show('editor')" class="bg-white rounded-xl border hover:shadow-md transition cursor-pointer overflow-hidden">
+      <div class="h-1 bg-sole-teal"></div>
+      <div class="p-5">
+        <div class="flex justify-between items-start mb-2">
+          <span class="bg-sole-tealLight text-sole-tealDark text-[10px] font-semibold px-2 py-0.5 rounded-full">Activo</span>
+          <span class="text-[10px] text-gray-400">v3 · 55 hojas</span>
+        </div>
+        <h3 class="font-bold text-gray-900">Edificio Las Heras</h3>
+        <p class="text-gray-500 text-xs mt-1">Obra gris · 10 pisos · 108 ítems · 325 materiales</p>
+        <div class="mt-3 flex gap-1.5 text-[10px]">
+          <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">44 hojas detalle</span>
+          <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">5 catálogos</span>
+        </div>
+        <div class="mt-4 pt-3 border-t flex justify-between items-end">
+          <div><div class="text-[10px] text-gray-400">Directo</div><div class="font-semibold text-gray-800 text-sm">$284.5M</div></div>
+          <div class="text-right"><div class="text-[10px] text-gray-400">Neto Total</div><div class="font-bold text-sole-teal text-lg">$372.7M</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Lugones -->
+    <div class="bg-white rounded-xl border hover:shadow-md transition cursor-pointer overflow-hidden">
+      <div class="h-1 bg-sole-gold"></div>
+      <div class="p-5">
+        <div class="flex justify-between items-start mb-2">
+          <span class="bg-amber-50 text-amber-700 text-[10px] font-semibold px-2 py-0.5 rounded-full">Borrador</span>
+          <span class="text-[10px] text-gray-400">v1 · 67 hojas</span>
+        </div>
+        <h3 class="font-bold text-gray-900">Casa Lugones</h3>
+        <p class="text-gray-500 text-xs mt-1">Refacción · 2 pisos · 72 ítems · 297 materiales</p>
+        <div class="mt-3 flex gap-1.5 text-[10px]">
+          <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">56 hojas detalle</span>
+          <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">12 meses</span>
+        </div>
+        <div class="mt-4 pt-3 border-t flex justify-between items-end">
+          <div><div class="text-[10px] text-gray-400">Directo</div><div class="font-semibold text-gray-800 text-sm">$198.2M</div></div>
+          <div class="text-right"><div class="text-[10px] text-gray-400">Neto Total</div><div class="font-bold text-sole-teal text-lg">$259.6M</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- El Encuentro -->
+    <div class="bg-white rounded-xl border hover:shadow-md transition cursor-pointer overflow-hidden">
+      <div class="h-1 bg-blue-500"></div>
+      <div class="p-5">
+        <div class="flex justify-between items-start mb-2">
+          <span class="bg-blue-50 text-blue-700 text-[10px] font-semibold px-2 py-0.5 rounded-full">Presentado</span>
+          <span class="text-[10px] text-gray-400">v2 · 25 hojas</span>
+        </div>
+        <h3 class="font-bold text-gray-900">El Encuentro</h3>
+        <p class="text-gray-500 text-xs mt-1">Paisajismo · Pilar · 30 ítems · 279 materiales</p>
+        <div class="mt-3 flex gap-1.5 text-[10px]">
+          <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">14 hojas detalle</span>
+          <span class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">+ Cronograma</span>
+        </div>
+        <div class="mt-4 pt-3 border-t flex justify-between items-end">
+          <div><div class="text-[10px] text-gray-400">Directo</div><div class="font-semibold text-gray-800 text-sm">$258.8M</div></div>
+          <div class="text-right"><div class="text-[10px] text-gray-400">Neto Total</div><div class="font-bold text-sole-teal text-lg">$409.0M</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity (SOLE "Acciones" pattern) -->
+  <div class="bg-white rounded-xl border p-5">
+    <h3 class="font-semibold text-gray-900 text-sm mb-3">ACTIVIDAD RECIENTE</h3>
+    <div class="space-y-2 text-sm">
+      <div class="flex justify-between py-2 border-b border-gray-50"><span class="text-gray-600"><strong class="text-gray-900">Las Heras</strong> — Catálogo Mar-2026 aplicado: 108 ítems recalculados</span><span class="text-gray-400 text-xs">hace 2 hs</span></div>
+      <div class="flex justify-between py-2 border-b border-gray-50"><span class="text-gray-600"><strong class="text-gray-900">El Encuentro</strong> — IA analizó plano exterior: 23 ítems sugeridos</span><span class="text-gray-400 text-xs">hace 3 días</span></div>
+      <div class="flex justify-between py-2"><span class="text-gray-600"><strong class="text-gray-900">Casa Lugones</strong> — Importación Excel completada: 72 ítems, 297 materiales</span><span class="text-gray-400 text-xs">15 mar</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 2. EDITOR ===== -->
+<div id="s-editor" class="screen fade-in">
+  <div class="p-4">
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-1.5 text-xs mb-1">
+      <span class="text-gray-400 cursor-pointer hover:text-sole-teal" onclick="show('dashboard')">Presupuestos</span>
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      <span class="font-semibold text-gray-900">Edificio Las Heras — Obra Gris</span>
+      <span class="bg-sole-tealLight text-sole-tealDark text-[10px] font-medium px-1.5 py-0.5 rounded">v3</span>
+    </div>
+    <!-- Section label -->
+    <div class="flex items-center gap-2 text-sole-teal text-[11px] font-bold tracking-wider mb-1">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      EDITOR DE OBRA
+    </div>
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-3">
+        <div class="w-1 h-7 bg-sole-teal rounded-full"></div>
+        <h1 class="text-xl font-extrabold text-gray-900">EDIFICIO LAS HERAS</h1>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="show('ai')" class="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50">IA + Plano</button>
+        <button onclick="show('export')" class="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50">Exportar</button>
+        <button class="bg-sole-teal text-white font-semibold px-4 py-1.5 rounded-lg text-xs">Guardar versión</button>
+      </div>
+    </div>
+
+    <div class="flex gap-3">
+      <!-- TREE -->
+      <div class="w-60 bg-white rounded-xl border flex-shrink-0 overflow-hidden">
+        <div class="bg-sole-teal text-white px-3 py-2 flex justify-between items-center">
+          <span class="font-semibold text-xs">Estructura de Obra</span>
+          <button class="text-sole-gold text-xs font-medium">+ Sección</button>
+        </div>
+        <div class="p-1.5 text-xs max-h-[520px] overflow-y-auto">
+          <div class="rounded px-2 py-1.5 bg-sole-tealLight font-semibold text-sole-dark text-xs">Edificio Las Heras</div>
+          <div class="ml-2 mt-0.5 space-y-0.5">
+            <div class="rounded px-2 py-1 font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">0. Tareas Preliminares</div>
+            <div class="ml-3 space-y-0.5">
+              <!-- EJEMPLO 1: Item 0.1 OBRADOR real del Excel -->
+              <div class="rounded px-2 py-0.5 text-gray-500 hover:bg-gray-50 cursor-pointer flex items-center gap-1">
+                <span>0.1 Obrador</span>
+                <span class="excel-tag ml-auto">EJ.1</span>
+              </div>
+              <div class="rounded px-2 py-0.5 text-gray-500 hover:bg-gray-50 cursor-pointer">0.2 Baños Químicos</div>
+              <div class="rounded px-2 py-0.5 text-gray-500 hover:bg-gray-50 cursor-pointer">0.3 Instalaciones Prov.</div>
+              <div class="rounded px-2 py-0.5 text-gray-500 hover:bg-gray-50 cursor-pointer">0.8 Estructura Encofrado</div>
+              <!-- EJEMPLO 4: Item 0.9 EXCAVACION real -->
+              <div class="rounded px-2 py-0.5 text-gray-500 hover:bg-gray-50 cursor-pointer flex items-center gap-1">
+                <span>0.9 Excavación Bases</span>
+                <span class="excel-tag ml-auto">EJ.4</span>
+              </div>
+              <div class="rounded px-2 py-0.5 text-gray-500 hover:bg-gray-50 cursor-pointer">0.10 Excavación Tensores</div>
+            </div>
+            <div class="rounded px-2 py-1 font-medium text-gray-700 bg-gray-50 border-l-2 border-sole-teal">1. Subsuelo</div>
+            <div class="ml-3 space-y-0.5">
+              <div class="rounded px-2 py-0.5 text-sole-dark font-medium bg-sole-tealLight cursor-pointer">1.1 Columnas y tabiques</div>
+              <div class="rounded px-2 py-0.5 text-gray-500 hover:bg-gray-50 cursor-pointer">1.2 Vigas</div>
+              <div class="rounded px-2 py-0.5 text-gray-500 hover:bg-gray-50 cursor-pointer">1.3 Losa</div>
+              <div class="rounded px-2 py-0.5 text-gray-500 hover:bg-gray-50 cursor-pointer">1.4 Mampostería</div>
+              <div class="rounded px-2 py-0.5 text-gray-500 hover:bg-gray-50 cursor-pointer">1.5 Contrapiso</div>
+            </div>
+            <div class="rounded px-2 py-1 font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">2. Planta Baja</div>
+            <div class="rounded px-2 py-1 font-medium text-gray-400 hover:bg-gray-50 cursor-pointer">3. Pisos 1-8 (×8)</div>
+            <div class="rounded px-2 py-1 font-medium text-gray-400 hover:bg-gray-50 cursor-pointer">4. Azotea</div>
+          </div>
+        </div>
+      </div>
+      <!-- TABLE -->
+      <div class="flex-1 bg-white rounded-xl border overflow-hidden">
+        <div class="bg-gray-50 border-b px-4 py-2.5 flex justify-between items-center">
+          <div>
+            <h2 class="font-bold text-gray-900 text-sm">1.1 Columnas y Tabiques — Subsuelo</h2>
+            <p class="text-[10px] text-gray-400 mt-0.5">Hormigón armado H-30 · Datos de hoja detalle Las Heras</p>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="show('detalle')" class="text-xs bg-sole-teal text-white px-2.5 py-1 rounded font-medium">Ver detalle</button>
+          </div>
+        </div>
+        <!-- Cost summary bar -->
+        <div class="grid grid-cols-5 gap-2 p-3 border-b bg-gray-50">
+          <div class="bg-white rounded-lg p-2 border text-center"><div class="text-[10px] text-gray-400">Materiales</div><div class="font-bold text-sm text-gray-800">$8.45M</div></div>
+          <div class="bg-white rounded-lg p-2 border text-center"><div class="text-[10px] text-gray-400">Mano de Obra</div><div class="font-bold text-sm text-gray-800">$3.20M</div></div>
+          <div class="bg-white rounded-lg p-2 border text-center"><div class="text-[10px] text-blue-600">Directo</div><div class="font-bold text-sm text-blue-700">$11.65M</div></div>
+          <div class="bg-white rounded-lg p-2 border text-center"><div class="text-[10px] text-orange-500">Indirecto (31%)</div><div class="font-bold text-sm text-orange-600">$3.61M</div></div>
+          <div class="bg-sole-tealLight rounded-lg p-2 border border-sole-teal text-center"><div class="text-[10px] text-sole-tealDark">Neto</div><div class="font-bold text-sm text-sole-teal">$15.26M</div></div>
+        </div>
+        <!-- Markup chain -->
+        <div class="px-3 py-1.5 bg-gray-50 border-b flex items-center gap-1 text-[10px]">
+          <span class="badge-c">CADENA</span>
+          <span class="font-medium text-gray-700">$11.65M</span>
+          <span class="text-gray-400">→ +Estr 15%</span>
+          <span class="text-gray-400">→ +Jef 8%</span>
+          <span class="text-gray-400">→ +Log 5%</span>
+          <span class="text-gray-400">→ +Herr 3%</span>
+          <span class="text-gray-400">→ +Benef 10%</span>
+          <span class="text-gray-400">→</span>
+          <span class="font-bold text-sole-teal">$15.26M</span>
+        </div>
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-gray-100 text-gray-600">
+              <tr>
+                <th class="px-2 py-2 text-left font-semibold">Código</th>
+                <th class="px-2 py-2 text-left font-semibold">Descripción</th>
+                <th class="px-2 py-2 text-left font-semibold">Unidad</th>
+                <th class="px-2 py-2 text-right font-semibold">Cant.</th>
+                <th class="px-2 py-2 text-right font-semibold">MAT Unit</th>
+                <th class="px-2 py-2 text-right font-semibold">MO Unit</th>
+                <th class="px-2 py-2 text-right font-semibold">Directo</th>
+                <th class="px-2 py-2 text-right font-semibold">Indirecto</th>
+                <th class="px-2 py-2 text-right font-semibold">Neto</th>
+                <th class="px-2 py-2 w-6"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b hover:bg-gray-50"><td class="px-2 py-2 font-mono text-gray-400">1.1.1</td><td class="px-2 py-2 font-medium editable text-gray-800">Hormigón H-30 elaborado</td><td class="px-2 py-2 text-gray-500">m³</td><td class="px-2 py-2 cost-cell editable">42.5</td><td class="px-2 py-2 cost-cell">$85.000</td><td class="px-2 py-2 cost-cell">$32.000</td><td class="px-2 py-2 cost-cell font-medium text-blue-700">$4.972.500</td><td class="px-2 py-2 cost-cell text-gray-400">$1.541.475</td><td class="px-2 py-2 cost-cell font-bold text-sole-teal">$6.513.975</td><td class="px-2 py-2 text-center text-gray-300 cursor-pointer hover:text-gray-500">⋮</td></tr>
+              <tr class="border-b hover:bg-gray-50"><td class="px-2 py-2 font-mono text-gray-400">1.1.2</td><td class="px-2 py-2 font-medium editable text-gray-800">Acero ADN 420 ø12</td><td class="px-2 py-2 text-gray-500">kg</td><td class="px-2 py-2 cost-cell editable">3.200</td><td class="px-2 py-2 cost-cell">$1.250</td><td class="px-2 py-2 cost-cell">$380</td><td class="px-2 py-2 cost-cell font-medium text-blue-700">$5.216.000</td><td class="px-2 py-2 cost-cell text-gray-400">$1.616.960</td><td class="px-2 py-2 cost-cell font-bold text-sole-teal">$6.832.960</td><td class="px-2 py-2 text-center text-gray-300 cursor-pointer hover:text-gray-500">⋮</td></tr>
+              <tr class="border-b hover:bg-gray-50"><td class="px-2 py-2 font-mono text-gray-400">1.1.3</td><td class="px-2 py-2 font-medium editable text-gray-800">Encofrado metálico</td><td class="px-2 py-2 text-gray-500">m²</td><td class="px-2 py-2 cost-cell editable">85</td><td class="px-2 py-2 cost-cell">$12.000</td><td class="px-2 py-2 cost-cell">$5.200</td><td class="px-2 py-2 cost-cell font-medium text-blue-700">$1.462.000</td><td class="px-2 py-2 cost-cell text-gray-400">$453.220</td><td class="px-2 py-2 cost-cell font-bold text-sole-teal">$1.915.220</td><td class="px-2 py-2 text-center text-gray-300 cursor-pointer hover:text-gray-500">⋮</td></tr>
+            </tbody>
+            <tfoot class="bg-gray-50 font-semibold text-xs">
+              <tr><td colspan="6" class="px-2 py-2 text-right text-gray-500">TOTAL 1.1</td><td class="px-2 py-2 cost-cell text-blue-700">$11.650.500</td><td class="px-2 py-2 cost-cell text-orange-600">$3.611.655</td><td class="px-2 py-2 cost-cell text-sole-teal font-bold">$15.262.155</td><td></td></tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="p-2 bg-sole-tealLight text-[10px] text-sole-tealDark border-t">Click en celdas <span class="editable px-1">punteadas</span> para editar. Totales se recalculan automáticamente por la cadena de markups.</div>
+      </div>
+    </div>
+
+    <!-- EJEMPLO 1 highlight -->
+    <div class="mt-3 bg-orange-50 border border-orange-200 rounded-xl p-4">
+      <div class="flex items-center gap-2 mb-2"><span class="excel-tag text-sm">EJ.1 — DATO REAL DEL EXCEL</span><span class="text-xs text-gray-500">Hoja 01_C&P, Fila Item 0.1</span></div>
+      <div class="grid grid-cols-2 gap-6 text-sm">
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">En el Excel (01_C&P):</div>
+          <div class="bg-white rounded-lg p-3 font-mono text-xs space-y-0.5 border">
+            <div>ITEM: <strong>0.1</strong></div>
+            <div>DESC: <strong>OBRADOR</strong></div>
+            <div>UNIDAD: <strong>mes</strong></div>
+            <div>CANTIDAD: <strong>16</strong> (16 meses de obra)</div>
+            <div>PRECIO UNITARIO: <strong>$700.000</strong>/mes</div>
+            <div>COSTO DIRECTO: <strong>$11.200.000</strong> (16 × $700k)</div>
+          </div>
+        </div>
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">En la app (Editor de Obra):</div>
+          <div class="bg-white rounded-lg p-3 text-xs border">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="font-mono text-gray-400">0.1</span>
+              <span class="font-medium">Obrador</span>
+              <span class="text-gray-400">· mes · 16</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="bg-gray-50 rounded p-1.5 text-center"><div class="text-[9px] text-gray-400">Directo</div><div class="font-bold">$11.2M</div></div>
+              <div class="bg-gray-50 rounded p-1.5 text-center"><div class="text-[9px] text-gray-400">+Cadena 31%</div><div class="font-bold text-orange-600">$3.5M</div></div>
+              <div class="bg-sole-tealLight rounded p-1.5 text-center"><div class="text-[9px] text-sole-tealDark">Neto</div><div class="font-bold text-sole-teal">$14.7M</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 3. DETALLE DE ÍTEM ===== -->
+<div id="s-detalle" class="screen fade-in p-6">
+  <div class="flex items-center gap-1.5 text-xs mb-2">
+    <span class="text-gray-400 cursor-pointer" onclick="show('dashboard')">Presupuestos</span>
+    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    <span class="text-gray-400 cursor-pointer" onclick="show('editor')">Las Heras</span>
+    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    <span class="font-semibold text-gray-900">0.9 Excavación Bases y Troncos</span>
+  </div>
+  <div class="flex items-center gap-2 text-sole-teal text-[11px] font-bold tracking-wider mb-1">DETALLE DE RECURSOS</div>
+  <div class="flex items-center gap-3 mb-4">
+    <div class="w-1 h-7 bg-sole-teal rounded-full"></div>
+    <h1 class="text-xl font-extrabold text-gray-900">0.9 EXCAVACIÓN BASES Y TRONCOS</h1>
+    <span class="excel-tag">EJ.4 — DATO REAL</span>
+  </div>
+
+  <!-- Item summary card -->
+  <div class="bg-white rounded-xl border p-4 mb-4 flex items-center gap-8">
+    <div><div class="text-[10px] text-gray-400">Unidad</div><div class="font-bold text-gray-800">m³</div></div>
+    <div><div class="text-[10px] text-gray-400">Cantidad</div><div class="font-bold text-gray-800">366.36</div></div>
+    <div><div class="text-[10px] text-gray-400">Desperdicio</div><div class="font-bold text-orange-600">10%</div></div>
+    <div><div class="text-[10px] text-gray-400">Cantidad Efectiva</div><div class="font-bold text-sole-teal">403 m³</div></div>
+    <div class="ml-auto text-right"><div class="text-[10px] text-gray-400">Fórmula</div><div class="font-mono text-xs text-gray-600">366.36 × (1 + 0.10) = <strong>403 m³</strong></div></div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <!-- Materiales (EJEMPLO 4) -->
+    <div class="bg-white rounded-xl border overflow-hidden">
+      <div class="bg-gray-100 px-4 py-2 flex justify-between items-center border-b">
+        <span class="font-bold text-sm text-gray-800">Materiales</span>
+        <span class="text-[10px] text-gray-400">Hoja detalle "0.9"</span>
+      </div>
+      <table class="w-full text-xs">
+        <thead class="bg-gray-50"><tr><th class="px-3 py-1.5 text-left text-gray-500 font-medium">Código</th><th class="px-3 py-1.5 text-left text-gray-500 font-medium">Descripción</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Cant</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Desp%</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Cant+Desp</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">P.Unit</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Subtotal</th></tr></thead>
+        <tbody>
+          <tr class="border-b"><td class="px-3 py-1.5 font-mono text-gray-400">H-30</td><td class="px-3 py-1.5 text-gray-800">Hormigón H-30</td><td class="px-3 py-1.5 cost-cell">366.36</td><td class="px-3 py-1.5 cost-cell text-orange-500">10%</td><td class="px-3 py-1.5 cost-cell font-medium">403</td><td class="px-3 py-1.5 cost-cell">$95.000</td><td class="px-3 py-1.5 cost-cell font-bold">$38.285.000</td></tr>
+          <tr class="border-b"><td class="px-3 py-1.5 font-mono text-gray-400">HADN12</td><td class="px-3 py-1.5 text-gray-800">Hierro ADN 420 ø12</td><td class="px-3 py-1.5 cost-cell">206</td><td class="px-3 py-1.5 cost-cell text-orange-500">10%</td><td class="px-3 py-1.5 cost-cell font-medium">227</td><td class="px-3 py-1.5 cost-cell">$12.800</td><td class="px-3 py-1.5 cost-cell font-bold">$2.905.600</td></tr>
+          <tr class="border-b"><td class="px-3 py-1.5 font-mono text-gray-400">F-MIR</td><td class="px-3 py-1.5 text-gray-800">Fenólico 18mm Miraluz</td><td class="px-3 py-1.5 cost-cell">52</td><td class="px-3 py-1.5 cost-cell text-orange-500">10%</td><td class="px-3 py-1.5 cost-cell font-medium">58</td><td class="px-3 py-1.5 cost-cell">$18.500</td><td class="px-3 py-1.5 cost-cell font-bold">$1.073.000</td></tr>
+          <tr><td class="px-3 py-1.5 font-mono text-gray-400">H-PL-m</td><td class="px-3 py-1.5 text-gray-800">Bomba Pluma m³</td><td class="px-3 py-1.5 cost-cell">9</td><td class="px-3 py-1.5 cost-cell text-orange-500">10%</td><td class="px-3 py-1.5 cost-cell font-medium">10</td><td class="px-3 py-1.5 cost-cell">$45.000</td><td class="px-3 py-1.5 cost-cell font-bold">$450.000</td></tr>
+        </tbody>
+        <tfoot class="bg-sole-tealLight"><tr><td colspan="6" class="px-3 py-2 text-right font-bold text-xs text-sole-tealDark">TOTAL MAT</td><td class="px-3 py-2 cost-cell font-bold text-sole-teal">$42.713.600</td></tr></tfoot>
+      </table>
+    </div>
+    <!-- Mano de Obra (EJEMPLO 2) -->
+    <div class="bg-white rounded-xl border overflow-hidden">
+      <div class="bg-gray-100 px-4 py-2 flex justify-between items-center border-b">
+        <span class="font-bold text-sm text-gray-800">Mano de Obra</span>
+        <span class="excel-tag">EJ.2 — DATO REAL</span>
+      </div>
+      <table class="w-full text-xs">
+        <thead class="bg-gray-50"><tr><th class="px-3 py-1.5 text-left text-gray-500 font-medium">Categoría</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Cant</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Días</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Desp%</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Jornal</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Subtotal</th></tr></thead>
+        <tbody>
+          <tr class="border-b"><td class="px-3 py-1.5 font-medium text-gray-800">Capataz (MO-CA)</td><td class="px-3 py-1.5 cost-cell">1</td><td class="px-3 py-1.5 cost-cell">5</td><td class="px-3 py-1.5 cost-cell text-orange-500">10%</td><td class="px-3 py-1.5 cost-cell">$120.000</td><td class="px-3 py-1.5 cost-cell font-bold">$660.000</td></tr>
+          <tr class="border-b"><td class="px-3 py-1.5 font-medium text-gray-800">Oficial (MO-OF)</td><td class="px-3 py-1.5 cost-cell">3</td><td class="px-3 py-1.5 cost-cell">5</td><td class="px-3 py-1.5 cost-cell text-orange-500">10%</td><td class="px-3 py-1.5 cost-cell">$90.000</td><td class="px-3 py-1.5 cost-cell font-bold">$1.485.000</td></tr>
+          <tr class="border-b"><td class="px-3 py-1.5 font-medium text-gray-800">Ayudante (MO-AY)</td><td class="px-3 py-1.5 cost-cell">3</td><td class="px-3 py-1.5 cost-cell">5</td><td class="px-3 py-1.5 cost-cell text-orange-500">10%</td><td class="px-3 py-1.5 cost-cell">$60.000</td><td class="px-3 py-1.5 cost-cell font-bold">$990.000</td></tr>
+          <tr><td class="px-3 py-1.5 font-medium text-gray-800">Puntero (MO-PU)</td><td class="px-3 py-1.5 cost-cell">0</td><td class="px-3 py-1.5 cost-cell">0</td><td class="px-3 py-1.5 cost-cell text-gray-400">—</td><td class="px-3 py-1.5 cost-cell">$105.000</td><td class="px-3 py-1.5 cost-cell font-bold text-gray-400">$0</td></tr>
+        </tbody>
+        <tfoot class="bg-sole-tealLight"><tr><td colspan="5" class="px-3 py-2 text-right font-bold text-xs text-sole-tealDark">TOTAL MO</td><td class="px-3 py-2 cost-cell font-bold text-sole-teal">$3.135.000</td></tr></tfoot>
+      </table>
+      <div class="px-3 py-2 text-[10px] text-gray-400 border-t bg-gray-50">
+        Jornal = Valor base × 1.5 (del Excel: <span class="font-mono">=80000×1.5</span> para Capataz)
+      </div>
+    </div>
+    <!-- Equipos -->
+    <div class="bg-white rounded-xl border overflow-hidden">
+      <div class="bg-gray-100 px-4 py-2 border-b"><span class="font-bold text-sm text-gray-800">Equipos</span></div>
+      <table class="w-full text-xs"><thead class="bg-gray-50"><tr><th class="px-3 py-1.5 text-left text-gray-500 font-medium">Equipo</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Días</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Precio/día</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">Subtotal</th></tr></thead>
+        <tbody><tr><td class="px-3 py-1.5 text-gray-800">Retroexcavadora (E-RC)</td><td class="px-3 py-1.5 cost-cell">8</td><td class="px-3 py-1.5 cost-cell">$85.000</td><td class="px-3 py-1.5 cost-cell font-bold">$680.000</td></tr></tbody>
+        <tfoot class="bg-sole-tealLight"><tr><td colspan="3" class="px-3 py-2 text-right font-bold text-xs">TOTAL EQ</td><td class="px-3 py-2 cost-cell font-bold text-sole-teal">$680.000</td></tr></tfoot>
+      </table>
+    </div>
+    <!-- Subcontratos -->
+    <div class="bg-white rounded-xl border overflow-hidden">
+      <div class="bg-gray-100 px-4 py-2 border-b"><span class="font-bold text-sm text-gray-800">Subcontratos</span></div>
+      <div class="p-4 text-xs text-gray-400 italic">Sin subcontratos para este ítem</div>
+    </div>
+  </div>
+
+  <!-- EJEMPLO 4 highlight -->
+  <div class="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-4">
+    <div class="flex items-center gap-2 mb-2"><span class="excel-tag text-sm">EJ.4 — DATO REAL DEL EXCEL</span><span class="text-xs text-gray-500">Hoja detalle "0.9" del Excel Las Heras</span></div>
+    <div class="grid grid-cols-2 gap-6 text-sm">
+      <div>
+        <div class="font-semibold text-gray-700 mb-1">En el Excel (hoja "0.9"):</div>
+        <div class="bg-white rounded-lg p-3 font-mono text-xs space-y-0.5 border">
+          <div>ITEM: <strong>0.9</strong> — EXCAVACIÓN BASES Y TRONCOS</div>
+          <div>UNIDAD: <strong>m³</strong> | CANTIDAD: <strong>366.36</strong></div>
+          <div class="border-t pt-1 mt-1">MATERIALES:</div>
+          <div>  Hormigón: 366.36 m³ × <strong>10% desp</strong> = <strong>403 m³</strong></div>
+          <div>  Hierros: 206 u × 10% = <strong>227 u</strong></div>
+          <div>  Fenólico: 52 u × 10% = <strong>58 u</strong></div>
+          <div>  Bomba: 9 u × 10% = <strong>10 u</strong></div>
+        </div>
+      </div>
+      <div>
+        <div class="font-semibold text-gray-700 mb-1">En la app (Detalle de Ítem):</div>
+        <div class="bg-white rounded-lg p-3 text-xs border">
+          <p class="mb-2 text-gray-600">Cada fila de materiales del Excel se convierte en una fila de la tabla con las columnas:</p>
+          <div class="font-medium text-gray-800 mb-1">Código → Descripción → Cant → Desp% → Cant+Desp → P.Unit → Subtotal</div>
+          <p class="text-gray-500">El <strong>10% de desperdicio</strong> se aplica automáticamente. El usuario puede editarlo por recurso.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 4. ANÁLISIS ===== -->
+<div id="s-analysis" class="screen fade-in p-6">
+  <div class="flex items-center gap-2 text-sole-teal text-[11px] font-bold tracking-wider mb-1">VISTA DE ANÁLISIS</div>
+  <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center gap-3">
+      <div class="w-1 h-7 bg-sole-teal rounded-full"></div>
+      <h1 class="text-xl font-extrabold text-gray-900">ANÁLISIS — LAS HERAS</h1>
+      <span class="excel-tag">EJ.6 — RESUMEN REAL</span>
+    </div>
+    <button onclick="show('export')" class="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50">Exportar</button>
+  </div>
+
+  <!-- EJEMPLO 6: Summary totals -->
+  <div class="grid grid-cols-4 gap-3 mb-4">
+    <div class="bg-white rounded-xl border p-4">
+      <div class="text-[10px] text-gray-400 mb-1">SUPERFICIE TOTAL</div>
+      <div class="text-2xl font-bold text-gray-900">2.663,25 <span class="text-sm font-normal text-gray-400">m²</span></div>
+      <div class="text-[10px] text-gray-500 mt-1">Subsuelo 410 + PB 144 + P1-8 1.848 + Azotea 43 + Circ. 218,25</div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="text-[10px] text-gray-400 mb-1">DURACIÓN</div>
+      <div class="text-2xl font-bold text-gray-900">16 <span class="text-sm font-normal text-gray-400">meses</span></div>
+      <div class="text-[10px] text-gray-500 mt-1">Edificio 8 pisos + subsuelo</div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="text-[10px] text-gray-400 mb-1">ÍTEMS TOTALES</div>
+      <div class="text-2xl font-bold text-gray-900">108</div>
+      <div class="text-[10px] text-gray-500 mt-1">En 5 secciones principales</div>
+    </div>
+    <div class="bg-sole-teal rounded-xl p-4 text-white">
+      <div class="text-[10px] text-sole-gold mb-1">NETO TOTAL</div>
+      <div class="text-2xl font-bold">$372.7M</div>
+      <div class="text-[10px] text-green-200 mt-1">$139.950 / m²</div>
+    </div>
+  </div>
+
+  <!-- Cost breakdown (6 KPIs like SOLE's "Foco de semana") -->
+  <div class="grid grid-cols-6 gap-2 mb-4">
+    <div class="bg-white rounded-lg border p-3 text-center"><div class="text-[10px] text-gray-400">Materiales</div><div class="text-lg font-bold text-gray-800">$142.2M</div></div>
+    <div class="bg-white rounded-lg border p-3 text-center"><div class="text-[10px] text-gray-400">Mano de Obra</div><div class="text-lg font-bold text-gray-800">$85.3M</div></div>
+    <div class="bg-white rounded-lg border p-3 text-center"><div class="text-[10px] text-gray-400">Equipos</div><div class="text-lg font-bold text-gray-800">$28.5M</div></div>
+    <div class="bg-blue-50 rounded-lg border border-blue-200 p-3 text-center"><div class="text-[10px] text-blue-500">Directo</div><div class="text-lg font-bold text-blue-700">$284.5M</div></div>
+    <div class="bg-orange-50 rounded-lg border border-orange-200 p-3 text-center"><div class="text-[10px] text-orange-500">Indirectos</div><div class="text-lg font-bold text-orange-600">$88.2M</div><div class="text-[9px] text-orange-400">Cadena: 31%</div></div>
+    <div class="bg-sole-teal rounded-lg p-3 text-center text-white"><div class="text-[10px] text-sole-gold">NETO</div><div class="text-lg font-bold">$372.7M</div></div>
+  </div>
+
+  <!-- Table by section -->
+  <div class="bg-white rounded-xl border overflow-hidden">
+    <table class="w-full text-xs">
+      <thead class="bg-gray-100 text-gray-600"><tr><th class="px-3 py-2 text-left font-semibold">Sección</th><th class="px-3 py-2 text-right font-semibold">MAT</th><th class="px-3 py-2 text-right font-semibold">MO</th><th class="px-3 py-2 text-right font-semibold">Equipo</th><th class="px-3 py-2 text-right font-semibold">Sub</th><th class="px-3 py-2 text-right font-semibold">Directo</th><th class="px-3 py-2 text-right font-semibold">Indirecto</th><th class="px-3 py-2 text-right font-semibold">Beneficio</th><th class="px-3 py-2 text-right font-bold">Neto</th></tr></thead>
+      <tbody>
+        <tr class="border-b hover:bg-gray-50"><td class="px-3 py-2 text-gray-800">0. Tareas Preliminares</td><td class="px-3 py-2 cost-cell">$3.2M</td><td class="px-3 py-2 cost-cell">$2.1M</td><td class="px-3 py-2 cost-cell">$1.8M</td><td class="px-3 py-2 cost-cell">$0</td><td class="px-3 py-2 cost-cell text-blue-700">$7.1M</td><td class="px-3 py-2 cost-cell">$2.2M</td><td class="px-3 py-2 cost-cell">$0.7M</td><td class="px-3 py-2 cost-cell font-bold">$10.0M</td></tr>
+        <tr class="border-b hover:bg-gray-50"><td class="px-3 py-2 font-semibold text-gray-800">1. Subsuelo</td><td class="px-3 py-2 cost-cell">$18.5M</td><td class="px-3 py-2 cost-cell">$9.2M</td><td class="px-3 py-2 cost-cell">$3.1M</td><td class="px-3 py-2 cost-cell">$0.5M</td><td class="px-3 py-2 cost-cell text-blue-700">$31.3M</td><td class="px-3 py-2 cost-cell">$9.7M</td><td class="px-3 py-2 cost-cell">$3.1M</td><td class="px-3 py-2 cost-cell font-bold">$44.1M</td></tr>
+        <tr class="border-b hover:bg-gray-50"><td class="px-3 py-2 font-semibold text-gray-800">2. Planta Baja</td><td class="px-3 py-2 cost-cell">$22.3M</td><td class="px-3 py-2 cost-cell">$11.8M</td><td class="px-3 py-2 cost-cell">$4.2M</td><td class="px-3 py-2 cost-cell">$1.2M</td><td class="px-3 py-2 cost-cell text-blue-700">$39.5M</td><td class="px-3 py-2 cost-cell">$12.2M</td><td class="px-3 py-2 cost-cell">$4.0M</td><td class="px-3 py-2 cost-cell font-bold">$55.7M</td></tr>
+        <tr class="border-b hover:bg-gray-50"><td class="px-3 py-2 text-gray-800">3. Pisos 1-8 (×8)</td><td class="px-3 py-2 cost-cell">$85.4M</td><td class="px-3 py-2 cost-cell">$52.8M</td><td class="px-3 py-2 cost-cell">$16.2M</td><td class="px-3 py-2 cost-cell">$6.8M</td><td class="px-3 py-2 cost-cell text-blue-700">$161.2M</td><td class="px-3 py-2 cost-cell">$50.0M</td><td class="px-3 py-2 cost-cell">$16.1M</td><td class="px-3 py-2 cost-cell font-bold">$227.3M</td></tr>
+        <tr class="hover:bg-gray-50"><td class="px-3 py-2 text-gray-800">4. Azotea</td><td class="px-3 py-2 cost-cell">$12.8M</td><td class="px-3 py-2 cost-cell">$9.4M</td><td class="px-3 py-2 cost-cell">$3.2M</td><td class="px-3 py-2 cost-cell">$0</td><td class="px-3 py-2 cost-cell text-blue-700">$25.4M</td><td class="px-3 py-2 cost-cell">$7.9M</td><td class="px-3 py-2 cost-cell">$2.5M</td><td class="px-3 py-2 cost-cell font-bold">$35.8M</td></tr>
+      </tbody>
+      <tfoot class="bg-sole-teal text-white font-semibold"><tr><td class="px-3 py-3">TOTAL OBRA</td><td class="px-3 py-3 cost-cell">$142.2M</td><td class="px-3 py-3 cost-cell">$85.3M</td><td class="px-3 py-3 cost-cell">$28.5M</td><td class="px-3 py-3 cost-cell">$8.5M</td><td class="px-3 py-3 cost-cell text-green-200">$284.5M</td><td class="px-3 py-3 cost-cell">$88.2M</td><td class="px-3 py-3 cost-cell">$24.6M</td><td class="px-3 py-3 cost-cell text-sole-gold text-base font-bold">$372.7M</td></tr></tfoot>
+    </table>
+  </div>
+
+  <!-- EJEMPLO 6 highlight -->
+  <div class="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-4">
+    <div class="flex items-center gap-2 mb-2"><span class="excel-tag text-sm">EJ.6 — DATO REAL DEL EXCEL</span><span class="text-xs text-gray-500">Hoja 01_RESUMEN VENTA</span></div>
+    <div class="grid grid-cols-2 gap-6 text-sm">
+      <div>
+        <div class="font-semibold text-gray-700 mb-1">En el Excel (01_RESUMEN VENTA):</div>
+        <div class="bg-white rounded-lg p-3 font-mono text-xs space-y-0.5 border">
+          <div>SUPERFICIE TOTAL: <strong>2.663,25 m²</strong></div>
+          <div>  Subsuelo: 410 m² | PB: 144 m²</div>
+          <div>  P1-P8: 231 m² × 8 = 1.848 m²</div>
+          <div>  Azotea acc: 43 m² | Circ: 218,25 m²</div>
+          <div class="border-t pt-1 mt-1">DURACIÓN: <strong>16 meses</strong></div>
+          <div>MONEDA: <strong>ARS</strong></div>
+        </div>
+      </div>
+      <div>
+        <div class="font-semibold text-gray-700 mb-1">En la app (Vista Análisis):</div>
+        <div class="bg-white rounded-lg p-3 text-xs border">
+          <p class="text-gray-600 mb-2">Las tarjetas de resumen muestran exactamente estos datos. El sistema calcula automáticamente:</p>
+          <div class="space-y-1">
+            <div class="flex justify-between"><span class="text-gray-500">Neto Total / m²:</span><span class="font-bold">$139.950 / m²</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Distribución MAT vs MO:</span><span class="font-bold">63% / 37%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 5. IA + PLANOS ===== -->
+<div id="s-ai" class="screen fade-in p-6">
+  <div class="flex items-center gap-2 text-sole-teal text-[11px] font-bold tracking-wider mb-1">INTELIGENCIA ARTIFICIAL</div>
+  <div class="flex items-center gap-3 mb-2">
+    <div class="w-1 h-7 bg-sole-teal rounded-full"></div>
+    <h1 class="text-xl font-extrabold text-gray-900">ANÁLISIS DE PLANOS CON IA</h1>
+  </div>
+  <p class="text-gray-500 text-sm mb-4 ml-4">Subí una foto del plano. La IA extrae secciones y cantidades para el presupuesto.</p>
+  <div class="grid grid-cols-2 gap-6">
+    <div>
+      <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-sole-teal transition cursor-pointer bg-white">
+        <svg class="mx-auto mb-3" width="48" height="48" fill="none" stroke="#9CA3AF" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 16l4-4a3 5 0 014 0l5 5M14 14l1-1a3 5 0 014 0l4 4M3.5 21h17a1.5 1.5 0 001.5-1.5v-15A1.5 1.5 0 0020.5 3h-17A1.5 1.5 0 002 4.5v15A1.5 1.5 0 003.5 21z"/></svg>
+        <p class="font-semibold text-gray-700">Arrastrá el plano acá</p>
+        <p class="text-xs text-gray-400 mt-1">JPG, PNG o WEBP · hasta 20 MB</p>
+        <button class="mt-4 bg-sole-teal text-white font-medium px-4 py-2 rounded-lg text-xs">Seleccionar archivo</button>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border overflow-hidden">
+      <div class="bg-sole-teal text-white px-4 py-3 flex justify-between items-center">
+        <span class="font-semibold text-sm">Resultado IA</span>
+        <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full">8 ítems · 11 seg</span>
+      </div>
+      <div class="p-3 space-y-2 max-h-[300px] overflow-y-auto">
+        <div class="bg-sole-tealLight border border-green-200 rounded-lg p-2.5 flex justify-between items-center text-xs"><div><div class="font-medium text-gray-800">2.1 Columnas PB — H-30</div><div class="text-gray-500">m³ · ~42.5 · confianza: alta</div></div><div class="flex gap-1"><button class="bg-sole-teal text-white px-2 py-1 rounded text-[10px] font-medium">Aceptar</button><button class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-[10px]">Rechazar</button></div></div>
+        <div class="bg-sole-tealLight border border-green-200 rounded-lg p-2.5 flex justify-between items-center text-xs"><div><div class="font-medium text-gray-800">2.2 Vigas PB — H-30</div><div class="text-gray-500">m³ · ~28 · confianza: alta</div></div><div class="flex gap-1"><button class="bg-sole-teal text-white px-2 py-1 rounded text-[10px] font-medium">Aceptar</button><button class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-[10px]">Rechazar</button></div></div>
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-2.5 flex justify-between items-center text-xs"><div><div class="font-medium text-gray-800">2.4 Mampostería exterior LP18</div><div class="text-amber-700">m² · ~320 · confianza: media</div></div><div class="flex gap-1"><button class="bg-sole-teal text-white px-2 py-1 rounded text-[10px] font-medium">Aceptar</button><button class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-[10px]">Rechazar</button></div></div>
+      </div>
+      <div class="p-3 border-t bg-gray-50 flex justify-between items-center">
+        <span class="text-[10px] text-gray-400">3 de 8 seleccionados</span>
+        <button class="bg-sole-teal text-white font-semibold px-4 py-2 rounded-lg text-xs">Agregar al presupuesto</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 6. IMPORTAR ===== -->
+<div id="s-import" class="screen fade-in p-6">
+  <div class="flex items-center gap-2 text-sole-teal text-[11px] font-bold tracking-wider mb-1">IMPORTACIÓN</div>
+  <div class="flex items-center gap-3 mb-2">
+    <div class="w-1 h-7 bg-sole-teal rounded-full"></div>
+    <h1 class="text-xl font-extrabold text-gray-900">IMPORTAR EXCEL</h1>
+  </div>
+  <p class="text-gray-500 text-sm mb-6 ml-4">El sistema detecta el formato automáticamente.</p>
+  <div class="max-w-3xl">
+    <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-white mb-6 hover:border-sole-teal transition cursor-pointer">
+      <svg class="mx-auto mb-3" width="48" height="48" fill="none" stroke="#9CA3AF" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      <p class="font-semibold text-gray-700">Arrastrá tu Excel acá</p>
+      <p class="text-xs text-gray-400 mt-1">.xlsx o .xls</p>
+      <button class="mt-4 bg-sole-teal text-white font-medium px-4 py-2 rounded-lg text-xs">Seleccionar archivo</button>
+    </div>
+    <!-- EJEMPLO 3: Detected format -->
+    <div class="bg-white rounded-xl border p-5">
+      <h3 class="font-semibold text-gray-900 mb-3">Formato detectado: <span class="text-sole-teal">Terrac — Cómputo y Presupuesto</span> <span class="excel-tag">EJ.3</span></h3>
+      <div class="grid grid-cols-3 gap-3 text-sm mb-4">
+        <div class="bg-sole-tealLight rounded-lg p-3 border border-green-200">
+          <div class="text-sole-tealDark font-medium text-xs">5 catálogos detectados</div>
+          <div class="text-[10px] text-gray-500 mt-1">00_Mat (325), 00_MO (4), 00_Eq (27), 00_Sub (70), 00_JEF+ESTR</div>
+        </div>
+        <div class="bg-sole-tealLight rounded-lg p-3 border border-green-200">
+          <div class="text-sole-tealDark font-medium text-xs">Hoja 01_C&P detectada</div>
+          <div class="text-[10px] text-gray-500 mt-1">26 columnas · 108 ítems · desglose MAT/MO/EQ/SUB</div>
+        </div>
+        <div class="bg-sole-tealLight rounded-lg p-3 border border-green-200">
+          <div class="text-sole-tealDark font-medium text-xs">44 hojas detalle</div>
+          <div class="text-[10px] text-gray-500 mt-1">78 filas c/u · 5 secciones: MAT, MO, EQ, SUB, Resumen</div>
+        </div>
+      </div>
+      <div class="bg-amber-50 rounded-lg p-3 border border-amber-200 text-xs mb-4">
+        <span class="text-amber-800 font-medium">12 códigos de ítem detectados como fechas por Excel</span>
+        <div class="text-gray-500 mt-0.5">Corrección automática: 2024-01-01 → 1.1, 2024-02-01 → 1.2, etc.</div>
+      </div>
+      <div class="flex gap-3">
+        <button class="bg-sole-teal text-white font-semibold px-5 py-2.5 rounded-lg text-sm">Importar como presupuesto nuevo</button>
+        <button class="bg-white border text-gray-600 px-5 py-2.5 rounded-lg text-sm">Solo importar catálogos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EJEMPLO 3 highlight -->
+  <div class="mt-4 max-w-3xl bg-orange-50 border border-orange-200 rounded-xl p-4">
+    <div class="flex items-center gap-2 mb-2"><span class="excel-tag text-sm">EJ.3 — DATO REAL DEL EXCEL</span><span class="text-xs text-gray-500">Estructura completa del Excel Las Heras (55 hojas)</span></div>
+    <div class="grid grid-cols-2 gap-6 text-sm">
+      <div>
+        <div class="font-semibold text-gray-700 mb-1">En el Excel:</div>
+        <div class="bg-white rounded-lg p-3 font-mono text-xs space-y-0.5 border">
+          <div><strong>5 hojas catálogo:</strong></div>
+          <div>  00_Mat → 325 materiales (ARG, CEM, H30...)</div>
+          <div>  00_MO → 4 categorías (CA, PU, OF, AY)</div>
+          <div>  00_Eq → 27 equipos</div>
+          <div>  00_Sub → 70 subcontratos</div>
+          <div>  00_JEF+ESTR → $5.9M/mes × 16 meses</div>
+          <div class="border-t pt-1 mt-1"><strong>1 hoja principal:</strong></div>
+          <div>  01_C&P → 108 ítems, 26 columnas</div>
+          <div class="border-t pt-1 mt-1"><strong>44 hojas detalle:</strong></div>
+          <div>  Ej: "1.1 COLUMNAS Y TABIQUES" (78 filas)</div>
+        </div>
+      </div>
+      <div>
+        <div class="font-semibold text-gray-700 mb-1">En la app (Importar Excel):</div>
+        <div class="bg-white rounded-lg p-3 text-xs border">
+          <p class="text-gray-600 mb-2">El sistema auto-detecta el formato Terrac y muestra qué encontró:</p>
+          <ul class="space-y-1 text-gray-700">
+            <li>Catálogos → van a <strong>Catálogos de Precios</strong></li>
+            <li>01_C&P → crea el <strong>árbol de ítems</strong></li>
+            <li>Hojas detalle → crean los <strong>recursos por ítem</strong></li>
+            <li>Códigos-fecha → se <strong>corrigen automáticamente</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 7. EXPORTAR ===== -->
+<div id="s-export" class="screen fade-in p-6">
+  <div class="flex items-center gap-2 text-sole-teal text-[11px] font-bold tracking-wider mb-1">EXPORTACIÓN</div>
+  <div class="flex items-center gap-3 mb-6">
+    <div class="w-1 h-7 bg-sole-teal rounded-full"></div>
+    <h1 class="text-xl font-extrabold text-gray-900">EXPORTAR PRESUPUESTO</h1>
+  </div>
+  <div class="max-w-2xl grid grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border p-5 hover:shadow-md hover:border-sole-teal transition cursor-pointer">
+      <svg class="mb-2" width="28" height="28" fill="none" stroke="#2D8D68" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <h3 class="font-bold text-gray-900 text-sm">PDF Profesional</h3>
+      <p class="text-[11px] text-gray-500 mt-1">Resumen + tabla + branding SOLE</p>
+      <span class="badge-u mt-2 inline-block">UNIVERSAL</span>
+    </div>
+    <div class="bg-white rounded-xl border p-5 hover:shadow-md hover:border-sole-teal transition cursor-pointer">
+      <svg class="mb-2" width="28" height="28" fill="none" stroke="#2D8D68" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      <h3 class="font-bold text-gray-900 text-sm">Excel Estándar (BoQ)</h3>
+      <p class="text-[11px] text-gray-500 mt-1">Bill of Quantities genérico</p>
+      <span class="badge-u mt-2 inline-block">UNIVERSAL</span>
+    </div>
+    <div class="bg-white rounded-xl border p-5 hover:shadow-md hover:border-sole-teal transition cursor-pointer">
+      <svg class="mb-2" width="28" height="28" fill="none" stroke="#2D8D68" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      <h3 class="font-bold text-gray-900 text-sm">Excel Formato Terrac</h3>
+      <p class="text-[11px] text-gray-500 mt-1">26 col + hojas detalle 78 filas</p>
+      <span class="badge-t mt-2 inline-block">TERRAC</span>
+    </div>
+    <div class="bg-white rounded-xl border p-5 hover:shadow-md hover:border-sole-teal transition cursor-pointer">
+      <svg class="mb-2" width="28" height="28" fill="none" stroke="#2D8D68" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      <h3 class="font-bold text-gray-900 text-sm">Vista Cliente (Venta)</h3>
+      <p class="text-[11px] text-gray-500 mt-1">Solo netos, sin costos internos</p>
+      <span class="badge-u mt-2 inline-block">UNIVERSAL</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 8. CADENA DE MARKUPS ===== -->
+<div id="s-markups" class="screen fade-in p-6">
+  <div class="flex items-center gap-2 text-sole-teal text-[11px] font-bold tracking-wider mb-1">CONFIGURACIÓN</div>
+  <div class="flex items-center gap-3 mb-2">
+    <div class="w-1 h-7 bg-sole-teal rounded-full"></div>
+    <h1 class="text-xl font-extrabold text-gray-900">CADENA DE MARKUPS</h1>
+    <span class="excel-tag">EJ.5 — INDIRECTOS REALES</span>
+  </div>
+  <p class="text-gray-500 text-sm mb-6 ml-4">Definí qué cargos se aplican sobre el costo directo. Podés agregar, quitar o reordenar.</p>
+  <div class="max-w-3xl">
+    <div class="bg-white rounded-xl border p-5 mb-4">
+      <div class="flex items-center gap-2 mb-4 flex-wrap">
+        <div class="bg-blue-100 text-blue-800 px-3 py-2 rounded-lg font-medium text-sm">Costo Directo</div>
+        <span class="text-gray-300 text-lg">→</span>
+        <div class="bg-orange-50 text-orange-800 px-3 py-2 rounded-lg text-sm border border-orange-200 cursor-move">Estructura <strong>15%</strong> <button class="ml-1 text-orange-300 hover:text-red-500">×</button></div>
+        <span class="text-gray-300 text-lg">→</span>
+        <div class="bg-orange-50 text-orange-800 px-3 py-2 rounded-lg text-sm border border-orange-200 cursor-move">Jefatura <strong>8%</strong> <button class="ml-1 text-orange-300 hover:text-red-500">×</button></div>
+        <span class="text-gray-300 text-lg">→</span>
+        <div class="bg-orange-50 text-orange-800 px-3 py-2 rounded-lg text-sm border border-orange-200 cursor-move">Logística <strong>5%</strong> <button class="ml-1 text-orange-300 hover:text-red-500">×</button></div>
+        <span class="text-gray-300 text-lg">→</span>
+        <div class="bg-orange-50 text-orange-800 px-3 py-2 rounded-lg text-sm border border-orange-200 cursor-move">Herramientas <strong>3%</strong> <button class="ml-1 text-orange-300 hover:text-red-500">×</button></div>
+        <span class="text-gray-300 text-lg">→</span>
+        <div class="bg-sole-tealLight text-sole-tealDark px-3 py-2 rounded-lg text-sm border border-green-200 cursor-move">Beneficio <strong>10%</strong> <button class="ml-1 text-green-300 hover:text-red-500">×</button></div>
+        <span class="text-gray-300 text-lg">→</span>
+        <div class="bg-sole-teal text-white px-3 py-2 rounded-lg font-bold text-sm">NETO TOTAL</div>
+      </div>
+      <button class="text-xs text-sole-teal font-medium hover:underline">+ Agregar eslabón</button>
+      <span class="text-[10px] text-gray-400 ml-2">Arrastrá para reordenar · Click en × para quitar</span>
+    </div>
+
+    <!-- EJEMPLO 5 highlight -->
+    <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4">
+      <div class="flex items-center gap-2 mb-2"><span class="excel-tag text-sm">EJ.5 — DATO REAL DEL EXCEL</span><span class="text-xs text-gray-500">Hoja 00_JEF+ESTR del Excel Las Heras</span></div>
+      <div class="grid grid-cols-2 gap-6 text-sm">
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">En el Excel (00_JEF+ESTR):</div>
+          <div class="bg-white rounded-lg p-3 font-mono text-xs space-y-0.5 border">
+            <div><strong>Costos mensuales de Jefatura + Estructura:</strong></div>
+            <div>  Jefe de Obra (Jorge): <strong>$2.500.000</strong></div>
+            <div>  Nafta Jefe: <strong>$500.000</strong></div>
+            <div>  Nafta Jorge: <strong>$500.000</strong></div>
+            <div>  Guille (carpintero): <strong>$400.000</strong></div>
+            <div>  Herramientas: <strong>$2.000.000</strong></div>
+            <div class="border-t pt-1 mt-1">TOTAL MENSUAL: <strong>$5.900.000</strong></div>
+            <div>× 16 meses = <strong>$94.400.000</strong></div>
+          </div>
+        </div>
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">En la app (Cadena de Markups):</div>
+          <div class="bg-white rounded-lg p-3 text-xs border">
+            <p class="text-gray-600 mb-2">Los $94.4M de indirectos se distribuyen como porcentaje sobre el costo directo total:</p>
+            <div class="space-y-1">
+              <div class="flex justify-between"><span class="text-gray-500">Estructura:</span><span class="font-bold">15%</span></div>
+              <div class="flex justify-between"><span class="text-gray-500">Jefatura:</span><span class="font-bold">8%</span></div>
+              <div class="flex justify-between"><span class="text-gray-500">Logística:</span><span class="font-bold">5%</span></div>
+              <div class="flex justify-between"><span class="text-gray-500">Herramientas:</span><span class="font-bold">3%</span></div>
+              <div class="flex justify-between border-t pt-1"><span class="text-gray-500">Total indirectos:</span><span class="font-bold text-sole-teal">~31%</span></div>
+            </div>
+            <p class="text-gray-400 mt-2">Otro cliente puede tener una cadena completamente diferente.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alternate chain example -->
+    <div class="bg-gray-50 rounded-xl border p-4">
+      <div class="text-xs font-medium text-gray-600 mb-2">Ejemplo de otro cliente (USA):</div>
+      <div class="flex items-center gap-1 text-[10px] flex-wrap">
+        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">Direct</span><span class="text-gray-300">→</span>
+        <span class="bg-orange-50 text-orange-800 px-2 py-1 rounded border border-orange-200">Overhead 12%</span><span class="text-gray-300">→</span>
+        <span class="bg-orange-50 text-orange-800 px-2 py-1 rounded border border-orange-200">Contingency 8%</span><span class="text-gray-300">→</span>
+        <span class="bg-green-50 text-green-800 px-2 py-1 rounded border border-green-200">Profit 15%</span><span class="text-gray-300">→</span>
+        <span class="bg-purple-50 text-purple-800 px-2 py-1 rounded border border-purple-200">Bond 2%</span><span class="text-gray-300">→</span>
+        <span class="bg-red-50 text-red-800 px-2 py-1 rounded border border-red-200">Tax 10%</span><span class="text-gray-300">→</span>
+        <span class="bg-gray-800 text-white px-2 py-1 rounded font-bold">NET</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 9. CATÁLOGOS ===== -->
+<div id="s-catalogos" class="screen fade-in p-6">
+  <div class="flex items-center gap-2 text-sole-teal text-[11px] font-bold tracking-wider mb-1">GESTIÓN DE PRECIOS</div>
+  <div class="flex items-center gap-3 mb-6">
+    <div class="w-1 h-7 bg-sole-teal rounded-full"></div>
+    <h1 class="text-xl font-extrabold text-gray-900">CATÁLOGOS DE PRECIOS</h1>
+  </div>
+
+  <div class="max-w-3xl space-y-3">
+    <!-- EJEMPLO del catálogo real -->
+    <div class="bg-white rounded-xl border overflow-hidden">
+      <div class="p-4 flex justify-between items-center">
+        <div>
+          <div class="font-semibold text-sm text-gray-900">Materiales Corralón — Mar 2026 <span class="excel-tag">EJ. CATALOGO REAL</span></div>
+          <div class="text-[10px] text-gray-400 mt-0.5">325 ítems · Importado del Excel Las Heras · Hoja 00_Mat</div>
+        </div>
+        <span class="bg-sole-tealLight text-sole-tealDark text-[10px] font-semibold px-2 py-0.5 rounded-full">Activo</span>
+      </div>
+      <!-- Mini table preview -->
+      <div class="border-t">
+        <table class="w-full text-[11px]">
+          <thead class="bg-gray-50"><tr><th class="px-3 py-1.5 text-left text-gray-500 font-medium">Código</th><th class="px-3 py-1.5 text-left text-gray-500 font-medium">Descripción</th><th class="px-3 py-1.5 text-left text-gray-500 font-medium">Unidad</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">P. con IVA</th><th class="px-3 py-1.5 text-right text-gray-500 font-medium">P. sin IVA</th></tr></thead>
+          <tbody>
+            <tr class="border-b"><td class="px-3 py-1.5 font-mono text-gray-400">ARG</td><td class="px-3 py-1.5 text-gray-800">Arena a granel (1m³)</td><td class="px-3 py-1.5 text-gray-500">m³</td><td class="px-3 py-1.5 cost-cell">$29.403</td><td class="px-3 py-1.5 cost-cell font-medium">$24.300</td></tr>
+            <tr class="border-b"><td class="px-3 py-1.5 font-mono text-gray-400">CEM</td><td class="px-3 py-1.5 text-gray-800">Cemento "Loma Negra" (25kg)</td><td class="px-3 py-1.5 text-gray-500">u</td><td class="px-3 py-1.5 cost-cell">$8.470</td><td class="px-3 py-1.5 cost-cell font-medium">$7.000</td></tr>
+            <tr class="border-b"><td class="px-3 py-1.5 font-mono text-gray-400">H30</td><td class="px-3 py-1.5 text-gray-800">Hormigón H-30 elaborado</td><td class="px-3 py-1.5 text-gray-500">m³</td><td class="px-3 py-1.5 cost-cell">$114.950</td><td class="px-3 py-1.5 cost-cell font-medium">$95.000</td></tr>
+            <tr class="border-b"><td class="px-3 py-1.5 font-mono text-gray-400">PIEG</td><td class="px-3 py-1.5 text-gray-800">Piedra partida a granel</td><td class="px-3 py-1.5 text-gray-500">m³</td><td class="px-3 py-1.5 cost-cell">$58.995</td><td class="px-3 py-1.5 cost-cell font-medium">$48.756</td></tr>
+            <tr><td class="px-3 py-1.5 font-mono text-gray-400">HADN12</td><td class="px-3 py-1.5 text-gray-800">Hierro ADN 420 ø12mm</td><td class="px-3 py-1.5 text-gray-500">u</td><td class="px-3 py-1.5 cost-cell">$15.488</td><td class="px-3 py-1.5 cost-cell font-medium">$12.800</td></tr>
+          </tbody>
+        </table>
+        <div class="px-3 py-2 bg-gray-50 text-[10px] text-gray-400 border-t">Mostrando 5 de 325 · Precios de la hoja 00_Mat del Excel real</div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border p-4 flex justify-between items-center">
+      <div><div class="font-semibold text-sm text-gray-900">Mano de Obra — Mar 2026</div><div class="text-[10px] text-gray-400 mt-0.5">4 categorías: Capataz =80000×1.5, Oficial =60000×1.5, Ayudante =40000×1.5</div></div>
+      <span class="bg-sole-tealLight text-sole-tealDark text-[10px] font-semibold px-2 py-0.5 rounded-full">Activo</span>
+    </div>
+    <div class="bg-white rounded-xl border p-4 flex justify-between items-center">
+      <div><div class="font-semibold text-sm text-gray-900">Equipos — Mar 2026</div><div class="text-[10px] text-gray-400 mt-0.5">27 ítems: Retroexcavadora, Mini cargadora, Compactador, Grúa...</div></div>
+      <span class="bg-sole-tealLight text-sole-tealDark text-[10px] font-semibold px-2 py-0.5 rounded-full">Activo</span>
+    </div>
+    <div class="bg-white rounded-xl border p-4 flex justify-between items-center">
+      <div><div class="font-semibold text-sm text-gray-900">Subcontratos — Mar 2026</div><div class="text-[10px] text-gray-400 mt-0.5">70 ítems: Pintura, Durlock, Plomería, Electricidad, Vidrios...</div></div>
+      <span class="bg-sole-tealLight text-sole-tealDark text-[10px] font-semibold px-2 py-0.5 rounded-full">Activo</span>
+    </div>
+    <button class="w-full bg-sole-teal hover:bg-sole-tealDark text-white py-3 rounded-xl font-semibold text-sm transition">Importar nuevo catálogo de precios</button>
+  </div>
+</div>
+
+<!-- ===== 10. VERSIONES ===== -->
+<div id="s-versiones" class="screen fade-in p-6">
+  <div class="flex items-center gap-2 text-sole-teal text-[11px] font-bold tracking-wider mb-1">HISTORIAL</div>
+  <div class="flex items-center gap-3 mb-6">
+    <div class="w-1 h-7 bg-sole-teal rounded-full"></div>
+    <h1 class="text-xl font-extrabold text-gray-900">VERSIONES — LAS HERAS</h1>
+  </div>
+  <div class="max-w-2xl space-y-3">
+    <div class="bg-white rounded-xl border overflow-hidden border-l-4 border-l-sole-teal">
+      <div class="p-4 flex justify-between items-center">
+        <div>
+          <div class="font-semibold text-sm text-gray-900">v3 — Precios actualizados Mar-2026</div>
+          <div class="text-[10px] text-gray-400 mt-0.5">Carlos · 03/04/2026 14:30 · Neto: $372.7M</div>
+        </div>
+        <span class="text-[10px] text-sole-teal font-semibold bg-sole-tealLight px-2 py-0.5 rounded-full">Actual</span>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="font-semibold text-sm text-gray-900">v2 — Ajuste cantidades P2-P8</div>
+          <div class="text-[10px] text-gray-400 mt-0.5">Carlos · 28/03/2026 · Neto: $358.1M</div>
+          <div class="text-[10px] text-red-500 mt-0.5">-$14.6M (-3.9%) vs v3</div>
+        </div>
+        <div class="flex gap-2">
+          <button class="text-xs text-sole-teal border border-sole-teal px-2.5 py-1 rounded-lg font-medium">Ver</button>
+          <button class="text-xs text-blue-600 border px-2.5 py-1 rounded-lg">Comparar</button>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="font-semibold text-sm text-gray-900">v1 — Importación inicial Excel</div>
+          <div class="text-[10px] text-gray-400 mt-0.5">Carlos · 20/03/2026 · Neto: $341.5M</div>
+          <div class="text-[10px] text-red-500 mt-0.5">-$31.2M (-8.4%) vs v3</div>
+        </div>
+        <div class="flex gap-2">
+          <button class="text-xs text-sole-teal border border-sole-teal px-2.5 py-1 rounded-lg font-medium">Ver</button>
+          <button class="text-xs text-blue-600 border px-2.5 py-1 rounded-lg">Comparar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- INDEX PANEL: 6 Excel Examples -->
+<div id="excel-index" class="fixed bottom-4 right-4 bg-white rounded-xl border shadow-lg p-4 w-80 z-50 text-xs" style="display:none">
+  <div class="flex justify-between items-center mb-2">
+    <span class="font-bold text-gray-900 text-sm">6 Ejemplos Excel → App</span>
+    <button onclick="document.getElementById('excel-index').style.display='none'" class="text-gray-400 hover:text-gray-600">×</button>
+  </div>
+  <div class="space-y-1.5">
+    <div class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1" onclick="show('editor')"><span class="excel-tag">EJ.1</span><span class="text-gray-700">Item 0.1 OBRADOR → Editor</span></div>
+    <div class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1" onclick="show('detalle')"><span class="excel-tag">EJ.2</span><span class="text-gray-700">Mano de Obra (MO-CA, MO-OF) → Detalle</span></div>
+    <div class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1" onclick="show('import')"><span class="excel-tag">EJ.3</span><span class="text-gray-700">55 hojas Excel → Importar</span></div>
+    <div class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1" onclick="show('detalle')"><span class="excel-tag">EJ.4</span><span class="text-gray-700">Hoja 0.9 Excavación → Detalle Ítem</span></div>
+    <div class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1" onclick="show('markups')"><span class="excel-tag">EJ.5</span><span class="text-gray-700">$5.9M/mes indirectos → Markups</span></div>
+    <div class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1" onclick="show('analysis')"><span class="excel-tag">EJ.6</span><span class="text-gray-700">2.663,25 m² resumen → Análisis</span></div>
+  </div>
+</div>
+
+<!-- FAB button to show index -->
+<button onclick="var el=document.getElementById('excel-index');el.style.display=el.style.display==='none'?'block':'none'" class="fixed bottom-4 right-4 bg-sole-coral text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-lg font-bold hover:bg-orange-600 transition z-40" title="Ver 6 ejemplos Excel → App">6</button>
+
+<script>
+function show(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  const screen=document.getElementById('s-'+name);
+  const btn=document.getElementById('sb-'+name);
+  if(screen)screen.classList.add('active');
+  if(btn)btn.classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>

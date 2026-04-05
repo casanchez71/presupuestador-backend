@@ -1,13 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { FileText, Pencil, Loader2, Trash2 } from 'lucide-react'
+import { MoreVertical, Pencil, Loader2 } from 'lucide-react'
 import type { BudgetItem } from '../../types'
 import { fmtCurrency, fmtNumber } from '../../lib/format'
 
 interface Props {
   items: BudgetItem[]
   onEditItem?: (itemId: string, field: string, oldValue: number, newValue: number) => Promise<void>
-  onViewDetail?: (itemId: string) => void
-  onDeleteItem?: (itemId: string, description: string) => void
 }
 
 type EditableField = 'cantidad' | 'mat_unitario' | 'mo_unitario'
@@ -21,8 +19,11 @@ interface CellState {
   hasAudit: boolean
 }
 
-export default function DataTable({ items, onEditItem, onViewDetail, onDeleteItem }: Props) {
-  const [deletingId, setDeletingId] = useState<string | null>(null)
+export default function DataTable({ items, onEditItem }: Props) {
+  // Detect if any item has the extended columns populated
+  const hasImpuestos = items.some((i) => (i.impuestos_total ?? 0) > 0)
+  const hasIva = items.some((i) => (i.iva_total ?? 0) > 0)
+  const hasTotalFinal = items.some((i) => (i.total_final ?? 0) > 0)
   const [editing, setEditing] = useState<{ id: string; field: EditableField } | null>(null)
   const [editValue, setEditValue] = useState('')
   const [cellStates, setCellStates] = useState<Record<string, CellState>>({})
@@ -100,10 +101,12 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
     (acc, item) => ({
       directo: acc.directo + item.directo_total,
       indirecto: acc.indirecto + item.indirecto_total,
-      beneficio: acc.beneficio + (item.beneficio_total ?? 0),
       neto: acc.neto + item.neto_total,
+      impuestos: acc.impuestos + (item.impuestos_total ?? 0),
+      iva: acc.iva + (item.iva_total ?? 0),
+      totalFinal: acc.totalFinal + (item.total_final ?? 0),
     }),
-    { directo: 0, indirecto: 0, beneficio: 0, neto: 0 },
+    { directo: 0, indirecto: 0, neto: 0, impuestos: 0, iva: 0, totalFinal: 0 },
   )
 
   function renderEditableCell(item: BudgetItem, field: EditableField, format: (v: number) => string) {
@@ -168,7 +171,7 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
   }
 
   return (
-    <div className="overflow-auto max-h-full">
+    <div className="overflow-x-auto">
       {/* Save flash animation */}
       <style>{`
         @keyframes saveFlash {
@@ -181,36 +184,38 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
         }
       `}</style>
       <table className="w-full text-xs">
-        <thead className="sticky top-0 z-10">
-          <tr className="bg-[#E8F5EE] text-[#143D34]">
-            <th className="px-3 py-2 text-left font-semibold text-[11px] tracking-wide">Codigo</th>
-            <th className="px-3 py-2 text-left font-semibold text-[11px] tracking-wide">Descripcion</th>
-            <th className="px-3 py-2 text-left font-semibold text-[11px] tracking-wide">Unidad</th>
-            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">
+        <thead>
+          <tr className="bg-[#143D34] text-white">
+            <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Codigo</th>
+            <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Descripcion</th>
+            <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Unidad</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               Cant.
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#2D8D68]/50" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
             </th>
-            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               MAT Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#2D8D68]/50" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
             </th>
-            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               MO Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#2D8D68]/50" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
             </th>
-            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Directo</th>
-            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Indirecto</th>
-            <th className="px-3 py-2 text-right font-semibold text-[11px] tracking-wide">Beneficio</th>
-            <th className="px-3 py-2 text-right font-bold text-[11px] tracking-wide">Neto</th>
-            <th className="px-3 py-2 w-16" />
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Directo</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Indirecto</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Neto</th>
+            {hasImpuestos && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Impuestos</th>}
+            {hasIva && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">IVA</th>}
+            {hasTotalFinal && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-yellow-200">Total Final</th>}
+            <th className="px-3 py-2.5 w-6" />
           </tr>
         </thead>
         <tbody>
           {items.map((item, idx) => (
             <tr
               key={item.id}
-              className={`hover:bg-[#E8F5EE]/20 transition-colors duration-150 ${
-                idx % 2 === 1 ? 'bg-gray-50/30' : 'bg-white'
+              className={`border-b border-gray-100 hover:bg-[#E8F5EE]/30 transition-colors duration-150 ${
+                idx % 2 === 1 ? 'bg-gray-50/50' : 'bg-white'
               }`}
             >
               <td className="px-3 py-2.5 font-mono text-[10px] text-gray-400">{item.code}</td>
@@ -228,62 +233,40 @@ export default function DataTable({ items, onEditItem, onViewDetail, onDeleteIte
               <td className="px-3 py-2.5 cost-cell text-gray-400">
                 {fmtCurrency(item.indirecto_total)}
               </td>
-              <td className="px-3 py-2.5 cost-cell text-gray-400">
-                {fmtCurrency(item.beneficio_total)}
-              </td>
               <td className="px-3 py-2.5 cost-cell font-bold text-[#143D34]">
                 {fmtCurrency(item.neto_total)}
               </td>
-              <td className="px-3 py-2.5">
-                <div className="flex items-center justify-end gap-1">
-                  {onViewDetail ? (
-                    <button
-                      onClick={() => onViewDetail(item.id)}
-                      className="p-1 text-gray-300 hover:text-[#2D8D68] transition-colors rounded hover:bg-[#E8F5EE]"
-                      title="Ver detalle del ítem"
-                    >
-                      <FileText size={13} />
-                    </button>
-                  ) : null}
-                  {onDeleteItem ? (
-                    deletingId === item.id ? (
-                      <div className="flex items-center gap-0.5">
-                        <button
-                          onClick={() => { onDeleteItem(item.id, item.description ?? ''); setDeletingId(null) }}
-                          className="px-1.5 py-0.5 text-[9px] bg-red-500 text-white rounded font-medium hover:bg-red-600"
-                        >
-                          Si
-                        </button>
-                        <button
-                          onClick={() => setDeletingId(null)}
-                          className="px-1.5 py-0.5 text-[9px] bg-gray-200 text-gray-600 rounded font-medium hover:bg-gray-300"
-                        >
-                          No
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setDeletingId(item.id)}
-                        className="p-1 text-gray-300 hover:text-red-500 transition-colors rounded hover:bg-red-50"
-                        title="Eliminar item"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    )
-                  ) : null}
-                </div>
+              {hasImpuestos && (
+                <td className="px-3 py-2.5 cost-cell text-orange-600">
+                  {fmtCurrency(item.impuestos_total ?? 0)}
+                </td>
+              )}
+              {hasIva && (
+                <td className="px-3 py-2.5 cost-cell text-blue-600">
+                  {fmtCurrency(item.iva_total ?? 0)}
+                </td>
+              )}
+              {hasTotalFinal && (
+                <td className="px-3 py-2.5 cost-cell font-extrabold text-[#143D34]">
+                  {fmtCurrency(item.total_final ?? 0)}
+                </td>
+              )}
+              <td className="px-3 py-2.5 text-center text-gray-300 cursor-pointer hover:text-gray-500 transition-colors">
+                <MoreVertical size={14} />
               </td>
             </tr>
           ))}
         </tbody>
         {items.length > 0 && (
-          <tfoot className="sticky bottom-0 z-10">
-            <tr className="bg-[#E8F5EE] font-semibold text-xs border-t border-[#2D8D68]/20">
-              <td colSpan={6} className="px-3 py-2.5 text-right text-[#2D8D68] uppercase text-[10px] tracking-wider font-bold">Total seccion</td>
-              <td className="px-3 py-2.5 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.directo)}</td>
-              <td className="px-3 py-2.5 cost-cell text-[#E8663C] font-bold">{fmtCurrency(totals.indirecto)}</td>
-              <td className="px-3 py-2.5 cost-cell text-gray-600 font-bold">{fmtCurrency(totals.beneficio)}</td>
-              <td className="px-3 py-2.5 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.neto)}</td>
+          <tfoot>
+            <tr className="bg-gradient-to-r from-gray-50 to-white font-semibold text-xs border-t-2 border-gray-200">
+              <td colSpan={6} className="px-3 py-3 text-right text-gray-400 uppercase text-[10px] tracking-wider">Total seccion</td>
+              <td className="px-3 py-3 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.directo)}</td>
+              <td className="px-3 py-3 cost-cell text-[#E8663C] font-bold">{fmtCurrency(totals.indirecto)}</td>
+              <td className="px-3 py-3 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.neto)}</td>
+              {hasImpuestos && <td className="px-3 py-3 cost-cell text-orange-600 font-bold">{fmtCurrency(totals.impuestos)}</td>}
+              {hasIva && <td className="px-3 py-3 cost-cell text-blue-600 font-bold">{fmtCurrency(totals.iva)}</td>}
+              {hasTotalFinal && <td className="px-3 py-3 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.totalFinal)}</td>}
               <td />
             </tr>
           </tfoot>

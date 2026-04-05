@@ -1,0 +1,43 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>SOLE INTHEGROW Icon</title>
+  <desc>Geometric icon combining a sun arc with a sprout to represent leadership, clarity, and growth.</desc>
+  <defs>
+    <linearGradient id="soleRing" x1="100" y1="90" x2="402" y2="422" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E0A33A"/>
+      <stop offset="1" stop-color="#C57F18"/>
+    </linearGradient>
+    <linearGradient id="soleLeaf" x1="198" y1="178" x2="311" y2="356" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2D8D68"/>
+      <stop offset="1" stop-color="#174B3D"/>
+    </linearGradient>
+  </defs>
+  <path
+    d="M256 72C170.947 72 102 140.947 102 226C102 311.053 170.947 380 256 380C316.134 380 368.215 345.533 393.832 295.282"
+    stroke="url(#soleRing)"
+    stroke-width="28"
+    stroke-linecap="round"
+  />
+  <circle cx="390" cy="179" r="28" fill="#E0A33A"/>
+  <path
+    d="M251 334V250C251 221.768 273.768 199 302 199H319"
+    stroke="#143D34"
+    stroke-width="24"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M251 280C216.14 280 188 251.86 188 217V206C222.86 206 251 234.14 251 269V280Z"
+    fill="url(#soleLeaf)"
+  />
+  <path
+    d="M257 248C257 209.34 288.34 178 327 178H338C338 216.66 306.66 248 268 248H257Z"
+    fill="url(#soleLeaf)"
+  />
+  <path
+    d="M223 355C238.997 364.334 247.387 370.667 256 390C264.613 370.667 273.003 364.334 289 355"
+    stroke="#143D34"
+    stroke-width="18"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
