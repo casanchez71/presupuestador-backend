@@ -3,13 +3,40 @@ import type { Budget } from '../../types'
 import { fmtCurrency } from '../../lib/format'
 
 const STATUS_STYLES: Record<string, string> = {
+  // English keys (from DB)
+  draft:     'bg-gray-100 text-gray-700',
+  review:    'bg-yellow-100 text-yellow-800',
+  approved:  'bg-green-100 text-green-800',
+  sent:      'bg-blue-100 text-blue-800',
+  active:    'bg-emerald-100 text-emerald-800',
+  // Spanish keys (legacy)
   activo:      'bg-[#E8F5EE] text-[#1B5E4B]',
   borrador:    'bg-amber-50 text-amber-700',
   presentado:  'bg-blue-50 text-blue-700',
   archivado:   'bg-gray-100 text-gray-500',
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  draft: 'Borrador',
+  review: 'En Revisión',
+  approved: 'Aprobado',
+  sent: 'Enviado',
+  active: 'Activo',
+  borrador: 'Borrador',
+  activo: 'Activo',
+  aprobado: 'Aprobado',
+  presentado: 'Enviado',
+  archivado: 'Archivado',
+}
+
 const BAR_COLORS: Record<string, string> = {
+  // English keys
+  draft:    'bg-[#E0A33A]',
+  review:   'bg-yellow-400',
+  approved: 'bg-[#2D8D68]',
+  sent:     'bg-blue-500',
+  active:   'bg-[#2D8D68]',
+  // Spanish keys (legacy)
   activo:     'bg-[#2D8D68]',
   borrador:   'bg-[#E0A33A]',
   presentado: 'bg-blue-500',
@@ -37,7 +64,7 @@ export default function BudgetCard({ budget, directTotal, netoTotal, subtitle, t
       <div className="p-5">
         <div className="flex justify-between items-start mb-2">
           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-500'}`}>
-            {budget.status || 'Borrador'}
+            {STATUS_LABELS[status] ?? (budget.status || 'Borrador')}
           </span>
           <span className="text-[10px] text-gray-400">
             {budget.source_file ? '✓ Excel' : 'Manual'}

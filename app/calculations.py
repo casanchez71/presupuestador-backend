@@ -2,6 +2,9 @@
 
 All functions are side-effect free and operate on plain dicts.
 Numeric safety is handled via safe_float from app.tree.
+
+Cascade model (Excel-based):
+  Resources → Unit Prices → Direct → Cascaded Indirects → Net → Total
 """
 
 from __future__ import annotations
@@ -77,3 +80,132 @@ def recalc_all_items(items: list[dict]) -> list[dict]:
     Returns a new list with derived fields updated.
     """
     return [calc_item_totals(item) for item in items]
+
+
+# ── Cascade calculation engine ───────────────────────────────────────────────
+
+
+def calc_resource_subtotal(resource: dict) -> dict:
+    """Calculate subtotal for a single resource (mutates in place, also returns it).
+
+    For material / equipo / mo_material / subcontrato:
+      cantidad_efectiva = cantidad × (1 + desperdicio_pct/100)
+      subtotal = cantidad_efectiva × precio_unitario
+
+    For mano_obra:
+      cantidad_efectiva = trabajadores × dias × (1 + cargas_sociales_pct/100)
+      subtotal = cantidad_efectiva × precio_unitario (jornal diario)
+    """
+    tipo = resource.get("tipo", "")
+
+    if tipo == "mano_obra":
+        trabajadores = float(resource.get("trabajadores") or 0)
+        dias = float(resource.get("dias") or 0)
+        cargas = float(resource.get("cargas_sociales_pct") or 25)
+        precio = float(resource.get("precio_unitario") or 0)
+
+        cantidad_efectiva = round(trabajadores * dias * (1 + cargas / 100), 2)
+        subtotal = round(cantidad_efectiva * precio, 2)
+    else:
+        cantidad = float(resource.get("cantidad") or 0)
+        desperdicio = float(resource.get("desperdicio_pct") or 0)
+        precio = float(resource.get("precio_unitario") or 0)
+
+        cantidad_efectiva = round(cantidad * (1 + desperdicio / 100), 2)
+        subtotal = round(cantidad_efectiva * precio, 2)
+
+    resource["cantidad_efectiva"] = cantidad_efectiva
+    resource["subtotal"] = subtotal
+    return resource
+
+
+def calc_item_from_resources(item: dict, resources: list[dict]) -> dict:
+    """Calculate item unit prices and direct totals from its resources (mutates item).
+
+    Groups resources by tipo:
+      - material            → mat_unitario
+      - mano_obra + equipo + mo_material + subcontrato → mo_unitario
+
+    Then: unitario × cantidad = total
+    """
+    mat_sum = sum(float(r.get("subtotal") or 0) for r in resources if r.get("tipo") == "material")
+    mo_sum = sum(float(r.get("subtotal") or 0) for r in resources if r.get("tipo") == "mano_obra")
+    eq_sum = sum(float(r.get("subtotal") or 0) for r in resources if r.get("tipo") == "equipo")
+    mat_ind_sum = sum(float(r.get("subtotal") or 0) for r in resources if r.get("tipo") == "mo_material")
+    sub_sum = sum(float(r.get("subtotal") or 0) for r in resources if r.get("tipo") == "subcontrato")
+
+    qty = float(item.get("cantidad") or 1)
+    if qty == 0:
+        qty = 1  # avoid division by zero
+
+    item["mat_unitario"] = round(mat_sum / qty, 2)
+    item["mo_unitario"] = round((mo_sum + eq_sum + mat_ind_sum + sub_sum) / qty, 2)
+    item["mat_total"] = round(item["mat_unitario"] * qty, 2)
+    item["mo_total"] = round(item["mo_unitario"] * qty, 2)
+    item["directo_total"] = round(item["mat_total"] + item["mo_total"], 2)
+
+    return item
+
+
+def calc_cascade_indirects(item: dict, config: dict) -> dict:
+    """Apply cascaded indirect costs following the Excel model (mutates item).
+
+    Cascade order:
+      Directo
+      + Imprevistos % (sobre directo)
+      + Estructura %  (sobre directo)
+      + Jefatura %    (sobre directo)
+      + Logística %   (sobre directo)
+      + Herramientas % (sobre directo)
+      = Subtotal 02
+
+      + Beneficio % (sobre Subtotal 02!)   ← KEY: not over directo
+      = Subtotal 03
+
+      + Ingresos Brutos % (sobre Subtotal 03)
+      + Imp. Cheque %     (sobre Subtotal 03)
+      = Neto (pre-IVA)
+
+      + IVA % (sobre Neto)
+      = Total Final
+
+    Config values are stored as WHOLE NUMBERS (15 = 15%), divided by 100 here.
+    Default values apply when a field is missing or null in DB.
+    """
+    directo = float(item.get("directo_total") or 0)
+
+    # Step 1: Indirect costs (all over directo)
+    imprevistos = float(config.get("imprevistos_pct") or 3)
+    estructura = float(config.get("estructura_pct") or 15)
+    jefatura = float(config.get("jefatura_pct") or 8)
+    logistica = float(config.get("logistica_pct") or 5)
+    herramientas = float(config.get("herramientas_pct") or 3)
+
+    pct_indirecto = (imprevistos + estructura + jefatura + logistica + herramientas) / 100
+    indirecto = round(directo * pct_indirecto, 2)
+    subtotal_02 = directo + indirecto
+
+    # Step 2: Beneficio over Subtotal 02 (NOT over directo)
+    beneficio_pct = float(config.get("beneficio_pct") or 10)
+    beneficio = round(subtotal_02 * beneficio_pct / 100, 2)
+    subtotal_03 = subtotal_02 + beneficio
+
+    # Step 3: Taxes over Subtotal 03
+    iibb = float(config.get("ingresos_brutos_pct") or 7)
+    cheque = float(config.get("imp_cheque_pct") or 1.2)
+    impuestos = round(subtotal_03 * (iibb + cheque) / 100, 2)
+    neto = subtotal_03 + impuestos
+
+    # Step 4: IVA over Neto
+    iva_pct = float(config.get("iva_pct") or 21)
+    iva = round(neto * iva_pct / 100, 2)
+    total_final = neto + iva
+
+    item["indirecto_total"] = indirecto
+    item["beneficio_total"] = beneficio
+    item["impuestos_total"] = impuestos
+    item["neto_total"] = round(neto, 2)
+    item["iva_total"] = iva
+    item["total_final"] = round(total_final, 2)
+
+    return item

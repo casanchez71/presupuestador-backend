@@ -100,6 +100,18 @@ export const budgetApi = {
   getItemResources: (budgetId: string, itemId: string) =>
     get<ItemResource[]>(`/budgets/${budgetId}/items/${itemId}/resources`),
 
+  createResource: (budgetId: string, itemId: string, data: Partial<ItemResource>) =>
+    post<ItemResource>(`/budgets/${budgetId}/items/${itemId}/resources`, data),
+
+  updateResource: (budgetId: string, itemId: string, resourceId: string, data: Partial<ItemResource>) =>
+    patch<ItemResource>(`/budgets/${budgetId}/items/${itemId}/resources/${resourceId}`, data),
+
+  deleteResource: (budgetId: string, itemId: string, resourceId: string) =>
+    del<void>(`/budgets/${budgetId}/items/${itemId}/resources/${resourceId}`),
+
+  cascadeRecalculate: (budgetId: string) =>
+    post<Budget>(`/budgets/${budgetId}/recalculate`),
+
   // Audits
   getItemAudits: (budgetId: string, itemId: string) =>
     get<ItemAudit[]>(`/budgets/${budgetId}/items/${itemId}/audits`),
@@ -127,6 +139,8 @@ export const budgetApi = {
   getIndirects: (id: string) => get<IndirectConfig>(`/budgets/${id}/indirects`),
   updateIndirects: (id: string, data: Partial<IndirectConfig>) =>
     patch<IndirectConfig>(`/budgets/${id}/indirects`, data),
+  applyIndirects: (id: string) =>
+    post<{ items_updated: number; total_neto: number }>(`/budgets/${id}/indirects`),
 
   // Analysis
   getAnalysis: (id: string) => get<AnalysisResponse>(`/budgets/${id}/analysis`),
@@ -143,6 +157,22 @@ export const budgetApi = {
   getVersions: (id: string) => get<BudgetVersion[]>(`/budgets/${id}/versions`),
   createVersion: (id: string) => post<BudgetVersion>(`/budgets/${id}/versions`),
   getVersion: (id: string, vid: string) => get<BudgetVersion>(`/budgets/${id}/versions/${vid}`),
+}
+
+// ─── Template API ──────────────────────────────────────────────────────────────
+
+export const templateApi = {
+  list: (categoria?: string) =>
+    get<any[]>(`/templates${categoria ? `?categoria=${encodeURIComponent(categoria)}` : ''}`),
+  categories: () => get<string[]>('/templates/categories'),
+  get: (id: string) => get<any>(`/templates/${id}`),
+  create: (data: any) => post<any>('/templates', data),
+  update: (id: string, data: any) => patch<any>(`/templates/${id}`, data),
+  remove: (id: string) => del<{ ok: boolean }>(`/templates/${id}`),
+  apply: (templateId: string, budgetId: string, itemId: string) =>
+    post<{ resources_created: number; item_updated: boolean }>(
+      `/templates/${templateId}/apply/${budgetId}/items/${itemId}`
+    ),
 }
 
 // ─── Catalog API ───────────────────────────────────────────────────────────────

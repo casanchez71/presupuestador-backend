@@ -1,0 +1,130 @@
+[
+  {
+    "nombre": "Hormigón H-30 columnas",
+    "unidad": "m3",
+    "categoria": "estructura",
+    "descripcion": "Columnas de hormigón armado H-30 con encofrado",
+    "recursos": [
+      {"tipo": "material", "codigo": "H30", "descripcion": "Hormigón H-30 elaborado", "unidad": "m3", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "HADN6", "descripcion": "Hierro ADN Ø6mm", "unidad": "barra", "cantidad_por_unidad": 9.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "HADN12", "descripcion": "Hierro ADN Ø12mm", "unidad": "barra", "cantidad_por_unidad": 2.3, "desperdicio_pct": 10},
+      {"tipo": "mo_material", "codigo": "F-GR2", "descripcion": "Fenólico 18mm (encofrado)", "unidad": "placa", "cantidad_por_unidad": 2.0, "desperdicio_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.17, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.13, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "equipo", "codigo": "BOMBA-H", "descripcion": "Bomba de hormigón", "unidad": "m3", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10}
+    ]
+  },
+  {
+    "nombre": "Hormigón H-21 losa",
+    "unidad": "m3",
+    "categoria": "estructura",
+    "descripcion": "Losa de hormigón armado H-21",
+    "recursos": [
+      {"tipo": "material", "codigo": "H21", "descripcion": "Hormigón H-21 elaborado", "unidad": "m3", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "HADN8", "descripcion": "Hierro ADN Ø8mm", "unidad": "barra", "cantidad_por_unidad": 6.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "HADN10", "descripcion": "Hierro ADN Ø10mm", "unidad": "barra", "cantidad_por_unidad": 3.0, "desperdicio_pct": 10},
+      {"tipo": "mo_material", "codigo": "F-GR2", "descripcion": "Fenólico 18mm (encofrado)", "unidad": "placa", "cantidad_por_unidad": 3.5, "desperdicio_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.22, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.17, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "equipo", "codigo": "BOMBA-H", "descripcion": "Bomba de hormigón", "unidad": "m3", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10}
+    ]
+  },
+  {
+    "nombre": "Mampostería ladrillo portante 18cm",
+    "unidad": "m2",
+    "categoria": "albañilería",
+    "descripcion": "Muro de ladrillo portante 18cm con mezcla",
+    "recursos": [
+      {"tipo": "material", "codigo": "LP18", "descripcion": "Ladrillo portante 18cm", "unidad": "u", "cantidad_por_unidad": 16, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "ARENA", "descripcion": "Arena gruesa", "unidad": "m3", "cantidad_por_unidad": 0.025, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CEM", "descripcion": "Cemento bolsa 50kg", "unidad": "bolsa", "cantidad_por_unidad": 0.218, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CAL", "descripcion": "Cal bolsa 25kg", "unidad": "bolsa", "cantidad_por_unidad": 0.213, "desperdicio_pct": 10},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.05, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.05, "dias_por_unidad": 1, "cargas_sociales_pct": 25}
+    ]
+  },
+  {
+    "nombre": "Revoque grueso interior",
+    "unidad": "m2",
+    "categoria": "albañilería",
+    "descripcion": "Revoque grueso interior sobre mampostería",
+    "recursos": [
+      {"tipo": "material", "codigo": "ARENA", "descripcion": "Arena gruesa", "unidad": "m3", "cantidad_por_unidad": 0.02, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CEM", "descripcion": "Cemento bolsa 50kg", "unidad": "bolsa", "cantidad_por_unidad": 0.16, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CAL", "descripcion": "Cal bolsa 25kg", "unidad": "bolsa", "cantidad_por_unidad": 0.16, "desperdicio_pct": 10},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.04, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.04, "dias_por_unidad": 1, "cargas_sociales_pct": 25}
+    ]
+  },
+  {
+    "nombre": "Revoque fino interior",
+    "unidad": "m2",
+    "categoria": "albañilería",
+    "descripcion": "Revoque fino interior sobre grueso",
+    "recursos": [
+      {"tipo": "material", "codigo": "ARENA-F", "descripcion": "Arena fina", "unidad": "m3", "cantidad_por_unidad": 0.01, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CEM", "descripcion": "Cemento bolsa 50kg", "unidad": "bolsa", "cantidad_por_unidad": 0.08, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CAL", "descripcion": "Cal bolsa 25kg", "unidad": "bolsa", "cantidad_por_unidad": 0.12, "desperdicio_pct": 10},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.033, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.033, "dias_por_unidad": 1, "cargas_sociales_pct": 25}
+    ]
+  },
+  {
+    "nombre": "Contrapiso",
+    "unidad": "m2",
+    "categoria": "albañilería",
+    "descripcion": "Contrapiso de hormigón pobre espesor 10cm",
+    "recursos": [
+      {"tipo": "material", "codigo": "H8", "descripcion": "Hormigón H-8 pobre", "unidad": "m3", "cantidad_por_unidad": 0.10, "desperdicio_pct": 10},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.025, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.025, "dias_por_unidad": 1, "cargas_sociales_pct": 25}
+    ]
+  },
+  {
+    "nombre": "Carpeta de nivelación",
+    "unidad": "m2",
+    "categoria": "albañilería",
+    "descripcion": "Carpeta de nivelación espesor 3cm para pisos",
+    "recursos": [
+      {"tipo": "material", "codigo": "ARENA", "descripcion": "Arena gruesa", "unidad": "m3", "cantidad_por_unidad": 0.015, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CEM", "descripcion": "Cemento bolsa 50kg", "unidad": "bolsa", "cantidad_por_unidad": 0.12, "desperdicio_pct": 15},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.02, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.02, "dias_por_unidad": 1, "cargas_sociales_pct": 25}
+    ]
+  },
+  {
+    "nombre": "Pintura interior látex",
+    "unidad": "m2",
+    "categoria": "terminaciones",
+    "descripcion": "Pintura interior látex 2 manos sobre revoque fino",
+    "recursos": [
+      {"tipo": "material", "codigo": "LATEX-INT", "descripcion": "Pintura látex interior", "unidad": "litro", "cantidad_por_unidad": 0.3, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "FIJADOR", "descripcion": "Fijador sellador", "unidad": "litro", "cantidad_por_unidad": 0.15, "desperdicio_pct": 10},
+      {"tipo": "subcontrato", "codigo": "SUB-PI", "descripcion": "Pintor interior", "unidad": "m2", "cantidad_por_unidad": 1.0, "desperdicio_pct": 0}
+    ]
+  },
+  {
+    "nombre": "Cerámica piso",
+    "unidad": "m2",
+    "categoria": "terminaciones",
+    "descripcion": "Colocación de cerámica de piso con pegamento",
+    "recursos": [
+      {"tipo": "material", "codigo": "CER-PISO", "descripcion": "Cerámica de piso", "unidad": "m2", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "PEG-CER", "descripcion": "Pegamento para cerámicos", "unidad": "bolsa", "cantidad_por_unidad": 0.2, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "PASTINA", "descripcion": "Pastina para juntas", "unidad": "kg", "cantidad_por_unidad": 0.5, "desperdicio_pct": 10},
+      {"tipo": "subcontrato", "codigo": "SUB-PIS", "descripcion": "Pisero (colocación)", "unidad": "m2", "cantidad_por_unidad": 1.0, "desperdicio_pct": 0}
+    ]
+  },
+  {
+    "nombre": "Instalación eléctrica por boca",
+    "unidad": "u",
+    "categoria": "instalaciones",
+    "descripcion": "Punto de luz o toma completo (caño, cable, caja, tapa)",
+    "recursos": [
+      {"tipo": "material", "codigo": "CABLE-2.5", "descripcion": "Cable 2.5mm²", "unidad": "m", "cantidad_por_unidad": 8, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CAÑO-E", "descripcion": "Caño corrugado eléctrico", "unidad": "m", "cantidad_por_unidad": 5, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "CAJA-E", "descripcion": "Caja de embutir rectangular", "unidad": "u", "cantidad_por_unidad": 1, "desperdicio_pct": 0},
+      {"tipo": "subcontrato", "codigo": "SUB-E-BOC", "descripcion": "Electricista por boca", "unidad": "u", "cantidad_por_unidad": 1, "desperdicio_pct": 0}
+    ]
+  }
+]

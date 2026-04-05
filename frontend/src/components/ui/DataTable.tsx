@@ -20,6 +20,10 @@ interface CellState {
 }
 
 export default function DataTable({ items, onEditItem }: Props) {
+  // Detect if any item has the extended columns populated
+  const hasImpuestos = items.some((i) => (i.impuestos_total ?? 0) > 0)
+  const hasIva = items.some((i) => (i.iva_total ?? 0) > 0)
+  const hasTotalFinal = items.some((i) => (i.total_final ?? 0) > 0)
   const [editing, setEditing] = useState<{ id: string; field: EditableField } | null>(null)
   const [editValue, setEditValue] = useState('')
   const [cellStates, setCellStates] = useState<Record<string, CellState>>({})
@@ -98,8 +102,11 @@ export default function DataTable({ items, onEditItem }: Props) {
       directo: acc.directo + item.directo_total,
       indirecto: acc.indirecto + item.indirecto_total,
       neto: acc.neto + item.neto_total,
+      impuestos: acc.impuestos + (item.impuestos_total ?? 0),
+      iva: acc.iva + (item.iva_total ?? 0),
+      totalFinal: acc.totalFinal + (item.total_final ?? 0),
     }),
-    { directo: 0, indirecto: 0, neto: 0 },
+    { directo: 0, indirecto: 0, neto: 0, impuestos: 0, iva: 0, totalFinal: 0 },
   )
 
   function renderEditableCell(item: BudgetItem, field: EditableField, format: (v: number) => string) {
@@ -197,6 +204,9 @@ export default function DataTable({ items, onEditItem }: Props) {
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Directo</th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Indirecto</th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Neto</th>
+            {hasImpuestos && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Impuestos</th>}
+            {hasIva && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">IVA</th>}
+            {hasTotalFinal && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-yellow-200">Total Final</th>}
             <th className="px-3 py-2.5 w-6" />
           </tr>
         </thead>
@@ -226,6 +236,21 @@ export default function DataTable({ items, onEditItem }: Props) {
               <td className="px-3 py-2.5 cost-cell font-bold text-[#143D34]">
                 {fmtCurrency(item.neto_total)}
               </td>
+              {hasImpuestos && (
+                <td className="px-3 py-2.5 cost-cell text-orange-600">
+                  {fmtCurrency(item.impuestos_total ?? 0)}
+                </td>
+              )}
+              {hasIva && (
+                <td className="px-3 py-2.5 cost-cell text-blue-600">
+                  {fmtCurrency(item.iva_total ?? 0)}
+                </td>
+              )}
+              {hasTotalFinal && (
+                <td className="px-3 py-2.5 cost-cell font-extrabold text-[#143D34]">
+                  {fmtCurrency(item.total_final ?? 0)}
+                </td>
+              )}
               <td className="px-3 py-2.5 text-center text-gray-300 cursor-pointer hover:text-gray-500 transition-colors">
                 <MoreVertical size={14} />
               </td>
@@ -239,6 +264,9 @@ export default function DataTable({ items, onEditItem }: Props) {
               <td className="px-3 py-3 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.directo)}</td>
               <td className="px-3 py-3 cost-cell text-[#E8663C] font-bold">{fmtCurrency(totals.indirecto)}</td>
               <td className="px-3 py-3 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.neto)}</td>
+              {hasImpuestos && <td className="px-3 py-3 cost-cell text-orange-600 font-bold">{fmtCurrency(totals.impuestos)}</td>}
+              {hasIva && <td className="px-3 py-3 cost-cell text-blue-600 font-bold">{fmtCurrency(totals.iva)}</td>}
+              {hasTotalFinal && <td className="px-3 py-3 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.totalFinal)}</td>}
               <td />
             </tr>
           </tfoot>

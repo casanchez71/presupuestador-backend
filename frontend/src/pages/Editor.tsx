@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Edit3, ChevronRight, Plus, CheckCircle, AlertCircle, X, Loader2, LayoutGrid, MousePointerClick, Command } from 'lucide-react'
+import { Edit3, ChevronRight, Plus, CheckCircle, AlertCircle, X, Loader2, LayoutGrid, MousePointerClick, Command, RefreshCw } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency, fmtNumber } from '../lib/format'
-import type { Budget, TreeNode, BudgetItem } from '../types'
+import type { Budget, TreeNode, BudgetItem, IndirectConfig } from '../types'
 import TreeView from '../components/ui/TreeView'
 import DataTable from '../components/ui/DataTable'
 import CostSummaryBar from '../components/ui/CostSummaryBar'
@@ -12,15 +12,6 @@ import ViewModeSelector from '../components/ui/ViewModeSelector'
 import AddItemForm from '../components/ui/AddItemForm'
 import { regroupItems } from '../lib/viewModes'
 import type { ViewMode } from '../lib/viewModes'
-
-
-const MARKUP_LINKS = [
-  { label: 'Estr', pct: 15 },
-  { label: 'Jef', pct: 8 },
-  { label: 'Log', pct: 5 },
-  { label: 'Herr', pct: 3 },
-  { label: 'Benef', pct: 10 },
-]
 
 const FIELD_LABELS: Record<string, string> = {
   cantidad: 'Cantidad',
@@ -49,6 +40,8 @@ export default function Editor() {
   const [viewMode, setViewMode] = useState<ViewMode>('rubro')
   const [originalTree, setOriginalTree] = useState<TreeNode[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
+  const [indirectConfig, setIndirectConfig] = useState<IndirectConfig | null>(null)
+  const [recalculating, setRecalculating] = useState(false)
 
   // Section CRUD state
   const [showSectionForm, setShowSectionForm] = useState(false)
@@ -100,14 +93,16 @@ export default function Editor() {
   /** Refresh tree and items from the API */
   const refreshData = useCallback(async () => {
     if (!id) return
-    const [{ budget: b, tree: t }, fetchedItems] = await Promise.all([
+    const [{ budget: b, tree: t }, fetchedItems, indirects] = await Promise.all([
       budgetApi.getFull(id),
       budgetApi.getItems(id),
+      budgetApi.getIndirects(id).catch(() => null),
     ])
     setBudget(b)
     setTree(t)
     setOriginalTree(t)
     setAllItems(fetchedItems)
+    if (indirects) setIndirectConfig(indirects)
     return { tree: t, items: fetchedItems }
   }, [id])
 
@@ -126,13 +121,14 @@ export default function Editor() {
       .finally(() => setLoading(false))
   }, [id, refreshData, getItemsForNode])
 
-  // Handle inline cell edit
+  // Handle inline cell edit — patches item, then auto-applies indirects to update markup chain
   const handleEditItem = useCallback(async (itemId: string, field: string, oldValue: number, newValue: number) => {
     if (!id) throw new Error('No budget ID')
 
     const fieldLabel = FIELD_LABELS[field] ?? field
     const formatVal = field === 'cantidad' ? (v: number) => fmtNumber(v, 2) : fmtCurrency
 
+    // Step 1: PATCH the item (backend recalculates mat_total, mo_total, directo_total)
     const result = await budgetApi.updateItem(id, itemId, { [field]: newValue })
     const updatedItem = (result as unknown as { item: BudgetItem }).item
     if (!updatedItem) throw new Error('No updated item in response')
@@ -144,8 +140,21 @@ export default function Editor() {
       prev.map((item) => (item.id === itemId ? { ...item, ...updatedItem } : item)),
     )
 
+    // Step 2: Auto-apply indirects to propagate markup chain (indirecto, beneficio, neto)
+    try {
+      await budgetApi.applyIndirects(id)
+      // Refresh all items so the table shows updated neto/indirecto columns
+      const freshItems = await budgetApi.getItems(id)
+      setAllItems(freshItems)
+      if (selectedNode) {
+        setItems(getItemsForNode(selectedNode, freshItems))
+      }
+    } catch {
+      // Non-critical: direct totals are already saved, just markup chain failed
+    }
+
     addToast(`${fieldLabel} actualizado: ${formatVal(oldValue)} → ${formatVal(newValue)}`)
-  }, [id, addToast])
+  }, [id, addToast, selectedNode, getItemsForNode])
 
   /** Suggest next section code */
   const suggestNextSectionCode = useCallback((): string => {
@@ -279,6 +288,24 @@ export default function Editor() {
     setTimeout(() => sectionCodigoRef.current?.focus(), 50)
   }, [suggestNextSectionCode])
 
+  /** Cascade recalculate — recalculates all items from resources through to total_final */
+  const handleCascadeRecalculate = useCallback(async () => {
+    if (!id) return
+    setRecalculating(true)
+    try {
+      await budgetApi.cascadeRecalculate(id)
+      const data = await refreshData()
+      if (data && selectedNode) {
+        setItems(getItemsForNode(selectedNode, data.items))
+      }
+      addToast('Recálculo completo realizado')
+    } catch (err) {
+      addToast(`Error en recálculo: ${err instanceof Error ? err.message : 'desconocido'}`, 'error')
+    } finally {
+      setRecalculating(false)
+    }
+  }, [id, selectedNode, refreshData, getItemsForNode, addToast])
+
   const selectedLabel = selectedNode
     ? `${selectedNode.code ? selectedNode.code + ' ' : ''}${selectedNode.description ?? ''}`
     : '\u2014'
@@ -287,7 +314,39 @@ export default function Editor() {
   const mo = items.reduce((s, i) => s + i.mo_total, 0)
   const directo = items.reduce((s, i) => s + i.directo_total, 0)
   const indirecto = items.reduce((s, i) => s + i.indirecto_total, 0)
+  const beneficio = items.reduce((s, i) => s + i.beneficio_total, 0)
   const neto = items.reduce((s, i) => s + i.neto_total, 0)
+  const totalFinal = items.reduce((s, i) => s + (i.total_final ?? 0), 0)
+
+  // Build markup links from loaded config for the chain display
+  const markupLinks = indirectConfig
+    ? [
+        { label: 'Imprevistos', pct: indirectConfig.imprevistos_pct ?? 3 },
+        { label: 'Estructura', pct: indirectConfig.estructura_pct },
+        { label: 'Jefatura', pct: indirectConfig.jefatura_pct },
+        { label: 'Logística', pct: indirectConfig.logistica_pct },
+        { label: 'Herramientas', pct: indirectConfig.herramientas_pct },
+        { label: 'Beneficio', pct: indirectConfig.beneficio_pct ?? 25 },
+      ]
+    : [
+        { label: 'Estr', pct: 15 },
+        { label: 'Jef', pct: 8 },
+        { label: 'Log', pct: 5 },
+        { label: 'Herr', pct: 3 },
+        { label: 'Benef', pct: 25 },
+      ]
+
+  const totalEffectivePct = indirectConfig
+    ? (indirectConfig.imprevistos_pct ?? 3) +
+      indirectConfig.estructura_pct +
+      indirectConfig.jefatura_pct +
+      indirectConfig.logistica_pct +
+      indirectConfig.herramientas_pct +
+      (indirectConfig.beneficio_pct ?? 25) +
+      (indirectConfig.ingresos_brutos_pct ?? 7) +
+      (indirectConfig.imp_cheque_pct ?? 1.2) +
+      (indirectConfig.iva_pct ?? 21)
+    : 41
 
   return (
     <div className="p-4 fade-in">
@@ -382,6 +441,17 @@ export default function Editor() {
             className="bg-white border border-gray-200 text-gray-700 px-3.5 py-1.5 rounded-xl text-xs font-medium hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
           >
             Exportar
+          </button>
+          <button
+            onClick={handleCascadeRecalculate}
+            disabled={recalculating}
+            title="Recalcula todos los ítems desde los recursos hasta el Total Final"
+            className="bg-white border border-[#2D8D68]/40 text-[#2D8D68] px-3.5 py-1.5 rounded-xl text-xs font-medium hover:bg-[#E8F5EE] disabled:opacity-60 transition-all duration-200 flex items-center gap-1.5"
+          >
+            {recalculating
+              ? <Loader2 size={12} className="animate-spin" />
+              : <RefreshCw size={12} />}
+            Recálculo
           </button>
           <button
             onClick={() => id && budgetApi.createVersion(id)}
@@ -528,8 +598,17 @@ export default function Editor() {
             </div>
           </div>
 
-          <CostSummaryBar mat={mat} mo={mo} directo={directo} indirecto={indirecto} neto={neto} indirectoPct={31} />
-          <MarkupChainDisplay directo={directo} neto={neto} links={MARKUP_LINKS} budgetId={id} />
+          <CostSummaryBar
+            mat={mat}
+            mo={mo}
+            directo={directo}
+            indirecto={indirecto}
+            beneficio={beneficio}
+            neto={neto}
+            totalFinal={totalFinal > 0 ? totalFinal : undefined}
+            indirectoPct={Math.round(totalEffectivePct)}
+          />
+          <MarkupChainDisplay directo={directo} neto={neto} links={markupLinks} budgetId={id} />
 
           {showAddForm && selectedNode && (
             <AddItemForm

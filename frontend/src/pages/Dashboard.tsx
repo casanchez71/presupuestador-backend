@@ -21,6 +21,31 @@ function timeAgo(dateStr: string): string {
   return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
 }
 
+const statusLabels: Record<string, string> = {
+  draft: 'Borrador',
+  review: 'En Revisión',
+  approved: 'Aprobado',
+  sent: 'Enviado',
+  active: 'Activo',
+  // Spanish aliases already stored in DB
+  borrador: 'Borrador',
+  activo: 'Activo',
+  aprobado: 'Aprobado',
+  presentado: 'Enviado',
+}
+
+const statusColors: Record<string, string> = {
+  draft: 'bg-gray-100 text-gray-700',
+  review: 'bg-yellow-100 text-yellow-800',
+  approved: 'bg-green-100 text-green-800',
+  sent: 'bg-blue-100 text-blue-800',
+  active: 'bg-emerald-100 text-emerald-800',
+  borrador: 'bg-gray-100 text-gray-700',
+  activo: 'bg-emerald-100 text-emerald-800',
+  aprobado: 'bg-green-100 text-green-800',
+  presentado: 'bg-blue-100 text-blue-800',
+}
+
 export default function Dashboard() {
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [analyses, setAnalyses] = useState<Record<string, AnalysisResponse>>({})
@@ -137,7 +162,7 @@ export default function Dashboard() {
               const a = analyses[b.id]
               const dateStr = b.updated_at || b.created_at
               const itemsText = a ? `${a.items_count} items` : ''
-              const statusText = b.status === 'draft' ? 'Borrador' : b.status === 'approved' ? 'Aprobado' : (b.status || '')
+              const statusText = statusLabels[b.status?.toLowerCase() ?? ''] ?? (b.status || '')
               const detail = [statusText, itemsText].filter(Boolean).join(' - ')
               return (
                 <div

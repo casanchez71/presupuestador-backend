@@ -15,7 +15,10 @@ from app.schemas import (
     BudgetItemCreate,
     BudgetItemUpdate,
     BudgetUpdate,
+    BulkResourceCreate,
     CreateFullBudget,
+    ResourceCreate,
+    ResourceUpdate,
     SectionCreate,
 )
 from app.tree import build_tree
@@ -23,7 +26,7 @@ from app.tree import build_tree
 logger = logging.getLogger(__name__)
 
 # Fields that are user-editable (not calculated). Used for audit trail.
-AUDITABLE_FIELDS = {"cantidad", "mat_unitario", "mo_unitario", "description", "unidad", "code"}
+AUDITABLE_FIELDS = {"cantidad", "mat_unitario", "mo_unitario", "description", "unidad", "code", "notas_calculo"}
 
 router = APIRouter()
 
@@ -423,6 +426,291 @@ async def get_item_resources(
         .execute()
     )
     return result.data or []
+
+
+# ── Resource helpers ────────────────────────────────────────────────────────
+
+
+def _calc_resource_subtotal(resource: dict) -> tuple[float, float]:
+    """Return (cantidad_efectiva, subtotal) for a resource dict."""
+    tipo = resource.get("tipo", "")
+    precio_unitario = float(resource.get("precio_unitario") or 0)
+
+    if tipo == "mano_obra":
+        trabajadores = float(resource.get("trabajadores") or 0)
+        dias = float(resource.get("dias") or 0)
+        cargas_sociales_pct = float(resource.get("cargas_sociales_pct") or 25)
+        cantidad_efectiva = round(trabajadores * dias * (1 + cargas_sociales_pct / 100), 2)
+    else:
+        cantidad = float(resource.get("cantidad") or 0)
+        desperdicio_pct = float(resource.get("desperdicio_pct") or 0)
+        cantidad_efectiva = cantidad * (1 + desperdicio_pct / 100)
+
+    subtotal = round(cantidad_efectiva * precio_unitario, 2)
+    return cantidad_efectiva, subtotal
+
+
+def _recalc_item_from_resources(db, item_id: str, org_id: str) -> None:
+    """Fetch all resources for an item and recalculate its unit prices."""
+    resources_result = (
+        db.table("item_resources")
+        .select("*")
+        .eq("item_id", item_id)
+        .eq("org_id", org_id)
+        .execute()
+    )
+    resources = resources_result.data or []
+
+    mat_sum = sum(r.get("subtotal") or 0 for r in resources if r.get("tipo") == "material")
+    mo_sum = sum(r.get("subtotal") or 0 for r in resources if r.get("tipo") == "mano_obra")
+    eq_sum = sum(r.get("subtotal") or 0 for r in resources if r.get("tipo") == "equipo")
+    mat_ind_sum = sum(r.get("subtotal") or 0 for r in resources if r.get("tipo") == "mo_material")
+    sub_sum = sum(r.get("subtotal") or 0 for r in resources if r.get("tipo") == "subcontrato")
+
+    item_result = (
+        db.table("budget_items")
+        .select("cantidad, indirecto_total, beneficio_total")
+        .eq("id", item_id)
+        .single()
+        .execute()
+    )
+    if not item_result.data:
+        return
+
+    item = item_result.data
+    qty = item.get("cantidad") or 1
+
+    mat_unitario = round(mat_sum / qty, 2)
+    mo_unitario = round((mo_sum + eq_sum + mat_ind_sum + sub_sum) / qty, 2)
+    mat_total = round(mat_unitario * qty, 2)
+    mo_total = round(mo_unitario * qty, 2)
+    directo_total = mat_total + mo_total
+    neto_total = directo_total + (item.get("indirecto_total") or 0) + (item.get("beneficio_total") or 0)
+
+    db.table("budget_items").update({
+        "mat_unitario": mat_unitario,
+        "mo_unitario": mo_unitario,
+        "mat_total": mat_total,
+        "mo_total": mo_total,
+        "directo_total": round(directo_total, 2),
+        "neto_total": round(neto_total, 2),
+    }).eq("id", item_id).execute()
+
+
+# ── Resource CRUD ───────────────────────────────────────────────────────────
+
+
+@router.post("/{budget_id}/items/{item_id}/resources")
+async def create_resource(
+    budget_id: UUID,
+    item_id: UUID,
+    payload: ResourceCreate,
+    user: dict = Depends(get_current_user),
+):
+    """Add a single resource to an item and recalculate the item's unit prices."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    iid = str(item_id)
+
+    # Verify item belongs to budget and org
+    item = (
+        db.table("budget_items")
+        .select("id")
+        .eq("id", iid)
+        .eq("budget_id", str(budget_id))
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not item.data:
+        raise HTTPException(404, "Item no encontrado")
+
+    resource_data = payload.model_dump()
+    cantidad_efectiva, subtotal = _calc_resource_subtotal(resource_data)
+
+    row = {
+        "item_id": iid,
+        "org_id": org_id,
+        "tipo": payload.tipo,
+        "codigo": payload.codigo,
+        "descripcion": payload.descripcion,
+        "unidad": payload.unidad,
+        "cantidad": payload.cantidad or 0,
+        "desperdicio_pct": payload.desperdicio_pct or 0,
+        "cantidad_efectiva": cantidad_efectiva,
+        "precio_unitario": payload.precio_unitario or 0,
+        "subtotal": subtotal,
+        "trabajadores": payload.trabajadores or 0,
+        "dias": payload.dias or 0,
+        "cargas_sociales_pct": payload.cargas_sociales_pct or 25,
+        "catalog_entry_id": payload.catalog_entry_id,
+    }
+
+    result = db.table("item_resources").insert(row).execute()
+    if not result.data:
+        raise HTTPException(500, "Error al crear recurso")
+
+    _recalc_item_from_resources(db, iid, org_id)
+    return result.data[0]
+
+
+@router.patch("/{budget_id}/items/{item_id}/resources/{resource_id}")
+async def update_resource(
+    budget_id: UUID,
+    item_id: UUID,
+    resource_id: UUID,
+    payload: ResourceUpdate,
+    user: dict = Depends(get_current_user),
+):
+    """Update a resource and recalculate the item's unit prices."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    iid = str(item_id)
+    rid = str(resource_id)
+
+    # Verify item belongs to budget and org
+    item = (
+        db.table("budget_items")
+        .select("id")
+        .eq("id", iid)
+        .eq("budget_id", str(budget_id))
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not item.data:
+        raise HTTPException(404, "Item no encontrado")
+
+    existing = (
+        db.table("item_resources")
+        .select("*")
+        .eq("id", rid)
+        .eq("item_id", iid)
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not existing.data:
+        raise HTTPException(404, "Recurso no encontrado")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    merged = {**existing.data, **update_data}
+    cantidad_efectiva, subtotal = _calc_resource_subtotal(merged)
+
+    update_data["cantidad_efectiva"] = cantidad_efectiva
+    update_data["subtotal"] = subtotal
+
+    result = (
+        db.table("item_resources")
+        .update(update_data)
+        .eq("id", rid)
+        .execute()
+    )
+    if not result.data:
+        raise HTTPException(500, "Error al actualizar recurso")
+
+    _recalc_item_from_resources(db, iid, org_id)
+    return result.data[0]
+
+
+@router.delete("/{budget_id}/items/{item_id}/resources/{resource_id}", status_code=204)
+async def delete_resource(
+    budget_id: UUID,
+    item_id: UUID,
+    resource_id: UUID,
+    user: dict = Depends(get_current_user),
+):
+    """Delete a resource and recalculate the item's unit prices."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    iid = str(item_id)
+    rid = str(resource_id)
+
+    # Verify item belongs to budget and org
+    item = (
+        db.table("budget_items")
+        .select("id")
+        .eq("id", iid)
+        .eq("budget_id", str(budget_id))
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not item.data:
+        raise HTTPException(404, "Item no encontrado")
+
+    existing = (
+        db.table("item_resources")
+        .select("id")
+        .eq("id", rid)
+        .eq("item_id", iid)
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not existing.data:
+        raise HTTPException(404, "Recurso no encontrado")
+
+    db.table("item_resources").delete().eq("id", rid).execute()
+    _recalc_item_from_resources(db, iid, org_id)
+
+
+@router.post("/{budget_id}/items/{item_id}/resources/bulk")
+async def bulk_create_resources(
+    budget_id: UUID,
+    item_id: UUID,
+    payload: BulkResourceCreate,
+    user: dict = Depends(get_current_user),
+):
+    """Create multiple resources at once and recalculate the item's unit prices once."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    iid = str(item_id)
+
+    # Verify item belongs to budget and org
+    item = (
+        db.table("budget_items")
+        .select("id")
+        .eq("id", iid)
+        .eq("budget_id", str(budget_id))
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not item.data:
+        raise HTTPException(404, "Item no encontrado")
+
+    rows = []
+    for resource in payload.resources:
+        resource_data = resource.model_dump()
+        cantidad_efectiva, subtotal = _calc_resource_subtotal(resource_data)
+        rows.append({
+            "item_id": iid,
+            "org_id": org_id,
+            "tipo": resource.tipo,
+            "codigo": resource.codigo,
+            "descripcion": resource.descripcion,
+            "unidad": resource.unidad,
+            "cantidad": resource.cantidad or 0,
+            "desperdicio_pct": resource.desperdicio_pct or 0,
+            "cantidad_efectiva": cantidad_efectiva,
+            "precio_unitario": resource.precio_unitario or 0,
+            "subtotal": subtotal,
+            "trabajadores": resource.trabajadores or 0,
+            "dias": resource.dias or 0,
+            "cargas_sociales_pct": resource.cargas_sociales_pct or 25,
+            "catalog_entry_id": resource.catalog_entry_id,
+        })
+
+    if not rows:
+        return []
+
+    result = db.table("item_resources").insert(rows).execute()
+    if not result.data:
+        raise HTTPException(500, "Error al crear recursos")
+
+    _recalc_item_from_resources(db, iid, org_id)
+    return result.data
 
 
 # ── Sections ────────────────────────────────────────────────────────────────
