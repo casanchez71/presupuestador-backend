@@ -101,12 +101,13 @@ export default function DataTable({ items, onEditItem }: Props) {
     (acc, item) => ({
       directo: acc.directo + item.directo_total,
       indirecto: acc.indirecto + item.indirecto_total,
+      beneficio: acc.beneficio + (item.beneficio_total ?? 0),
       neto: acc.neto + item.neto_total,
       impuestos: acc.impuestos + (item.impuestos_total ?? 0),
       iva: acc.iva + (item.iva_total ?? 0),
       totalFinal: acc.totalFinal + (item.total_final ?? 0),
     }),
-    { directo: 0, indirecto: 0, neto: 0, impuestos: 0, iva: 0, totalFinal: 0 },
+    { directo: 0, indirecto: 0, beneficio: 0, neto: 0, impuestos: 0, iva: 0, totalFinal: 0 },
   )
 
   function renderEditableCell(item: BudgetItem, field: EditableField, format: (v: number) => string) {
@@ -171,7 +172,7 @@ export default function DataTable({ items, onEditItem }: Props) {
   }
 
   return (
-    <div className="overflow-auto max-h-[calc(100vh-400px)]">
+    <div className="overflow-x-auto">
       {/* Save flash animation */}
       <style>{`
         @keyframes saveFlash {
@@ -184,29 +185,30 @@ export default function DataTable({ items, onEditItem }: Props) {
         }
       `}</style>
       <table className="w-full text-xs">
-        <thead className="bg-[#E8F5EE] text-[#143D34] sticky top-0 z-10">
-          <tr>
+        <thead>
+          <tr className="bg-[#143D34] text-white">
             <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Codigo</th>
             <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Descripcion</th>
             <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Unidad</th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               Cant.
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#143D34]/40" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
             </th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               MAT Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#143D34]/40" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
             </th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               MO Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#143D34]/40" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
             </th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">Directo</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">Indirecto</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">Neto</th>
-            {hasImpuestos && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">Impuestos</th>}
-            {hasIva && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">IVA</th>}
-            {hasTotalFinal && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">Total Final</th>}
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Directo</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Indirecto</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Beneficio</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Neto</th>
+            {hasImpuestos && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Impuestos</th>}
+            {hasIva && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">IVA</th>}
+            {hasTotalFinal && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Total Final</th>}
             <th className="px-3 py-2.5 w-6" />
           </tr>
         </thead>
@@ -214,7 +216,9 @@ export default function DataTable({ items, onEditItem }: Props) {
           {items.map((item, idx) => (
             <tr
               key={item.id}
-              className={`${idx % 2 === 1 ? 'bg-gray-50/30' : ''} hover:bg-[#E8F5EE]/20 transition-colors duration-150`}
+              className={`border-b border-gray-100 hover:bg-[#E8F5EE]/30 transition-colors duration-150 ${
+                idx % 2 === 1 ? 'bg-gray-50/50' : 'bg-white'
+              }`}
             >
               <td className="px-3 py-2.5 font-mono text-[10px] text-gray-400">{item.code}</td>
               <td className="px-3 py-2.5">
@@ -230,6 +234,9 @@ export default function DataTable({ items, onEditItem }: Props) {
               </td>
               <td className="px-3 py-2.5 cost-cell text-gray-400">
                 {fmtCurrency(item.indirecto_total)}
+              </td>
+              <td className="px-3 py-2.5 cost-cell text-amber-600">
+                {fmtCurrency(item.beneficio_total ?? 0)}
               </td>
               <td className="px-3 py-2.5 cost-cell font-bold text-[#143D34]">
                 {fmtCurrency(item.neto_total)}
@@ -256,15 +263,16 @@ export default function DataTable({ items, onEditItem }: Props) {
           ))}
         </tbody>
         {items.length > 0 && (
-          <tfoot className="bg-[#E8F5EE] text-[#143D34] font-semibold sticky bottom-0 z-10">
-            <tr className="text-xs">
-              <td colSpan={6} className="px-3 py-3 text-right text-[#143D34]/60 uppercase text-[10px] tracking-wider">Total seccion</td>
-              <td className="px-3 py-3 cost-cell font-bold">{fmtCurrency(totals.directo)}</td>
-              <td className="px-3 py-3 cost-cell font-bold">{fmtCurrency(totals.indirecto)}</td>
-              <td className="px-3 py-3 cost-cell font-extrabold text-sm">{fmtCurrency(totals.neto)}</td>
-              {hasImpuestos && <td className="px-3 py-3 cost-cell font-bold">{fmtCurrency(totals.impuestos)}</td>}
-              {hasIva && <td className="px-3 py-3 cost-cell font-bold">{fmtCurrency(totals.iva)}</td>}
-              {hasTotalFinal && <td className="px-3 py-3 cost-cell font-extrabold text-sm">{fmtCurrency(totals.totalFinal)}</td>}
+          <tfoot>
+            <tr className="bg-gradient-to-r from-gray-50 to-white font-semibold text-xs border-t-2 border-gray-200">
+              <td colSpan={6} className="px-3 py-3 text-right text-gray-400 uppercase text-[10px] tracking-wider">Total seccion</td>
+              <td className="px-3 py-3 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.directo)}</td>
+              <td className="px-3 py-3 cost-cell text-[#E8663C] font-bold">{fmtCurrency(totals.indirecto)}</td>
+              <td className="px-3 py-3 cost-cell text-amber-600 font-bold">{fmtCurrency(totals.beneficio)}</td>
+              <td className="px-3 py-3 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.neto)}</td>
+              {hasImpuestos && <td className="px-3 py-3 cost-cell text-orange-600 font-bold">{fmtCurrency(totals.impuestos)}</td>}
+              {hasIva && <td className="px-3 py-3 cost-cell text-blue-600 font-bold">{fmtCurrency(totals.iva)}</td>}
+              {hasTotalFinal && <td className="px-3 py-3 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.totalFinal)}</td>}
               <td />
             </tr>
           </tfoot>

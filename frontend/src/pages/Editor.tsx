@@ -13,6 +13,7 @@ import AddItemForm from '../components/ui/AddItemForm'
 import { regroupItems } from '../lib/viewModes'
 import type { ViewMode } from '../lib/viewModes'
 
+
 const FIELD_LABELS: Record<string, string> = {
   cantidad: 'Cantidad',
   mat_unitario: 'MAT Unit',
@@ -333,7 +334,7 @@ export default function Editor() {
         { label: 'Jef', pct: 8 },
         { label: 'Log', pct: 5 },
         { label: 'Herr', pct: 3 },
-        { label: 'Benef', pct: 25 },
+        { label: 'Benef', pct: 10 },
       ]
 
   const totalEffectivePct = indirectConfig

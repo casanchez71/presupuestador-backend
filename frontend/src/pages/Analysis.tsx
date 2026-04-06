@@ -38,6 +38,7 @@ function buildSections(items: BudgetItem[]): SectionRow[] {
   }
 
   if (sectionHeaders.length === 0) {
+    // Fallback: treat all items as one section
     const totals = sumItems(items)
     return [{ name: 'Total', ...totals }]
   }
@@ -204,10 +205,9 @@ export default function Analysis() {
           <div className="text-2xl font-bold text-gray-900">{fmtCurrency(directoTotal)}</div>
           <div className="text-[10px] text-gray-500 mt-1">MAT {fmtCurrency(matTotal)} + MO {fmtCurrency(moTotal)}</div>
         </div>
-        <div className="bg-[#143D34] rounded-xl p-4 text-white">
-          <div className="text-[10px] text-[#E0A33A] mb-1">TOTAL FINAL c/IVA</div>
-          <div className="text-2xl font-bold">{fmtCurrency(totalFinalGlobal > 0 ? totalFinalGlobal : netoTotal)}</div>
-          <div className="text-[10px] text-[#E0A33A]/70 mt-0.5">Neto: {fmtCurrency(netoTotal)}</div>
+        <div className="bg-[#2D8D68] rounded-xl p-4 text-white">
+          <div className="text-[10px] text-[#E0A33A] mb-1">NETO TOTAL</div>
+          <div className="text-2xl font-bold">{fmtCurrency(netoTotal)}</div>
         </div>
       </div>
 
@@ -215,44 +215,43 @@ export default function Analysis() {
       <div className="grid grid-cols-7 gap-2 mb-4">
         <div className="bg-white rounded-lg border p-3 text-center">
           <div className="text-[10px] text-gray-400">Materiales</div>
-          <div className="text-base font-bold text-gray-800">{fmtCurrency(matTotal)}</div>
+          <div className="text-lg font-bold text-gray-800">{fmtCurrency(matTotal)}</div>
         </div>
         <div className="bg-white rounded-lg border p-3 text-center">
           <div className="text-[10px] text-gray-400">Mano de Obra</div>
-          <div className="text-base font-bold text-gray-800">{fmtCurrency(moTotal)}</div>
+          <div className="text-lg font-bold text-gray-800">{fmtCurrency(moTotal)}</div>
         </div>
         <div className="bg-blue-50 rounded-lg border border-blue-200 p-3 text-center">
           <div className="text-[10px] text-blue-500">Directo</div>
-          <div className="text-base font-bold text-blue-700">{fmtCurrency(directoTotal)}</div>
+          <div className="text-lg font-bold text-blue-700">{fmtCurrency(directoTotal)}</div>
         </div>
         <div className="bg-orange-50 rounded-lg border border-orange-200 p-3 text-center">
           <div className="text-[10px] text-orange-500">Indirectos</div>
-          <div className="text-base font-bold text-orange-600">{fmtCurrency(indirectoTotal)}</div>
+          <div className="text-lg font-bold text-orange-600">{fmtCurrency(indirectoTotal)}</div>
         </div>
-        <div className="bg-amber-50 rounded-lg border border-amber-200 p-3 text-center">
-          <div className="text-[10px] text-amber-600">Beneficio</div>
-          <div className="text-base font-bold text-amber-700">{fmtCurrency(beneficioTotal)}</div>
+        <div className="bg-white rounded-lg border p-3 text-center">
+          <div className="text-[10px] text-gray-400">Beneficio</div>
+          <div className="text-lg font-bold text-gray-800">{fmtCurrency(beneficioTotal)}</div>
         </div>
-        <div className="bg-emerald-50 rounded-lg border border-emerald-200 p-3 text-center">
-          <div className="text-[10px] text-emerald-600">Neto</div>
-          <div className="text-base font-bold text-emerald-700">{fmtCurrency(netoTotal)}</div>
+        <div className="bg-[#2D8D68] rounded-lg p-3 text-center text-white">
+          <div className="text-[10px] text-[#E0A33A]">NETO</div>
+          <div className="text-lg font-bold">{fmtCurrency(netoTotal)}</div>
         </div>
         <div className="bg-[#143D34] rounded-lg p-3 text-center text-white">
           <div className="text-[10px] text-[#E0A33A]">TOTAL c/IVA</div>
-          <div className="text-base font-bold">{fmtCurrency(totalFinalGlobal > 0 ? totalFinalGlobal : netoTotal)}</div>
+          <div className="text-lg font-bold">{fmtCurrency(totalFinalGlobal > 0 ? totalFinalGlobal : netoTotal)}</div>
         </div>
       </div>
 
       {/* Section table */}
       <div className="bg-white rounded-xl border overflow-hidden">
-        <div className="bg-[#E8F5EE]/30 px-3 py-2">
-          <span className="text-[10px] font-bold text-[#2D8D68] tracking-wide">
+        <div className="bg-gray-50 px-3 py-2 border-b">
+          <span className="text-[10px] font-bold text-gray-500 tracking-wide">
             DESGLOSE POR {VIEW_MODE_LABELS[viewMode].toUpperCase()}
           </span>
         </div>
-        <div className="overflow-auto max-h-[calc(100vh-420px)]">
         <table className="w-full text-xs">
-          <thead className="bg-[#E8F5EE] text-[#143D34] sticky top-0 z-10">
+          <thead className="bg-gray-100 text-gray-600">
             <tr>
               <th className="px-3 py-2 text-left font-semibold">Seccion</th>
               <th className="px-3 py-2 text-right font-semibold">MAT</th>
@@ -273,14 +272,14 @@ export default function Analysis() {
               </tr>
             ) : (
               sections.map((s, i) => (
-                <tr key={i} className={`${i % 2 === 1 ? 'bg-gray-50/30' : ''} hover:bg-[#E8F5EE]/20 transition-colors`}>
+                <tr key={i} className="border-b hover:bg-gray-50">
                   <td className="px-3 py-2 font-medium text-gray-800">{s.name}</td>
                   <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mat)}</td>
                   <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mo)}</td>
                   <td className="px-3 py-2 cost-cell text-blue-700 font-medium">{fmtCurrency(s.directo)}</td>
                   <td className="px-3 py-2 cost-cell">{fmtCurrency(s.indirecto)}</td>
-                  <td className="px-3 py-2 cost-cell text-amber-700">{fmtCurrency(s.benef)}</td>
-                  <td className="px-3 py-2 cost-cell text-emerald-700 font-medium">{fmtCurrency(s.neto)}</td>
+                  <td className="px-3 py-2 cost-cell">{fmtCurrency(s.benef)}</td>
+                  <td className="px-3 py-2 cost-cell font-bold">{fmtCurrency(s.neto)}</td>
                   <td className="px-3 py-2 cost-cell font-bold text-[#143D34]">
                     {s.total_final > 0 ? fmtCurrency(s.total_final) : '—'}
                   </td>
@@ -288,22 +287,21 @@ export default function Analysis() {
               ))
             )}
           </tbody>
-          <tfoot className="bg-[#E8F5EE] text-[#143D34] font-semibold sticky bottom-0 z-10">
+          <tfoot className="bg-[#2D8D68] text-white font-semibold">
             <tr>
               <td className="px-3 py-3">TOTAL OBRA</td>
               <td className="px-3 py-3 cost-cell">{fmtCurrency(matTotal)}</td>
               <td className="px-3 py-3 cost-cell">{fmtCurrency(moTotal)}</td>
-              <td className="px-3 py-3 cost-cell">{fmtCurrency(directoTotal)}</td>
+              <td className="px-3 py-3 cost-cell text-green-200">{fmtCurrency(directoTotal)}</td>
               <td className="px-3 py-3 cost-cell">{fmtCurrency(indirectoTotal)}</td>
               <td className="px-3 py-3 cost-cell">{fmtCurrency(beneficioTotal)}</td>
-              <td className="px-3 py-3 cost-cell">{fmtCurrency(netoTotal)}</td>
-              <td className="px-3 py-3 cost-cell text-base font-bold">
+              <td className="px-3 py-3 cost-cell text-[#E0A33A] text-base font-bold">{fmtCurrency(netoTotal)}</td>
+              <td className="px-3 py-3 cost-cell text-[#E0A33A] text-base font-bold">
                 {fmtCurrency(totalFinalGlobal > 0 ? totalFinalGlobal : netoTotal)}
               </td>
             </tr>
           </tfoot>
         </table>
-        </div>
       </div>
     </div>
   )
