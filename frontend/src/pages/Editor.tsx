@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Edit3, ChevronRight, Plus, CheckCircle, AlertCircle, X, Loader2, LayoutGrid, MousePointerClick, Command, RefreshCw } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency, fmtNumber } from '../lib/format'
-import type { Budget, TreeNode, BudgetItem, IndirectConfig } from '../types'
+import type { Budget, TreeNode, BudgetItem } from '../types'
 import TreeView from '../components/ui/TreeView'
 import DataTable from '../components/ui/DataTable'
 import CostSummaryBar from '../components/ui/CostSummaryBar'
@@ -13,6 +13,14 @@ import AddItemForm from '../components/ui/AddItemForm'
 import { regroupItems } from '../lib/viewModes'
 import type { ViewMode } from '../lib/viewModes'
 
+
+const MARKUP_LINKS = [
+  { label: 'Estr', pct: 15 },
+  { label: 'Jef', pct: 8 },
+  { label: 'Log', pct: 5 },
+  { label: 'Herr', pct: 3 },
+  { label: 'Benef', pct: 10 },
+]
 
 const FIELD_LABELS: Record<string, string> = {
   cantidad: 'Cantidad',
@@ -41,8 +49,18 @@ export default function Editor() {
   const [viewMode, setViewMode] = useState<ViewMode>('rubro')
   const [originalTree, setOriginalTree] = useState<TreeNode[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
-  const [indirectConfig, setIndirectConfig] = useState<IndirectConfig | null>(null)
+  const [indirectConfig, setIndirectConfig] = useState<{estructura_pct: number, jefatura_pct: number, logistica_pct: number, herramientas_pct: number} | null>(null)
+
   const [recalculating, setRecalculating] = useState(false)
+  const [showStatusMenu, setShowStatusMenu] = useState(false)
+  const [statusChanging, setStatusChanging] = useState(false)
+
+  const STATUS_OPTIONS = [
+    { value: 'draft', label: 'Borrador', badgeCls: 'bg-gray-100 text-gray-600 border-gray-200' },
+    { value: 'review', label: 'En Revisión', badgeCls: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+    { value: 'approved', label: 'Aprobado', badgeCls: 'bg-green-100 text-green-700 border-green-200' },
+    { value: 'sent', label: 'Enviado', badgeCls: 'bg-blue-100 text-blue-700 border-blue-200' },
+  ]
 
   // Section CRUD state
   const [showSectionForm, setShowSectionForm] = useState(false)
@@ -59,23 +77,37 @@ export default function Editor() {
 
   /** Return items that belong to a given tree node. */
   const getItemsForNode = useCallback((node: TreeNode, all: BudgetItem[]): BudgetItem[] => {
-    if (node.id.startsWith('__virtual_') && node.children.length > 0) {
-      return node.children as BudgetItem[]
+    // Virtual nodes from regrouping (piso/material/gremio views)
+    // children are TreeNode wrappers via itemToLeaf — look up real BudgetItems by ID
+    if (node.id.startsWith('__virtual_')) {
+      if (node.children && node.children.length > 0) {
+        const childIds = new Set(node.children.map((c) => c.id))
+        return all.filter((i) => childIds.has(i.id))
+      }
+      return []
     }
+
+    const code = node.code ?? ''
+    const isLeafItem = code.includes('.')
+
+    // Leaf item (e.g. "1.1", "3.2"): ALWAYS show itself only
+    if (isLeafItem) {
+      return all.filter((i) => i.id === node.id)
+    }
+
+    // Section header (e.g. "1", "2"): show all items in this section
+    const sectionMatch = code.match(/^(\d+)/)
+    if (sectionMatch) {
+      const prefix = sectionMatch[1] + '.'
+      const byCode = all.filter((i) => i.code?.startsWith(prefix) && i.id !== node.id)
+      if (byCode.length > 0) return byCode
+    }
+
+    // Fallback: items with this node as parent
     const byParent = all.filter((i) => i.parent_id === node.id)
     if (byParent.length > 0) return byParent
-    const code = node.code ?? ''
-    // Only treat as section header if code is just a number (e.g. "1", "2") or "N-" pattern
-    // Items like "1.1" should NOT be treated as sections
-    const isSection = /^\d+\s*[-.]?\s*\D/.test(code) && !code.includes('.')
-    if (isSection) {
-      const sectionMatch = code.match(/^(\d+)/)
-      if (sectionMatch) {
-        const prefix = sectionMatch[1] + '.'
-        return all.filter((i) => i.code?.startsWith(prefix) && i.id !== node.id)
-      }
-    }
-    // Leaf item: show itself in the table
+
+    // Nothing found: show self
     return all.filter((i) => i.id === node.id)
   }, [])
 
@@ -91,19 +123,37 @@ export default function Editor() {
     setToasts((prev) => prev.filter((t) => t.id !== tid))
   }, [])
 
+  const handleStatusChange = useCallback(async (newStatus: string) => {
+    if (!id) return
+    setStatusChanging(true)
+    setShowStatusMenu(false)
+    try {
+      const updated = await budgetApi.update(id, { status: newStatus })
+      setBudget((prev) => prev ? { ...prev, status: updated.status } : prev)
+      const label = [
+        { value: 'draft', label: 'Borrador' },
+        { value: 'review', label: 'En Revisión' },
+        { value: 'approved', label: 'Aprobado' },
+        { value: 'sent', label: 'Enviado' },
+      ].find((s) => s.value === newStatus)?.label ?? newStatus
+      addToast(`Estado actualizado: ${label}`)
+    } catch {
+      addToast('Error al cambiar estado', 'error')
+    }
+    setStatusChanging(false)
+  }, [id, addToast])
+
   /** Refresh tree and items from the API */
   const refreshData = useCallback(async () => {
     if (!id) return
-    const [{ budget: b, tree: t }, fetchedItems, indirects] = await Promise.all([
+    const [{ budget: b, tree: t }, fetchedItems] = await Promise.all([
       budgetApi.getFull(id),
       budgetApi.getItems(id),
-      budgetApi.getIndirects(id).catch(() => null),
     ])
     setBudget(b)
     setTree(t)
     setOriginalTree(t)
     setAllItems(fetchedItems)
-    if (indirects) setIndirectConfig(indirects)
     return { tree: t, items: fetchedItems }
   }, [id])
 
@@ -120,16 +170,32 @@ export default function Editor() {
       })
       .catch(() => {/* keep empty state */})
       .finally(() => setLoading(false))
+    budgetApi.getIndirects(id).then(config => {
+      if (config) setIndirectConfig(config)
+    }).catch(() => {})
   }, [id, refreshData, getItemsForNode])
 
-  // Handle inline cell edit — patches item, then auto-applies indirects to update markup chain
+  async function handleRecalculate() {
+    if (!id || recalculating) return
+    setRecalculating(true)
+    try {
+      await budgetApi.recalculate(id)
+      await budgetApi.applyIndirects(id)
+      await refreshData()
+    } catch (err) {
+      console.error('Error recalculating:', err)
+    } finally {
+      setRecalculating(false)
+    }
+  }
+
+  // Handle inline cell edit
   const handleEditItem = useCallback(async (itemId: string, field: string, oldValue: number, newValue: number) => {
     if (!id) throw new Error('No budget ID')
 
     const fieldLabel = FIELD_LABELS[field] ?? field
     const formatVal = field === 'cantidad' ? (v: number) => fmtNumber(v, 2) : fmtCurrency
 
-    // Step 1: PATCH the item (backend recalculates mat_total, mo_total, directo_total)
     const result = await budgetApi.updateItem(id, itemId, { [field]: newValue })
     const updatedItem = (result as unknown as { item: BudgetItem }).item
     if (!updatedItem) throw new Error('No updated item in response')
@@ -141,21 +207,8 @@ export default function Editor() {
       prev.map((item) => (item.id === itemId ? { ...item, ...updatedItem } : item)),
     )
 
-    // Step 2: Auto-apply indirects to propagate markup chain (indirecto, beneficio, neto)
-    try {
-      await budgetApi.applyIndirects(id)
-      // Refresh all items so the table shows updated neto/indirecto columns
-      const freshItems = await budgetApi.getItems(id)
-      setAllItems(freshItems)
-      if (selectedNode) {
-        setItems(getItemsForNode(selectedNode, freshItems))
-      }
-    } catch {
-      // Non-critical: direct totals are already saved, just markup chain failed
-    }
-
     addToast(`${fieldLabel} actualizado: ${formatVal(oldValue)} → ${formatVal(newValue)}`)
-  }, [id, addToast, selectedNode, getItemsForNode])
+  }, [id, addToast])
 
   /** Suggest next section code */
   const suggestNextSectionCode = useCallback((): string => {
@@ -253,6 +306,22 @@ export default function Editor() {
     return `${prefix}${maxSub + 1}`
   }, [selectedNode, items])
 
+  /** Find the section parent for the currently selected node */
+  const findSectionParent = useCallback((): TreeNode | null => {
+    if (!selectedNode) return null
+    const code = selectedNode.code ?? ''
+    // If already a section (no dot in code), use it
+    if (!code.includes('.')) return selectedNode
+    // Extract section number and find the section node
+    const sectionNum = code.split('.')[0]
+    const section = originalTree.find((n) => {
+      const c = n.code ?? ''
+      const m = c.match(/^(\d+)/)
+      return m && m[1] === sectionNum && !c.includes('.')
+    })
+    return section ?? selectedNode
+  }, [selectedNode, originalTree])
+
   /** Handle adding a new item */
   const handleAddItem = useCallback(async (data: {
     code: string
@@ -264,6 +333,9 @@ export default function Editor() {
   }) => {
     if (!id || !selectedNode) throw new Error('No budget/section selected')
 
+    // Always use the section as parent, not the leaf item
+    const sectionNode = findSectionParent()
+
     const newItem = await budgetApi.createItem(id, {
       code: data.code,
       description: data.description,
@@ -271,7 +343,7 @@ export default function Editor() {
       cantidad: data.cantidad,
       mat_unitario: data.mat_unitario,
       mo_unitario: data.mo_unitario,
-      parent_id: selectedNode.id,
+      parent_id: sectionNode?.id ?? selectedNode.id,
     })
 
     const refreshedItems = await budgetApi.getItems(id)
@@ -279,7 +351,7 @@ export default function Editor() {
     setItems(getItemsForNode(selectedNode, refreshedItems))
     setShowAddForm(false)
     addToast(`Item agregado: ${newItem.code ?? data.code} ${data.description}`)
-  }, [id, selectedNode, addToast, getItemsForNode])
+  }, [id, selectedNode, addToast, getItemsForNode, findSectionParent])
 
   // Open section form with suggested code
   const openSectionForm = useCallback(() => {
@@ -289,24 +361,6 @@ export default function Editor() {
     setTimeout(() => sectionCodigoRef.current?.focus(), 50)
   }, [suggestNextSectionCode])
 
-  /** Cascade recalculate — recalculates all items from resources through to total_final */
-  const handleCascadeRecalculate = useCallback(async () => {
-    if (!id) return
-    setRecalculating(true)
-    try {
-      await budgetApi.cascadeRecalculate(id)
-      const data = await refreshData()
-      if (data && selectedNode) {
-        setItems(getItemsForNode(selectedNode, data.items))
-      }
-      addToast('Recálculo completo realizado')
-    } catch (err) {
-      addToast(`Error en recálculo: ${err instanceof Error ? err.message : 'desconocido'}`, 'error')
-    } finally {
-      setRecalculating(false)
-    }
-  }, [id, selectedNode, refreshData, getItemsForNode, addToast])
-
   const selectedLabel = selectedNode
     ? `${selectedNode.code ? selectedNode.code + ' ' : ''}${selectedNode.description ?? ''}`
     : '\u2014'
@@ -315,39 +369,18 @@ export default function Editor() {
   const mo = items.reduce((s, i) => s + i.mo_total, 0)
   const directo = items.reduce((s, i) => s + i.directo_total, 0)
   const indirecto = items.reduce((s, i) => s + i.indirecto_total, 0)
-  const beneficio = items.reduce((s, i) => s + i.beneficio_total, 0)
   const neto = items.reduce((s, i) => s + i.neto_total, 0)
-  const totalFinal = items.reduce((s, i) => s + (i.total_final ?? 0), 0)
 
-  // Build markup links from loaded config for the chain display
-  const markupLinks = indirectConfig
-    ? [
-        { label: 'Imprevistos', pct: indirectConfig.imprevistos_pct ?? 3 },
-        { label: 'Estructura', pct: indirectConfig.estructura_pct },
-        { label: 'Jefatura', pct: indirectConfig.jefatura_pct },
-        { label: 'Logística', pct: indirectConfig.logistica_pct },
-        { label: 'Herramientas', pct: indirectConfig.herramientas_pct },
-        { label: 'Beneficio', pct: indirectConfig.beneficio_pct ?? 25 },
-      ]
-    : [
-        { label: 'Estr', pct: 15 },
-        { label: 'Jef', pct: 8 },
-        { label: 'Log', pct: 5 },
-        { label: 'Herr', pct: 3 },
-        { label: 'Benef', pct: 10 },
-      ]
+  const indirectoPct = indirectConfig
+    ? Math.round(indirectConfig.estructura_pct + indirectConfig.jefatura_pct + indirectConfig.logistica_pct + indirectConfig.herramientas_pct)
+    : null
 
-  const totalEffectivePct = indirectConfig
-    ? (indirectConfig.imprevistos_pct ?? 3) +
-      indirectConfig.estructura_pct +
-      indirectConfig.jefatura_pct +
-      indirectConfig.logistica_pct +
-      indirectConfig.herramientas_pct +
-      (indirectConfig.beneficio_pct ?? 25) +
-      (indirectConfig.ingresos_brutos_pct ?? 7) +
-      (indirectConfig.imp_cheque_pct ?? 1.2) +
-      (indirectConfig.iva_pct ?? 21)
-    : 41
+  const markupLinks = indirectConfig ? [
+    { label: 'Estructura', pct: Math.round(indirectConfig.estructura_pct) },
+    { label: 'Jefatura', pct: Math.round(indirectConfig.jefatura_pct) },
+    { label: 'Logística', pct: Math.round(indirectConfig.logistica_pct) },
+    { label: 'Herramientas', pct: Math.round(indirectConfig.herramientas_pct) },
+  ] : MARKUP_LINKS
 
   return (
     <div className="p-4 fade-in h-full flex flex-col">
@@ -429,8 +462,43 @@ export default function Editor() {
           <h1 className="text-xl font-extrabold text-gray-900">
             {budget?.name?.toUpperCase() ?? 'PRESUPUESTO'}
           </h1>
+          {/* Status badge / dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowStatusMenu((v) => !v)}
+              disabled={statusChanging}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium transition-all hover:opacity-80 disabled:opacity-60 ${STATUS_OPTIONS.find((s) => s.value === (budget?.status ?? 'draft'))?.badgeCls ?? 'bg-gray-100 text-gray-600 border-gray-200'}`}
+            >
+              {STATUS_OPTIONS.find((s) => s.value === (budget?.status ?? 'draft'))?.label ?? 'Borrador'}
+              <span className="text-[10px] opacity-60">▾</span>
+            </button>
+            {showStatusMenu && (
+              <>
+              <div className="fixed inset-0 z-20" onClick={() => setShowStatusMenu(false)} />
+              <div className="absolute left-0 top-full mt-1 z-30 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[140px]">
+                {STATUS_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleStatusChange(opt.value)}
+                    className={`w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-gray-50 flex items-center gap-2 ${opt.value === (budget?.status ?? 'draft') ? 'opacity-50 cursor-default' : ''}`}
+                  >
+                    <span className={`px-2 py-0.5 rounded-full border text-xs ${opt.badgeCls}`}>{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+              </>
+            )}
+          </div>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleRecalculate}
+            disabled={recalculating}
+            className="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={13} className={recalculating ? 'animate-spin' : ''} />
+            {recalculating ? 'Recalculando...' : 'Recalcular'}
+          </button>
           <button
             onClick={() => navigate(`/app/budgets/${id ?? '1'}/ai`)}
             className="bg-white border border-gray-200 text-gray-700 px-3.5 py-1.5 rounded-xl text-xs font-medium hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
@@ -442,17 +510,6 @@ export default function Editor() {
             className="bg-white border border-gray-200 text-gray-700 px-3.5 py-1.5 rounded-xl text-xs font-medium hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
           >
             Exportar
-          </button>
-          <button
-            onClick={handleCascadeRecalculate}
-            disabled={recalculating}
-            title="Recalcula todos los ítems desde los recursos hasta el Total Final"
-            className="bg-white border border-[#2D8D68]/40 text-[#2D8D68] px-3.5 py-1.5 rounded-xl text-xs font-medium hover:bg-[#E8F5EE] disabled:opacity-60 transition-all duration-200 flex items-center gap-1.5"
-          >
-            {recalculating
-              ? <Loader2 size={12} className="animate-spin" />
-              : <RefreshCw size={12} />}
-            Recálculo
           </button>
           <button
             onClick={() => id && budgetApi.createVersion(id)}
@@ -475,16 +532,16 @@ export default function Editor() {
         <ViewModeSelector
           mode={viewMode}
           onChange={(m) => {
-            setViewMode(m)
             setSelectedNode(null)
             setItems([])
+            setViewMode(m)
           }}
         />
       </div>
 
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Tree Panel */}
-        <div className="w-64 bg-white rounded-2xl shadow-sm border border-gray-200/80 flex-shrink-0 overflow-hidden">
+        <div className="w-64 bg-white rounded-2xl shadow-sm border border-gray-200/80 flex-shrink-0 overflow-hidden flex flex-col">
           {/* Gradient header */}
           <div className="bg-gradient-to-r from-[#143D34] to-[#2D8D68] text-white px-4 py-3 flex justify-between items-center">
             <span className="font-semibold text-xs tracking-wide">Estructura de Obra</span>
@@ -543,7 +600,7 @@ export default function Editor() {
             </div>
           )}
 
-          <div className="px-2 pt-2.5 pb-2 max-h-[480px] overflow-y-auto">
+          <div className="px-2 pt-2.5 pb-2 flex-1 overflow-y-auto">
             <TreeView
               nodes={displayTree}
               selectedId={selectedNode?.id}
@@ -581,34 +638,10 @@ export default function Editor() {
                   <Plus size={12} /> Item
                 </button>
               )}
-              {items.length === 1 ? (
-                <button
-                  onClick={() => navigate(`/app/budgets/${id ?? '1'}/item/${items[0].id}`)}
-                  className="text-xs bg-gradient-to-r from-[#2D8D68] to-[#1B5E4B] hover:from-[#1B5E4B] hover:to-[#143D34] text-white px-3 py-1.5 rounded-xl font-medium transition-all duration-200 shadow-sm"
-                >
-                  Ver detalle
-                </button>
-              ) : selectedNode && (!selectedNode.children || selectedNode.children.length === 0) ? (
-                <button
-                  onClick={() => navigate(`/app/budgets/${id ?? '1'}/item/${selectedNode.id}`)}
-                  className="text-xs bg-gradient-to-r from-[#2D8D68] to-[#1B5E4B] hover:from-[#1B5E4B] hover:to-[#143D34] text-white px-3 py-1.5 rounded-xl font-medium transition-all duration-200 shadow-sm"
-                >
-                  Ver detalle
-                </button>
-              ) : null}
             </div>
           </div>
 
-          <CostSummaryBar
-            mat={mat}
-            mo={mo}
-            directo={directo}
-            indirecto={indirecto}
-            beneficio={beneficio}
-            neto={neto}
-            totalFinal={totalFinal > 0 ? totalFinal : undefined}
-            indirectoPct={Math.round(totalEffectivePct)}
-          />
+          <CostSummaryBar mat={mat} mo={mo} directo={directo} indirecto={indirecto} neto={neto} indirectoPct={indirectoPct ?? undefined} />
           <MarkupChainDisplay directo={directo} neto={neto} links={markupLinks} budgetId={id} />
 
           {showAddForm && selectedNode && (
@@ -619,6 +652,7 @@ export default function Editor() {
             />
           )}
 
+          <div className="flex-1 overflow-y-auto">
           {items.length === 0 ? (
             <div className="py-16 px-8 text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-100 mb-4">
@@ -642,15 +676,26 @@ export default function Editor() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 overflow-auto">
-              <DataTable
-                items={items}
-                onEditItem={handleEditItem}
-                onViewDetail={(itemId) => navigate(`/app/budgets/${id}/item/${itemId}`)}
-              />
-            </div>
+            <DataTable
+              items={items}
+              onEditItem={handleEditItem}
+              onViewDetail={(itemId) => navigate(`/app/budgets/${id}/item/${itemId}`)}
+              onDeleteItem={async (itemId, desc) => {
+                if (!id) return
+                try {
+                  await budgetApi.deleteItem(id, itemId)
+                  const refreshedItems = await budgetApi.getItems(id)
+                  setAllItems(refreshedItems)
+                  if (selectedNode) setItems(getItemsForNode(selectedNode, refreshedItems))
+                  addToast(`Item eliminado: ${desc}`)
+                } catch (err) {
+                  addToast(`Error al eliminar: ${err instanceof Error ? err.message : 'desconocido'}`, 'error')
+                }
+              }}
+            />
           )}
 
+          </div>
           <div className="px-5 py-2.5 bg-gradient-to-r from-[#E8F5EE] to-[#E8F5EE]/50 text-[10px] text-[#1B5E4B] border-t flex items-center gap-1.5 flex-shrink-0">
             <span className="w-1 h-1 rounded-full bg-[#2D8D68] inline-block" />
             Click en celdas punteadas para editar. Totales se recalculan automaticamente por la cadena de markups.

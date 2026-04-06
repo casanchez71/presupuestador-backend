@@ -4,6 +4,19 @@ Todas las versiones notables del proyecto se documentan aca.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 Versionado segun [Semantic Versioning](https://semver.org/).
 
+## [3.1.1] — 2026-04-06
+
+### Corregido
+- Frontend restaurado a v3.1.0 (commit d0d2c3f) tras regresion estetica causada por Sprints
+- Null safety en format.ts (fmtCurrency/fmtNumber/fmtPercent aceptan null/undefined)
+- ACUERDOS_CON_CARLOS.md restaurado con historial completo (sobreescrito por error)
+
+### Nota
+- Todos los cambios backend de v3.0.0 se mantienen (motor calculo, IA, templates, etc.)
+- Solo se restauro el frontend a la estetica aprobada por Carlos en v3.1.0
+
+---
+
 ## [3.0.0] — 2026-04-05
 
 ### Agregado

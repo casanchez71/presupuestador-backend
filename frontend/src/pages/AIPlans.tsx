@@ -11,7 +11,7 @@ import {
   Edit3,
   AlertCircle,
 } from 'lucide-react'
-import { budgetApi, catalogApi } from '../lib/api'
+import { budgetApi } from '../lib/api'
 import type { AIAnalysisResult, AISeccion, AIItem, AIItemToInsert } from '../types'
 import FileUpload from '../components/ui/FileUpload'
 
@@ -70,15 +70,7 @@ export default function AIPlans() {
   const [done, setDone] = useState(false)
   const [insertedCount, setInsertedCount] = useState(0)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [hasCatalogs, setHasCatalogs] = useState<boolean | null>(null)
   const analyzeStepRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  // Load catalog status on mount
-  useEffect(() => {
-    catalogApi.list()
-      .then((list) => setHasCatalogs(list.length > 0))
-      .catch(() => setHasCatalogs(false))
-  }, [])
 
   // Cleanup preview URL on unmount
   useEffect(() => {
@@ -232,23 +224,9 @@ export default function AIPlans() {
         <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
         <h1 className="text-xl font-extrabold text-gray-900">ANALISIS DE PLANOS CON IA</h1>
       </div>
-      <p className="text-gray-500 text-sm mb-3 ml-4">
+      <p className="text-gray-500 text-sm mb-6 ml-4">
         Subi una foto o PDF del plano. La IA identifica ambientes, estructura e instalaciones y genera items de presupuesto.
       </p>
-
-      {/* Catalog status indicator */}
-      {hasCatalogs === true && (
-        <div className="mb-4 ml-4 inline-flex items-center gap-2 bg-[#E8F5EE] border border-green-200 text-[#1B5E4B] text-xs font-medium px-3 py-1.5 rounded-full">
-          <span className="w-2 h-2 rounded-full bg-[#2D8D68] flex-shrink-0" />
-          Catálogos cargados — La IA usará tus precios
-        </div>
-      )}
-      {hasCatalogs === false && (
-        <div className="mb-4 ml-4 inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium px-3 py-1.5 rounded-full">
-          <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
-          Sin catálogos — Cargá una lista de precios para costeo automático
-        </div>
-      )}
 
       {/* Error banner */}
       {error && (
