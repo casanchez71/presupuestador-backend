@@ -172,7 +172,7 @@ export default function DataTable({ items, onEditItem }: Props) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-auto max-h-full">
       {/* Save flash animation */}
       <style>{`
         @keyframes saveFlash {
@@ -185,30 +185,30 @@ export default function DataTable({ items, onEditItem }: Props) {
         }
       `}</style>
       <table className="w-full text-xs">
-        <thead>
-          <tr className="bg-[#143D34] text-white">
+        <thead className="sticky top-0 z-10">
+          <tr className="bg-[#E8F5EE] text-[#143D34]">
             <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Codigo</th>
             <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Descripcion</th>
             <th className="px-3 py-2.5 text-left font-semibold text-[11px] tracking-wide">Unidad</th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               Cant.
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#143D34]/40" /> : null}
             </th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               MAT Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#143D34]/40" /> : null}
             </th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide">
               MO Unit
-              {onEditItem ? <Pencil size={8} className="inline ml-1 text-white/50" /> : null}
+              {onEditItem ? <Pencil size={8} className="inline ml-1 text-[#143D34]/40" /> : null}
             </th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Directo</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Indirecto</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Beneficio</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Neto</th>
-            {hasImpuestos && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Impuestos</th>}
-            {hasIva && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">IVA</th>}
-            {hasTotalFinal && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Total Final</th>}
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-[#143D34]/70">Directo</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-[#143D34]/70">Indirecto</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-[#143D34]/70">Beneficio</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-[#143D34]/70">Neto</th>
+            {hasImpuestos && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-[#143D34]/70">Impuestos</th>}
+            {hasIva && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-[#143D34]/70">IVA</th>}
+            {hasTotalFinal && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-[#143D34]/70">Total Final</th>}
             <th className="px-3 py-2.5 w-6" />
           </tr>
         </thead>
@@ -263,8 +263,8 @@ export default function DataTable({ items, onEditItem }: Props) {
           ))}
         </tbody>
         {items.length > 0 && (
-          <tfoot>
-            <tr className="bg-gradient-to-r from-gray-50 to-white font-semibold text-xs border-t-2 border-gray-200">
+          <tfoot className="sticky bottom-0 z-10">
+            <tr className="bg-[#E8F5EE] font-semibold text-xs border-t border-[#2D8D68]/20">
               <td colSpan={6} className="px-3 py-3 text-right text-gray-400 uppercase text-[10px] tracking-wider">Total seccion</td>
               <td className="px-3 py-3 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.directo)}</td>
               <td className="px-3 py-3 cost-cell text-[#E8663C] font-bold">{fmtCurrency(totals.indirecto)}</td>
