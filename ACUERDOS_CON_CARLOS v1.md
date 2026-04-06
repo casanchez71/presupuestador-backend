@@ -43,29 +43,8 @@
 29. ~~Línea negra divisoria~~ — MarkupChainDisplay border suavizado a gray-100
 30. ~~Marca "editado por humano"~~ — badge sutil en ItemDetail cuando item tiene edits manuales
 
-## SESION 2026-04-06 (madrugada ~01:00 a ~05:00 AR) ✅
-31. ~~Analisis de Excels TERRAC~~ — 4 Excels analizados formula por formula (55 hojas)
-32. ~~Motor calculo cascada~~ — calc_resource_subtotal, calc_item_from_resources, calc_cascade_indirects
-33. ~~IA con contexto de catalogo~~ — prompt incluye codigos del catalogo del usuario
-34. ~~IA genera recursos~~ — items CON composicion (materiales, MO, equipos, subcontratos)
-35. ~~Migracion 003~~ — tipos mo_material, campos MO, impuestos, tabla item_templates
-36. ~~12 templates TERRAC~~ — con codigos reales (H30, ARG, LP18, MO-OF, SUB-PI, etc.)
-37. ~~Pagina Templates en sidebar~~ — CRUD completo con filtro por categoria
-38. ~~Boton "Cargar template" en ItemDetail~~ — modal de seleccion, aplica recursos
-39. ~~Cadena Markups completa~~ — 9 campos: 5 indirectos + beneficio + IIBB + cheque + IVA
-40. ~~Backend templates router~~ — CRUD + apply endpoint
-41. ~~CHANGELOG v3.0.0~~ — documentada toda la sesion
-42. ~~Arquitectura 3 capas~~ — Universal (85%) / Sector (10%) / Cliente (5%)
-43. ~~MANUAL_REVISION_SOLE.md~~ — para colaboradora de revision
-44. ~~Null safety en format.ts~~ — fmtCurrency/fmtNumber/fmtPercent toleran null
-45. ~~RESTAURACION v3.1.0~~ — archivos frontend restaurados del commit d0d2c3f (pre-merge)
-
-### LECCION APRENDIDA (04-06):
-Los agentes de los Sprints sobreescribieron archivos de estetica aprobados.
-**REGLA NUEVA:** Antes de deployar cambios de frontend, verificar diff de archivos de estetica contra la version aprobada.
-
 ## EN CURSO (trabajando ahora) 🔧
-(restauracion completa — verificando deploy)
+(nada pendiente — esperando feedback de Carlos)
 
 ## BACKLOG PRIORITARIO (próximos) 🔴
 27. **Vista por planta REAL** — Items se REPITEN por piso (PB, Piso 1, Piso 2... Azotea) cada uno con su cantidad. CRITICO para Terrac.

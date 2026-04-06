@@ -4,58 +4,68 @@ Todas las versiones notables del proyecto se documentan aca.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 Versionado segun [Semantic Versioning](https://semver.org/).
 
-## [3.1.0] — 2026-04-04
-
-### Agregado
-- **Botón borrar items**: icono Trash2 por fila con confirmación inline (Si/No)
-- **Botón ver detalle por fila**: icono Eye por cada item, reemplaza botón global ambiguo
-- **Selector de vistas en Analysis**: 4 vistas (Rubro/Piso/Material/Gremio) con reagrupación de tabla
-- **Botón ? popover**: explicación de cada vista, reemplaza tooltips cortados
-- **Separación click flecha vs texto en árbol**: flecha expande/contrae, texto selecciona
-
-### Cambiado
-- **CostSummaryBar rediseñado**: de 5 cards individuales a barra horizontal con divide-x (igual que Analysis)
-- **DataTable header**: de negro bg-[#143D34] a teal suave bg-[#E8F5EE] — consistente con la estética
-- **DataTable filas**: sin bordes pesados, alternado sutil, hover teal
-- **DataTable footer**: teal suave en vez de gradient gris
-- **Analysis layout**: h-full flex flex-col, solo las filas scrollean, header fijo
-- **Analysis summary**: barra horizontal compacta con divide-x
-- **Renombrado Tipo → Gremio**: más claro para el usuario
-- **Scroll global corregido**: html/body/#root height:100% overflow:hidden
+## [3.1.1] — 2026-04-06
 
 ### Corregido
-- **Fix error 422**: createItem envía array como espera el backend
-- **Fix items mostrando datos equivocados**: getItemsForNode prioriza leaf-first
-- **Fix parent_id al agregar items**: findSectionParent busca la sección, no usa leaf seleccionado
-- **Fix "Ver detalle" navegaba al item equivocado**: eliminado botón global, reemplazado por ojo por fila
+- Frontend restaurado a v3.1.0 (commit d0d2c3f) tras regresion estetica causada por Sprints
+- Null safety en format.ts (fmtCurrency/fmtNumber/fmtPercent aceptan null/undefined)
+- ACUERDOS_CON_CARLOS.md restaurado con historial completo (sobreescrito por error)
 
-## [3.0.0] — 2026-04-04
+### Nota
+- Todos los cambios backend de v3.0.0 se mantienen (motor calculo, IA, templates, etc.)
+- Solo se restauro el frontend a la estetica aprobada por Carlos en v3.1.0
+
+---
+
+## [3.0.0] — 2026-04-05
 
 ### Agregado
-- **Frontend completo**: React 19 + Vite + Tailwind + TypeScript (10 pantallas)
-- **Wizard nuevo proyecto**: 5 pasos (datos, precios, estructura, indirectos, resultado)
-- **IA + Planos**: GPT-4o Vision analiza planos arquitectonicos y sugiere items automaticamente
-- **Lista generica de tareas**: 42 tareas comunes de construccion en 6 categorias (obrador, estructura, albanileria, instalaciones, terminaciones, especiales)
-- **4 vistas multiples en Editor**: por rubro, por piso/planta, por material, por tipo de trabajo
-- **Edicion inline**: click en celdas punteadas, recalculo automatico de totales
-- **Audit trail**: tabla item_audits registra cada cambio manual (campo, valor viejo/nuevo, usuario)
-- **Sidebar contextual**: detecta si estas dentro de un presupuesto y muestra links relevantes
-- **Exportar PDF/Excel**: botones conectados al backend con manejo de errores
-- **Catalogos**: aplicar lista de precios a presupuesto desde frontend
-- **Actividad reciente**: Dashboard muestra ultimos presupuestos reales con timestamps
-- **Deploy**: Vercel (frontend) + Render (backend) con CORS configurado
+- Motor de calculo cascada: recursos → unitarios → directo → indirectos → beneficio → impuestos → IVA → total final (`app/calculations.py`)
+- IA con contexto de catalogo: GPT-4o Vision recibe los catalogos del usuario y genera items CON recursos desglosados (`app/routers/ai.py`)
+- CRUD de recursos por item: crear, editar, eliminar, bulk (`app/routers/budgets.py`)
+- Endpoint cascade-recalculate: recalcula TODO desde recursos hasta total final (`app/routers/analysis.py`)
+- Sistema de templates reutilizables: CRUD + aplicar a items (`app/routers/templates.py`)
+- 12 templates TERRAC con codigos reales (H30, LP18, ARG, MO-OF, SUB-PI, etc.)
+- Pagina Templates en sidebar (`frontend/src/pages/Templates.tsx`)
+- Boton "Cargar template" en detalle de item con modal de seleccion
+- ItemDetail reescrito: 5 secciones de recursos (Materiales, MO Personas, MO Equipos, Mat. Indirectos, Subcontratos)
+- Cadena de Markups completa: 9 campos editables (Imprevistos, Estructura, Jefatura, Logistica, Herramientas, Beneficio, IIBB, Imp.Cheque, IVA)
+- CostSummaryBar expandible: 5 tarjetas base + Beneficio y Total c/IVA cuando hay datos
+- Auto-recalculo al editar celdas (sin boton)
+- Boton "Recalculo completo" para cascada desde recursos
+- Indicador de catalogos en wizard IA (verde si hay, amarillo si no)
+- Badges de estado en espanol (Borrador, En Revision, Aprobado, Enviado)
+- Migracion 003: tipos mo_material, campos MO (trabajadores/dias/cargas), impuestos, tabla item_templates
+- Documentacion: PLAN_FLUJO_AUTOMATICO.md, INSTRUCTIVO_EJEMPLO_COMPLETO.md, ARQUITECTURA_PLATAFORMA.md, MANUAL_REVISION_SOLE.md
+
+### Corregido
+- NewProject crash: StepEstructura no destructuraba templateTasks de props (bug pre-existente)
+- Boton detalle por fila invisible: Editor no pasaba onViewDetail a DataTable
+- Analysis KPIs desaparecidos: restauradas 3 tarjetas grandes + 6 KPI mini
+- Pantalla en blanco por null en format: fmtCurrency/fmtNumber/fmtPercent ahora toleran null
+- CostSummaryBar crash: props beneficio/totalFinal no aceptadas por version vieja
+- Deploy Render fallaba: CatalogEntryCreate/Update schemas perdidas durante merge
+- Altura hardcodeada calc(100vh-340px) reemplazada por flex layout responsive
 
 ### Cambiado
-- Analysis.tsx usa datos reales del API (no hardcodeados)
-- Editor.tsx agrupa items por codigo de seccion para arboles planos
-- ItemDetail.tsx muestra costos del item directamente (no solo de recursos)
-- Todas las paginas limpiadas de datos demo "Las Heras"
+- Cascada indirectos: beneficio ahora se aplica sobre Subtotal con Indirectos (no sobre Directo)
+- Indirectos incluyen: imprevistos_pct, ingresos_brutos_pct, imp_cheque_pct, iva_pct
 
-### Infraestructura
+---
+
+## [2.1.0] — En desarrollo
+
+### Agregado
 - Modelo C: auth compartida (EOS Supabase) + data separada (Supabase propio)
 - Dual Supabase client: `AUTH_SUPABASE_*` y `DATA_SUPABASE_*`
 - Fallback automatico a `SUPABASE_URL/KEY` si no estan las nuevas variables
-- DEMO_ORG_ID mode para desarrollo sin JWT
+- Migracion SQL sin dependencia de `get_my_org_ids()`
+
+### Cambiado
+- `app/config.py` — 4 variables nuevas con fallback
+- `app/db.py` — dos clientes: `get_auth_db()` y `get_data_db()`
+- `app/auth.py` — usa cliente auth
+- Todos los routers — usan cliente data
 
 ## [2.0.0] — 2026-04-03
 
@@ -97,40 +107,3 @@ Versionado segun [Semantic Versioning](https://semver.org/).
 - N+1 queries en calculo de indirectos
 - Naming confuso (tenant_id vs org_id)
 - Sin tests
-
-
-Documentación de versionado
-
-Te recomiendo 3 lugares, cada uno con un propósito distinto:
-
-Dónde	Qué va	Para quién
-ARQUITECTURA.md (en el repo)	Reglas técnicas, modelo de datos, endpoints, decisiones de diseño	Para cualquier IA o dev que toque el código
-CHANGELOG.md (en el repo)	Lista cronológica de cambios por versión — qué se agregó, qué se arregló, qué se rompió	Para vos, para saber qué cambió y cuándo
-Memory de Claude (ya existe)	Contexto del proyecto, tus preferencias, lo que no debe repetirse	Para mí, para no olvidar entre conversaciones
-No necesitás hacer nada — yo mantengo los tres actualizados cada vez que hago un cambio.
-
-2. Versionado
-El estándar se llama Semantic Versioning (SemVer). Funciona así:
-
-MAYOR.MENOR.PARCHE
-  │      │      │
-  │      │      └── Arreglo de bugs, cambios chicos (no cambia comportamiento)
-  │      └────────── Feature nuevo (algo que antes no existía)
-  └───────────────── Cambio que rompe compatibilidad (ej: cambio de base de datos)
-
-Ejemplo práctico para tu proyecto:
-Versión	Qué pasó
-1.0.0	Monolito original (lo que hizo Grok/Codex)
-2.0.0	Reescritura completa que hicimos hoy (rompe todo lo anterior)
-2.1.0	Modelo C: dual Supabase (feature nuevo)
-2.1.1	Fix: corregir parseo de Excel para otro formato
-2.2.0	Nuevo endpoint de export PDF
-3.0.0	Cambio de Supabase a otro proveedor (rompe compatibilidad)
-Regla simple:
-Arreglé un bug → sumo el último número (2.1.0 → 2.1.1)
-Agregué algo nuevo → sumo el del medio, reseteo el último (2.1.1 → 2.2.0)
-Cambié algo que rompe lo anterior → sumo el primero, reseteo los otros (2.2.0 → 3.0.0)
-En la práctica:
-Cada vez que hago un commit importante, actualizo la versión en pyproject.toml y agrego la entrada en CHANGELOG.md. Vos no tenés que hacer nada.
-
-Hoy estamos en 2.0.0. Cuando implemente el Modelo C, pasa a 2.1.0.

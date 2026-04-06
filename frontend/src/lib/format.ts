@@ -34,6 +34,7 @@ export function fmtNumber(value: number | null | undefined, decimals = 2): strin
  */
 export function fmtPercent(value: number | null | undefined): string {
   if (!value) return '0%'
+  // Accept both 0.31 and 31
   const pct = value > 1 ? value : value * 100
   return `${pct.toLocaleString('es-AR', { maximumFractionDigits: 1 })}%`
 }
