@@ -1,19 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronRight, ChevronDown, ChevronLeft, ClipboardList, History, Pencil, Upload, Cpu, BookOpen, Calculator, Check, X } from 'lucide-react'
-import { budgetApi } from '../lib/api'
+import {
+  ChevronRight,
+  ChevronDown,
+  ClipboardList,
+  History,
+  Pencil,
+  Upload,
+  Cpu,
+  BookOpen,
+  Calculator,
+  Check,
+  X,
+  Plus,
+  Trash2,
+  Save,
+  ArrowLeft,
+  Library,
+} from 'lucide-react'
+import { budgetApi, templateApi } from '../lib/api'
 import { fmtCurrency, fmtNumber, fmtPercent } from '../lib/format'
-import type { ItemResource, BudgetItem, Budget, ItemAudit } from '../types'
+import type { ItemResource, BudgetItem, Budget, ItemAudit, IndirectConfig } from '../types'
 
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 type Tipo = ItemResource['tipo']
 
 const TIPO_LABELS: Record<Tipo, string> = {
   material: 'Materiales',
-  mano_obra: 'Mano de Obra',
-  equipo: 'Equipos',
+  mano_obra: 'Mano de Obra - Personas',
+  equipo: 'Mano de Obra - Equipos',
+  mo_material: 'Materiales Indirectos',
   subcontrato: 'Subcontratos',
 }
+
+const TIPO_SECTIONS: Tipo[] = ['material', 'mano_obra', 'equipo', 'mo_material', 'subcontrato']
 
 const FIELD_LABELS: Record<string, string> = {
   cantidad: 'Cantidad',
@@ -32,6 +53,15 @@ const SOURCE_CONFIG: Record<string, { label: string; icon: typeof Pencil; color:
   catalog_update: { label: 'Catalogo de precios', icon: BookOpen, color: 'text-orange-600' },
 }
 
+const fmt = new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+  maximumFractionDigits: 0,
+})
+const fmtARS = (v: number | null | undefined) => fmt.format(v ?? 0)
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function timeAgo(dateStr: string): string {
   const now = new Date()
   const date = new Date(dateStr)
@@ -39,7 +69,6 @@ function timeAgo(dateStr: string): string {
   const diffMin = Math.floor(diffMs / 60000)
   const diffHr = Math.floor(diffMin / 60)
   const diffDays = Math.floor(diffHr / 24)
-
   if (diffMin < 1) return 'hace un momento'
   if (diffMin < 60) return `hace ${diffMin} min`
   if (diffHr < 24) return `hace ${diffHr}h`
@@ -47,61 +76,377 @@ function timeAgo(dateStr: string): string {
   return date.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-function ResourceTable({ recursos, tipo }: { recursos: ItemResource[]; tipo: Tipo }) {
+function emptyResource(tipo: Tipo, itemId: string): Partial<ItemResource> {
+  return {
+    tipo,
+    item_id: itemId,
+    codigo: null,
+    descripcion: null,
+    unidad: tipo === 'mano_obra' ? 'jornal' : null,
+    cantidad: 0,
+    desperdicio_pct: 0,
+    precio_unitario: 0,
+    trabajadores: tipo === 'mano_obra' ? 1 : 0,
+    dias: tipo === 'mano_obra' ? 1 : 0,
+    cargas_sociales_pct: tipo === 'mano_obra' ? 25 : 0,
+    catalog_entry_id: null,
+  }
+}
+
+// ─── ResourceRow ──────────────────────────────────────────────────────────────
+
+interface ResourceRowProps {
+  resource: ItemResource
+  tipo: Tipo
+  onSave: (id: string, data: Partial<ItemResource>) => Promise<void>
+  onDelete: (id: string) => Promise<void>
+  startEditing: boolean
+  onEditDone: () => void
+}
+
+function ResourceRow({ resource, tipo, onSave, onDelete, startEditing, onEditDone }: ResourceRowProps) {
+  const [editing, setEditing] = useState(startEditing)
+  const [draft, setDraft] = useState<Partial<ItemResource>>({})
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  useEffect(() => {
+    if (startEditing) {
+      setEditing(true)
+      setDraft({ ...resource })
+    }
+  }, [startEditing, resource])
+
+  const handleEdit = () => {
+    setDraft({ ...resource })
+    setEditing(true)
+  }
+
+  const handleCancel = () => {
+    setEditing(false)
+    setDraft({})
+    onEditDone()
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await onSave(resource.id, draft)
+      setEditing(false)
+      setDraft({})
+      onEditDone()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm('¿Eliminar este recurso?')) return
+    setDeleting(true)
+    try {
+      await onDelete(resource.id)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const set = (field: keyof ItemResource, value: string | number | null) =>
+    setDraft((prev) => ({ ...prev, [field]: value }))
+
+  const inputCls = 'w-full border border-[#2D8D68] rounded px-1.5 py-0.5 text-xs bg-white outline-none focus:ring-1 focus:ring-[#2D8D68]'
+  const numCls = inputCls + ' text-right'
+
+  if (editing) {
+    if (tipo === 'mano_obra') {
+      return (
+        <tr className="bg-[#E8F5EE]/40">
+          <td className="px-2 py-1.5">
+            <input className={inputCls} value={draft.codigo ?? ''} onChange={(e) => set('codigo', e.target.value || null)} placeholder="COD" />
+          </td>
+          <td className="px-2 py-1.5">
+            <input className={inputCls} value={draft.descripcion ?? ''} onChange={(e) => set('descripcion', e.target.value || null)} placeholder="Descripcion" />
+          </td>
+          <td className="px-2 py-1.5">
+            <input className={numCls} type="number" step="1" min="0" value={draft.trabajadores ?? 0} onChange={(e) => set('trabajadores', parseFloat(e.target.value) || 0)} />
+          </td>
+          <td className="px-2 py-1.5">
+            <input className={numCls} type="number" step="1" min="0" value={draft.dias ?? 0} onChange={(e) => set('dias', parseFloat(e.target.value) || 0)} />
+          </td>
+          <td className="px-2 py-1.5">
+            <input className={numCls} type="number" step="0.1" min="0" value={draft.cargas_sociales_pct ?? 25} onChange={(e) => set('cargas_sociales_pct', parseFloat(e.target.value) || 0)} />
+          </td>
+          <td className="px-2 py-1.5 text-right text-xs text-gray-400">—</td>
+          <td className="px-2 py-1.5">
+            <input className={numCls} type="number" step="1" min="0" value={draft.precio_unitario ?? 0} onChange={(e) => set('precio_unitario', parseFloat(e.target.value) || 0)} />
+          </td>
+          <td className="px-2 py-1.5 text-right text-xs text-gray-400">—</td>
+          <td className="px-2 py-1.5">
+            <div className="flex items-center gap-1 justify-center">
+              <button disabled={saving} onClick={handleSave} className="p-1 bg-[#2D8D68] hover:bg-[#1E6B4E] text-white rounded disabled:opacity-50 transition-colors">
+                <Save size={12} />
+              </button>
+              <button disabled={saving} onClick={handleCancel} className="p-1 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded transition-colors">
+                <X size={12} />
+              </button>
+            </div>
+          </td>
+        </tr>
+      )
+    }
+
+    return (
+      <tr className="bg-[#E8F5EE]/40">
+        <td className="px-2 py-1.5">
+          <input className={inputCls} value={draft.codigo ?? ''} onChange={(e) => set('codigo', e.target.value || null)} placeholder="COD" />
+        </td>
+        <td className="px-2 py-1.5">
+          <input className={inputCls} value={draft.descripcion ?? ''} onChange={(e) => set('descripcion', e.target.value || null)} placeholder="Descripcion" />
+        </td>
+        <td className="px-2 py-1.5">
+          <input className={inputCls} value={draft.unidad ?? ''} onChange={(e) => set('unidad', e.target.value || null)} placeholder="m2" />
+        </td>
+        <td className="px-2 py-1.5">
+          <input className={numCls} type="number" step="any" min="0" value={draft.cantidad ?? 0} onChange={(e) => set('cantidad', parseFloat(e.target.value) || 0)} />
+        </td>
+        <td className="px-2 py-1.5">
+          <input className={numCls} type="number" step="0.1" min="0" value={draft.desperdicio_pct ?? 0} onChange={(e) => set('desperdicio_pct', parseFloat(e.target.value) || 0)} />
+        </td>
+        <td className="px-2 py-1.5 text-right text-xs text-gray-400">—</td>
+        <td className="px-2 py-1.5">
+          <input className={numCls} type="number" step="1" min="0" value={draft.precio_unitario ?? 0} onChange={(e) => set('precio_unitario', parseFloat(e.target.value) || 0)} />
+        </td>
+        <td className="px-2 py-1.5 text-right text-xs text-gray-400">—</td>
+        <td className="px-2 py-1.5">
+          <div className="flex items-center gap-1 justify-center">
+            <button disabled={saving} onClick={handleSave} className="p-1 bg-[#2D8D68] hover:bg-[#1E6B4E] text-white rounded disabled:opacity-50 transition-colors">
+              <Save size={12} />
+            </button>
+            <button disabled={saving} onClick={handleCancel} className="p-1 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded transition-colors">
+              <X size={12} />
+            </button>
+          </div>
+        </td>
+      </tr>
+    )
+  }
+
+  // Read mode
+  if (tipo === 'mano_obra') {
+    return (
+      <tr className="border-b border-gray-100 hover:bg-[#E8F5EE]/20 transition-colors">
+        <td className="px-3 py-1.5 font-mono text-[10px] text-gray-400">{resource.codigo ?? '—'}</td>
+        <td className="px-3 py-1.5 text-gray-800">{resource.descripcion ?? '—'}</td>
+        <td className="px-3 py-1.5 text-right text-gray-700">{fmtNumber(resource.trabajadores, 0)}</td>
+        <td className="px-3 py-1.5 text-right text-gray-700">{fmtNumber(resource.dias, 0)}</td>
+        <td className="px-3 py-1.5 text-right text-orange-500">{fmtPercent(resource.cargas_sociales_pct)}</td>
+        <td className="px-3 py-1.5 text-right font-medium text-gray-700">{fmtNumber(resource.cantidad_efectiva, 2)}</td>
+        <td className="px-3 py-1.5 text-right text-gray-700">{fmtARS(resource.precio_unitario)}</td>
+        <td className="px-3 py-1.5 text-right font-bold text-gray-900">{fmtARS(resource.subtotal)}</td>
+        <td className="px-3 py-1.5">
+          <div className="flex items-center gap-1 justify-center">
+            <button onClick={handleEdit} className="p-1 text-gray-300 hover:text-[#2D8D68] transition-colors rounded hover:bg-[#E8F5EE]">
+              <Pencil size={12} />
+            </button>
+            <button disabled={deleting} onClick={handleDelete} className="p-1 text-gray-300 hover:text-red-500 transition-colors rounded hover:bg-red-50 disabled:opacity-50">
+              <Trash2 size={12} />
+            </button>
+          </div>
+        </td>
+      </tr>
+    )
+  }
+
+  return (
+    <tr className="border-b border-gray-100 hover:bg-[#E8F5EE]/20 transition-colors">
+      <td className="px-3 py-1.5 font-mono text-[10px] text-gray-400">{resource.codigo ?? '—'}</td>
+      <td className="px-3 py-1.5 text-gray-800">{resource.descripcion ?? '—'}</td>
+      <td className="px-3 py-1.5 text-gray-500 text-[10px] uppercase">{resource.unidad ?? '—'}</td>
+      <td className="px-3 py-1.5 text-right text-gray-700">{fmtNumber(resource.cantidad, 2)}</td>
+      <td className="px-3 py-1.5 text-right text-orange-500">{fmtPercent(resource.desperdicio_pct)}</td>
+      <td className="px-3 py-1.5 text-right font-medium text-gray-700">{fmtNumber(resource.cantidad_efectiva, 2)}</td>
+      <td className="px-3 py-1.5 text-right text-gray-700">{fmtARS(resource.precio_unitario)}</td>
+      <td className="px-3 py-1.5 text-right font-bold text-gray-900">{fmtARS(resource.subtotal)}</td>
+      <td className="px-3 py-1.5">
+        <div className="flex items-center gap-1 justify-center">
+          <button onClick={handleEdit} className="p-1 text-gray-300 hover:text-[#2D8D68] transition-colors rounded hover:bg-[#E8F5EE]">
+            <Pencil size={12} />
+          </button>
+          <button disabled={deleting} onClick={handleDelete} className="p-1 text-gray-300 hover:text-red-500 transition-colors rounded hover:bg-red-50 disabled:opacity-50">
+            <Trash2 size={12} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+// ─── ResourceSection ──────────────────────────────────────────────────────────
+
+interface SectionProps {
+  tipo: Tipo
+  recursos: ItemResource[]
+  itemQty: number
+  budgetId: string
+  itemId: string
+  onReload: () => void
+}
+
+function ResourceSection({ tipo, recursos, itemQty, budgetId, itemId, onReload }: SectionProps) {
+  const [open, setOpen] = useState(true)
+  const [adding, setAdding] = useState(false)
+  const [newResource, setNewResource] = useState<Partial<ItemResource> | null>(null)
+  const [newEditStarted, setNewEditStarted] = useState(false)
+
   const filtered = recursos.filter((r) => r.tipo === tipo)
   const total = filtered.reduce((s, r) => s + r.subtotal, 0)
+  const unitPrice = itemQty > 0 ? total / itemQty : 0
+
+  const handleSave = async (id: string, data: Partial<ItemResource>) => {
+    await budgetApi.updateResource(budgetId, itemId, id, data)
+    onReload()
+  }
+
+  const handleDelete = async (id: string) => {
+    await budgetApi.deleteResource(budgetId, itemId, id)
+    onReload()
+  }
+
+  const handleAddNew = () => {
+    setNewResource(emptyResource(tipo, itemId))
+    setAdding(true)
+    setNewEditStarted(true)
+  }
+
+  const handleSaveNew = async (_id: string, data: Partial<ItemResource>) => {
+    await budgetApi.createResource(budgetId, itemId, { ...data, tipo })
+    setAdding(false)
+    setNewResource(null)
+    setNewEditStarted(false)
+    onReload()
+  }
+
+  const handleCancelNew = () => {
+    setAdding(false)
+    setNewResource(null)
+    setNewEditStarted(false)
+  }
+
+  const moHeaders = ['Codigo', 'Descripcion', 'Trabajadores', 'Dias', 'Cargas %', 'Jornales Efect.', 'Jornal', 'Subtotal', '']
+  const matHeaders = ['Codigo', 'Descripcion', 'Unidad', 'Cantidad', 'Desperdicio %', 'Qty Efectiva', 'Precio Unit.', 'Subtotal', '']
+  const headers = tipo === 'mano_obra' ? moHeaders : matHeaders
+
+  const tipoUnitLabel =
+    tipo === 'material' ? 'MAT'
+    : tipo === 'mano_obra' ? 'MO'
+    : tipo === 'equipo' ? 'EQ'
+    : tipo === 'mo_material' ? 'Mat.Ind'
+    : 'Sub'
 
   return (
     <div className="bg-white rounded-xl border overflow-hidden">
-      <div className="bg-gray-100 px-4 py-2 flex justify-between items-center border-b">
-        <span className="font-bold text-sm text-gray-800">{TIPO_LABELS[tipo]}</span>
-        <span className="text-[10px] text-gray-400">{filtered.length} recursos</span>
-      </div>
-      {filtered.length === 0 ? (
-        <div className="p-4 text-xs text-gray-400 italic">Sin {TIPO_LABELS[tipo].toLowerCase()} para este item</div>
-      ) : (
-        <table className="w-full text-xs">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-3 py-1.5 text-left text-gray-500 font-medium">Codigo</th>
-              <th className="px-3 py-1.5 text-left text-gray-500 font-medium">Descripcion</th>
-              <th className="px-3 py-1.5 text-right text-gray-500 font-medium">Cant</th>
-              <th className="px-3 py-1.5 text-right text-gray-500 font-medium">Desp%</th>
-              <th className="px-3 py-1.5 text-right text-gray-500 font-medium">Cant+Desp</th>
-              <th className="px-3 py-1.5 text-right text-gray-500 font-medium">P.Unit</th>
-              <th className="px-3 py-1.5 text-right text-gray-500 font-medium">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((r) => (
-              <tr key={r.id} className="border-b hover:bg-gray-50">
-                <td className="px-3 py-1.5 font-mono text-gray-400">{r.codigo}</td>
-                <td className="px-3 py-1.5 text-gray-800">{r.descripcion}</td>
-                <td className="px-3 py-1.5 cost-cell">{r.cantidad !== undefined ? fmtNumber(r.cantidad, 0) : '—'}</td>
-                <td className="px-3 py-1.5 cost-cell text-orange-500">{fmtPercent(r.desperdicio_pct)}</td>
-                <td className="px-3 py-1.5 cost-cell font-medium">
-                  {r.cantidad_efectiva !== undefined ? fmtNumber(r.cantidad_efectiva, 0) : '—'}
-                </td>
-                <td className="px-3 py-1.5 cost-cell">
-                  {r.precio_unitario !== undefined ? fmtCurrency(r.precio_unitario) : '—'}
-                </td>
-                <td className="px-3 py-1.5 cost-cell font-bold">{fmtCurrency(r.subtotal)}</td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot className="bg-[#E8F5EE]">
-            <tr>
-              <td colSpan={6} className="px-3 py-2 text-right font-bold text-xs text-[#1B5E4B]">
-                TOTAL {TIPO_LABELS[tipo].toUpperCase()}
-              </td>
-              <td className="px-3 py-2 cost-cell font-bold text-[#2D8D68]">{fmtCurrency(total)}</td>
-            </tr>
-          </tfoot>
-        </table>
+      {/* Section header */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full bg-[#E8F5EE]/30 px-4 py-2.5 flex items-center gap-2 border-b hover:bg-[#E8F5EE]/60 transition-colors"
+      >
+        {open
+          ? <ChevronDown size={14} className="text-[#2D8D68] flex-shrink-0" />
+          : <ChevronRight size={14} className="text-[#2D8D68] flex-shrink-0" />}
+        <span className="font-bold text-sm text-[#2D8D68]">{TIPO_LABELS[tipo]}</span>
+        <span className="text-[10px] text-gray-400 ml-1">{filtered.length} recursos</span>
+        {!open && total > 0 && (
+          <span className="ml-auto text-sm font-bold text-[#143D34]">{fmtARS(total)}</span>
+        )}
+      </button>
+
+      {open && (
+        <>
+          {filtered.length === 0 && !adding ? (
+            <div className="p-6 text-center text-gray-400 text-sm italic">
+              No hay recursos cargados. Agregá recursos para calcular el precio unitario.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-[#E8F5EE] text-[#143D34]">
+                    {headers.map((h) => (
+                      <th
+                        key={h}
+                        className={`px-3 py-2 text-[10px] uppercase font-semibold tracking-wide ${h === '' ? 'w-16' : h === 'Descripcion' ? 'text-left' : h === 'Codigo' ? 'text-left' : h === 'Unidad' ? 'text-left' : 'text-right'}`}
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((r) => (
+                    <ResourceRow
+                      key={r.id}
+                      resource={r}
+                      tipo={tipo}
+                      onSave={handleSave}
+                      onDelete={handleDelete}
+                      startEditing={false}
+                      onEditDone={() => {}}
+                    />
+                  ))}
+                  {/* New resource row (inline) */}
+                  {adding && newResource && (
+                    <ResourceRow
+                      key="__new__"
+                      resource={{ ...emptyResource(tipo, itemId), id: '__new__', org_id: '', subtotal: 0, cantidad_efectiva: 0 } as ItemResource}
+                      tipo={tipo}
+                      onSave={handleSaveNew}
+                      onDelete={async () => { handleCancelNew() }}
+                      startEditing={newEditStarted}
+                      onEditDone={handleCancelNew}
+                    />
+                  )}
+                </tbody>
+                {/* Footer with total */}
+                <tfoot>
+                  <tr className="bg-[#E8F5EE]">
+                    <td colSpan={headers.length - 2} className="px-3 py-2 text-right text-[10px] font-bold text-[#1B5E4B] uppercase tracking-wide">
+                      Total {TIPO_LABELS[tipo]}
+                    </td>
+                    <td className="px-3 py-2 text-right font-bold text-[#2D8D68]">
+                      {fmtARS(total)}
+                    </td>
+                    <td className="px-3 py-2" />
+                  </tr>
+                  {itemQty > 0 && (
+                    <tr className="bg-[#E8F5EE]/60">
+                      <td colSpan={headers.length} className="px-3 py-1.5 text-right text-[10px] text-[#1B5E4B]">
+                        {fmtARS(total)} ÷ {fmtNumber(itemQty, 2)} =&nbsp;
+                        <strong>Precio Unitario {tipoUnitLabel}: {fmtARS(unitPrice)}</strong>
+                      </td>
+                    </tr>
+                  )}
+                </tfoot>
+              </table>
+            </div>
+          )}
+
+          {/* Add resource button */}
+          <div className="px-4 py-2 border-t">
+            <button
+              onClick={handleAddNew}
+              disabled={adding}
+              className="flex items-center gap-1.5 text-xs bg-[#2D8D68] hover:bg-[#1E6B4E] text-white px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
+            >
+              <Plus size={12} />
+              Agregar recurso
+            </button>
+          </div>
+        </>
       )}
     </div>
   )
 }
+
+// ─── AuditHistory ─────────────────────────────────────────────────────────────
 
 function AuditHistory({ audits, loading }: { audits: ItemAudit[]; loading: boolean }) {
   if (loading) {
@@ -157,6 +502,252 @@ function AuditHistory({ audits, loading }: { audits: ItemAudit[]; loading: boole
   )
 }
 
+// ─── GrandTotal ───────────────────────────────────────────────────────────────
+
+interface GrandTotalProps {
+  item: BudgetItem
+  indirects: IndirectConfig | null
+  recursos: ItemResource[]
+}
+
+function GrandTotal({ item, indirects, recursos }: GrandTotalProps) {
+  const matTotal = recursos.filter((r) => r.tipo === 'material').reduce((s, r) => s + (r.subtotal ?? 0), 0)
+  const moTotal = recursos.filter((r) => r.tipo === 'mano_obra').reduce((s, r) => s + (r.subtotal ?? 0), 0)
+  const eqTotal = recursos.filter((r) => r.tipo === 'equipo').reduce((s, r) => s + (r.subtotal ?? 0), 0)
+  const matIndTotal = recursos.filter((r) => r.tipo === 'mo_material').reduce((s, r) => s + (r.subtotal ?? 0), 0)
+  const subTotal = recursos.filter((r) => r.tipo === 'subcontrato').reduce((s, r) => s + (r.subtotal ?? 0), 0)
+  const directo = matTotal + moTotal + eqTotal + matIndTotal + subTotal
+
+  // Prefer item's calculated values if available, otherwise derive from indirects config
+  const indirectoTotal = item.indirecto_total ?? 0
+  const beneficioTotal = item.beneficio_total ?? 0
+  const impuestosTotal = item.impuestos_total ?? 0
+  const netoTotal = item.neto_total ?? 0
+  const ivaTotal = item.iva_total ?? 0
+  const totalFinal = item.total_final ?? 0
+
+  const indirectoPct = indirects
+    ? (indirects.estructura_pct || 0) + (indirects.jefatura_pct || 0) + (indirects.logistica_pct || 0) + (indirects.herramientas_pct || 0)
+    : 0
+  const beneficioPct = indirects?.beneficio_pct ?? 10
+  const impuestosPct = (indirects?.ingresos_brutos_pct ?? 7) + (indirects?.imp_cheque_pct ?? 1.2)
+  const ivaPct = indirects?.iva_pct ?? 21
+
+  const Row = ({ label, value, sub, highlight }: { label: string; value: number; sub?: string; highlight?: boolean }) => (
+    <div className={`flex items-center justify-between py-1.5 px-4 ${highlight ? 'bg-[#E8F5EE] rounded-lg' : ''}`}>
+      <span className={`text-xs ${highlight ? 'font-bold text-[#143D34]' : 'text-gray-600'}`}>
+        {label}
+        {sub && <span className="ml-1 text-[10px] text-gray-400">({sub})</span>}
+      </span>
+      <span className={`font-bold tabular-nums ${highlight ? 'text-[#2D8D68] text-base' : 'text-xs text-gray-900'}`}>
+        {fmtARS(value)}
+      </span>
+    </div>
+  )
+
+  return (
+    <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-[#E8F5EE]/30 px-4 py-2.5 border-b flex items-center gap-2">
+        <Calculator size={14} className="text-[#2D8D68]" />
+        <span className="font-bold text-sm text-[#2D8D68]">Resumen de Costos</span>
+      </div>
+      <div className="py-2 space-y-0.5">
+        {/* Resource breakdown */}
+        {matTotal > 0 && <Row label="+ MAT (Materiales)" value={matTotal} />}
+        {moTotal > 0 && <Row label="+ MO (Mano de Obra)" value={moTotal} />}
+        {eqTotal > 0 && <Row label="+ EQ (Equipos)" value={eqTotal} />}
+        {matIndTotal > 0 && <Row label="+ Mat.Ind (Materiales Indirectos)" value={matIndTotal} />}
+        {subTotal > 0 && <Row label="+ Sub (Subcontratos)" value={subTotal} />}
+        <div className="mx-4 my-1 border-t border-dashed border-gray-200" />
+        <Row label="= Costo Directo" value={directo} />
+        {indirectoTotal > 0 && <Row label="+ Indirectos" value={indirectoTotal} sub={`${indirectoPct.toFixed(1)}%`} />}
+        {beneficioTotal > 0 && <Row label="+ Beneficio" value={beneficioTotal} sub={`${beneficioPct}%`} />}
+        {impuestosTotal > 0 && <Row label="+ Impuestos" value={impuestosTotal} sub={`${impuestosPct.toFixed(1)}%`} />}
+        {netoTotal > 0 && (
+          <>
+            <div className="mx-4 my-1 border-t border-dashed border-gray-200" />
+            <Row label="= NETO" value={netoTotal} />
+          </>
+        )}
+        {ivaTotal > 0 && <Row label="+ IVA" value={ivaTotal} sub={`${ivaPct}%`} />}
+        {totalFinal > 0 && (
+          <>
+            <div className="mx-4 my-1 border-t-2 border-gray-300" />
+            <Row label="= TOTAL FINAL" value={totalFinal} highlight />
+          </>
+        )}
+        {/* Fallback if totals not calculated yet */}
+        {netoTotal === 0 && directo > 0 && (
+          <>
+            <div className="mx-4 my-1 border-t-2 border-gray-300" />
+            <div className="px-4 py-2 text-[10px] text-gray-400 italic">
+              Los totales con indirectos y beneficio se calculan al recalcular el presupuesto.
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── TemplateModal ────────────────────────────────────────────────────────────
+
+interface TemplateModalProps {
+  budgetId: string
+  itemId: string
+  onApplied: () => void
+  onClose: () => void
+}
+
+function TemplateModal({ budgetId, itemId, onApplied, onClose }: TemplateModalProps) {
+  const [templates, setTemplates] = useState<any[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [selectedCat, setSelectedCat] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [applying, setApplying] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    Promise.all([templateApi.list(), templateApi.categories()])
+      .then(([tmplList, cats]) => {
+        setTemplates(Array.isArray(tmplList) ? tmplList : [])
+        const catList = Array.isArray(cats) ? cats : []
+        setCategories(catList)
+        if (catList.length > 0) setSelectedCat(catList[0])
+      })
+      .catch(() => setError('Error cargando templates.'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const filtered = selectedCat
+    ? templates.filter((t) => t.categoria === selectedCat)
+    : templates
+
+  const handleApply = async (templateId: string) => {
+    setApplying(templateId)
+    setError(null)
+    try {
+      await templateApi.apply(templateId, budgetId, itemId)
+      onApplied()
+      onClose()
+    } catch {
+      setError('Error al aplicar el template. Intenta de nuevo.')
+      setApplying(null)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[85vh]">
+        {/* Modal header */}
+        <div className="bg-[#E8F5EE] px-5 py-4 flex items-center justify-between border-b border-[#C3E5D3] flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <Library size={16} className="text-[#2D8D68]" />
+            <span className="font-bold text-[#143D34] text-base">Biblioteca de Templates</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-[#C3E5D3] text-[#2D8D68] transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Category tabs */}
+        {categories.length > 0 && (
+          <div className="px-4 pt-3 pb-2 flex gap-2 flex-wrap flex-shrink-0 border-b border-gray-100">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCat(cat)}
+                className={`text-xs px-3 py-1 rounded-full font-medium capitalize transition-colors ${
+                  selectedCat === cat
+                    ? 'bg-[#2D8D68] text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-[#E8F5EE] hover:text-[#2D8D68]'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Template list */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-gray-400 py-6 justify-center">
+              <div className="w-4 h-4 border-2 border-[#2D8D68] border-t-transparent rounded-full animate-spin" />
+              Cargando templates...
+            </div>
+          )}
+          {!loading && filtered.length === 0 && (
+            <div className="text-center text-sm text-gray-400 italic py-8">
+              No hay templates en esta categoría.
+            </div>
+          )}
+          {!loading && filtered.map((tmpl) => {
+            const recursoCount = Array.isArray(tmpl.recursos) ? tmpl.recursos.length : 0
+            const isApplying = applying === tmpl.id
+            return (
+              <div
+                key={tmpl.id}
+                className="border border-gray-200 rounded-xl p-3.5 hover:border-[#2D8D68] hover:bg-[#E8F5EE]/30 transition-all"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-[#143D34] text-sm">{tmpl.nombre}</div>
+                    {tmpl.descripcion && (
+                      <div className="text-xs text-gray-500 mt-0.5 truncate">{tmpl.descripcion}</div>
+                    )}
+                    <div className="flex items-center gap-3 mt-1.5">
+                      {tmpl.unidad && (
+                        <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-mono uppercase">
+                          {tmpl.unidad}
+                        </span>
+                      )}
+                      <span className="text-[10px] text-gray-400">
+                        {recursoCount} {recursoCount === 1 ? 'recurso' : 'recursos'}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleApply(tmpl.id)}
+                    disabled={isApplying || applying !== null}
+                    className="flex items-center gap-1.5 text-xs bg-[#2D8D68] hover:bg-[#1E6B4E] text-white px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 flex-shrink-0"
+                  >
+                    {isApplying ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Aplicando...
+                      </>
+                    ) : (
+                      <>
+                        <Check size={12} />
+                        Aplicar
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="px-4 pb-3 flex-shrink-0">
+            <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700">
+              {error}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
 export default function ItemDetail() {
   const { id, itemId } = useParams<{ id: string; itemId: string }>()
   const navigate = useNavigate()
@@ -164,6 +755,7 @@ export default function ItemDetail() {
   const [item, setItem] = useState<BudgetItem | null>(null)
   const [recursos, setRecursos] = useState<ItemResource[]>([])
   const [audits, setAudits] = useState<ItemAudit[]>([])
+  const [indirects, setIndirects] = useState<IndirectConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [auditsLoading, setAuditsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -171,8 +763,9 @@ export default function ItemDetail() {
   const [editingMemoria, setEditingMemoria] = useState(false)
   const [memoriaDraft, setMemoriaDraft] = useState('')
   const [memoriaSaving, setMemoriaSaving] = useState(false)
+  const [templateModalOpen, setTemplateModalOpen] = useState(false)
 
-  useEffect(() => {
+  const loadData = useCallback(async (cancelled?: { v: boolean }) => {
     if (!id || !itemId) {
       setLoading(false)
       setAuditsLoading(false)
@@ -180,47 +773,67 @@ export default function ItemDetail() {
       return
     }
 
-    let cancelled = false
-
-    // Load budget, item info, and resources in parallel
-    Promise.all([
-      budgetApi.get(id).catch(() => null),
-      budgetApi.getItems(id).then((items) => items.find((i) => i.id === itemId) ?? null).catch(() => null),
-      budgetApi.getItemResources(id, itemId).catch(() => [] as ItemResource[]),
-    ]).then(([b, it, res]) => {
-      if (cancelled) return
+    try {
+      const [b, items, res, ind] = await Promise.all([
+        budgetApi.get(id).catch(() => null),
+        budgetApi.getItems(id).catch(() => [] as BudgetItem[]),
+        budgetApi.getItemResources(id, itemId).catch(() => [] as ItemResource[]),
+        budgetApi.getIndirects(id).catch(() => null),
+      ])
+      if (cancelled?.v) return
+      const it = Array.isArray(items) ? items.find((i) => i.id === itemId) ?? null : null
       if (b) setBudget(b)
       if (it) setItem(it)
       setRecursos(Array.isArray(res) ? res : [])
-      if (!it) {
-        setError('No se encontro el item. Puede ser una seccion sin detalle de recursos.')
-      }
-    }).catch(() => {
-      if (!cancelled) setError('Error cargando datos del item.')
-    }).finally(() => {
-      if (!cancelled) setLoading(false)
-    })
-
-    // Load audits separately (may fail if table doesn't exist)
-    budgetApi.getItemAudits(id, itemId)
-      .then((data) => { if (!cancelled) setAudits(Array.isArray(data) ? data : []) })
-      .catch(() => { if (!cancelled) setAudits([]) })
-      .finally(() => { if (!cancelled) setAuditsLoading(false) })
-
-    return () => { cancelled = true }
+      if (ind) setIndirects(ind)
+      if (!it) setError('No se encontro el item.')
+    } catch {
+      if (!cancelled?.v) setError('Error cargando datos del item.')
+    } finally {
+      if (!cancelled?.v) setLoading(false)
+    }
   }, [id, itemId])
 
-  // Use the item's own cost fields (from BudgetItem) as the source of truth for the summary.
-  // Only fall back to summing resources if the item fields are zero/missing.
-  const resourceMat = recursos.filter((r) => r.tipo === 'material').reduce((s, r) => s + r.subtotal, 0)
-  const resourceMO = recursos.filter((r) => r.tipo === 'mano_obra').reduce((s, r) => s + r.subtotal, 0)
-  const totalMat = (item?.mat_total ?? 0) !== 0 ? (item?.mat_total ?? 0) : resourceMat
-  const totalMO = (item?.mo_total ?? 0) !== 0 ? (item?.mo_total ?? 0) : resourceMO
-  const costoDirecto = (item?.directo_total ?? 0) !== 0 ? (item?.directo_total ?? 0) : totalMat + totalMO
-  const cantidad = item?.cantidad ?? 0
-  const desperdicio = 10
+  const reloadResources = useCallback(async () => {
+    if (!id || !itemId) return
+    try {
+      const [res, items] = await Promise.all([
+        budgetApi.getItemResources(id, itemId),
+        budgetApi.getItems(id),
+      ])
+      setRecursos(Array.isArray(res) ? res : [])
+      const it = Array.isArray(items) ? items.find((i) => i.id === itemId) ?? null : null
+      if (it) setItem(it)
+    } catch {
+      // silent
+    }
+  }, [id, itemId])
 
-  // Show loading spinner while fetching
+  useEffect(() => {
+    const cancelled = { v: false }
+    loadData(cancelled)
+
+    // Load audits separately
+    if (id && itemId) {
+      setAuditsLoading(true)
+      budgetApi.getItemAudits(id, itemId)
+        .then((data) => { if (!cancelled.v) setAudits(Array.isArray(data) ? data : []) })
+        .catch(() => { if (!cancelled.v) setAudits([]) })
+        .finally(() => { if (!cancelled.v) setAuditsLoading(false) })
+    }
+
+    return () => { cancelled.v = true }
+  }, [id, itemId, loadData])
+
+  const cantidad = item?.cantidad ?? 0
+
+  // Unit prices from item record (backend calculated)
+  const matUnit = item?.mat_unitario ?? 0
+  const moUnit = item?.mo_unitario ?? 0
+  const eqUnit = item?.eq_unitario ?? 0
+  const matIndUnit = item?.mat_ind_unitario ?? 0
+  const subUnit = item?.sub_unitario ?? 0
+
   if (loading) {
     return (
       <div className="p-6 fade-in">
@@ -232,7 +845,6 @@ export default function ItemDetail() {
     )
   }
 
-  // Show error state with a back button
   if (error && !item) {
     return (
       <div className="p-6 fade-in">
@@ -255,7 +867,7 @@ export default function ItemDetail() {
   }
 
   return (
-    <div className="p-6 fade-in">
+    <div className="p-6 fade-in max-w-6xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-xs mb-2">
         <span className="text-gray-400 cursor-pointer hover:text-[#2D8D68]" onClick={() => navigate('/app/dashboard')}>Presupuestos</span>
@@ -265,108 +877,122 @@ export default function ItemDetail() {
         <span className="font-semibold text-gray-900">{item ? `${item.code ?? ''} ${item.description ?? ''}`.trim() : 'Item'}</span>
       </div>
 
-      {/* Back button */}
-      <button
-        onClick={() => navigate(`/app/budgets/${id ?? '1'}/editor`)}
-        className="flex items-center gap-1.5 text-sm text-[#2D8D68] hover:text-[#1B5E4B] font-medium mb-3 transition-colors"
-      >
-        <ChevronLeft size={16} />
-        Volver al editor
-      </button>
-
-      {/* Section label */}
-      <div className="flex items-center gap-2 text-[#2D8D68] text-[11px] font-bold tracking-wider mb-1">
-        <ClipboardList size={14} /> DETALLE DE RECURSOS
+      {/* Back button + section label */}
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(`/app/budgets/${id ?? '1'}/editor`)}
+            className="flex items-center gap-1 text-xs text-[#2D8D68] hover:text-[#1B5E4B] font-medium transition-colors"
+          >
+            <ArrowLeft size={13} />
+            Volver al editor
+          </button>
+          <button
+            onClick={() => setTemplateModalOpen(true)}
+            className="flex items-center gap-1.5 text-xs bg-[#2D8D68] hover:bg-[#1E6B4E] text-white px-3 py-1.5 rounded-lg font-medium transition-colors"
+          >
+            <Library size={13} />
+            Cargar template
+          </button>
+        </div>
+        <div className="flex items-center gap-2 text-[#2D8D68] text-[11px] font-bold tracking-wider">
+          <ClipboardList size={14} /> DETALLE DE RECURSOS
+        </div>
       </div>
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-1 h-7 bg-[#2D8D68] rounded-full" />
-        <h1 className="text-xl font-extrabold text-gray-900">{item ? `${item.code ?? ''} ${item.description ?? ''}`.trim().toUpperCase() : 'DETALLE DE ITEM'}</h1>
-      </div>
-      <p className="text-xs text-gray-400 mb-4 ml-4">Vista de detalle: recursos, costos y memoria de cálculo de este ítem. La edición de cantidades y precios se hace desde el Editor.</p>
 
-      {/* Item summary */}
-      <div className="bg-white rounded-xl border p-4 mb-4 flex items-center gap-8 flex-wrap">
-        {/* "Editado por humano" mark — visible when item has manual edits */}
-        {audits.some((a) => a.source === 'manual_edit') && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200/50">
-            <Pencil size={10} className="text-blue-500" />
-            <span className="text-[10px] font-medium text-blue-600">Editado por humano</span>
+      {/* Template modal */}
+      {templateModalOpen && id && itemId && (
+        <TemplateModal
+          budgetId={id}
+          itemId={itemId}
+          onApplied={reloadResources}
+          onClose={() => setTemplateModalOpen(false)}
+        />
+      )}
+
+      {/* Page header */}
+      <div className="bg-[#E8F5EE] rounded-xl p-4 mb-4 border border-[#C3E5D3]">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-1 h-8 bg-[#2D8D68] rounded-full flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h1 className="text-xl font-extrabold text-[#143D34]">
+              {item ? `${item.code ?? ''} ${item.description ?? ''}`.trim().toUpperCase() : 'DETALLE DE ITEM'}
+            </h1>
+            <div className="flex items-center gap-4 mt-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-[#2D8D68] uppercase font-semibold">Unidad</span>
+                <span className="font-bold text-[#143D34] text-sm">{item?.unidad ?? '—'}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-[#2D8D68] uppercase font-semibold">Cantidad</span>
+                <span className="font-bold text-[#143D34] text-sm">{fmtNumber(cantidad, 2)}</span>
+              </div>
+              {item?.notas_calculo && (
+                <span className="inline-flex items-center gap-1 text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                  <Calculator size={9} />
+                  Con memoria de calculo
+                </span>
+              )}
+            </div>
           </div>
-        )}
-        <div>
-          <div className="text-[10px] text-gray-400">Unidad</div>
-          <div className="font-bold text-gray-800">{item?.unidad ?? '—'}</div>
         </div>
-        <div>
-          <div className="text-[10px] text-gray-400">Cantidad</div>
-          <div className="font-bold text-gray-800">{fmtNumber(cantidad, 2)}</div>
-        </div>
-        <div>
-          <div className="text-[10px] text-gray-400">Desperdicio</div>
-          <div className="font-bold text-orange-600">{desperdicio}%</div>
-        </div>
-        <div>
-          <div className="text-[10px] text-gray-400">Cantidad Efectiva</div>
-          <div className="font-bold text-[#2D8D68]">{fmtNumber(cantidad * (1 + desperdicio / 100), 0)} {item?.unidad ?? ''}</div>
-        </div>
-        <div className="ml-auto text-right">
-          <div className="text-[10px] text-gray-400">Formula</div>
-          <div className="font-mono text-xs text-gray-600">
-            {fmtNumber(cantidad, 2)} x (1 + 0.{desperdicio}) ={' '}
-            <strong>{fmtNumber(cantidad * (1 + desperdicio / 100), 0)} {item?.unidad ?? ''}</strong>
-          </div>
+
+        {/* Summary bar: 5 mini cards */}
+        <div className="grid grid-cols-5 gap-2">
+          {[
+            { label: 'MAT Unit', value: matUnit },
+            { label: 'MO Unit', value: moUnit },
+            { label: 'EQ Unit', value: eqUnit },
+            { label: 'Mat.Ind Unit', value: matIndUnit },
+            { label: 'Sub Unit', value: subUnit },
+          ].map(({ label, value }) => (
+            <div key={label} className="bg-white rounded-lg p-2 text-center border border-[#C3E5D3]">
+              <div className="text-[9px] text-[#2D8D68] uppercase font-semibold mb-0.5">{label}</div>
+              <div className="font-bold text-[#143D34] text-xs">{fmtARS(value)}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Cost quick summary */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-gray-50 rounded-lg p-3 border text-center">
-          <div className="text-[10px] text-gray-400">MAT Unitario</div>
-          <div className="font-bold text-gray-800">{fmtCurrency(item?.mat_unitario ?? 0)}</div>
-          <div className="text-[10px] text-gray-400 mt-1">Total MAT</div>
-          <div className="font-semibold text-gray-700 text-sm">{fmtCurrency(totalMat)}</div>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3 border text-center">
-          <div className="text-[10px] text-gray-400">MO Unitario</div>
-          <div className="font-bold text-gray-800">{fmtCurrency(item?.mo_unitario ?? 0)}</div>
-          <div className="text-[10px] text-gray-400 mt-1">Total MO</div>
-          <div className="font-semibold text-gray-700 text-sm">{fmtCurrency(totalMO)}</div>
-        </div>
-        <div className="bg-[#E8F5EE] rounded-lg p-3 border border-[#2D8D68] text-center">
-          <div className="text-[10px] text-[#1B5E4B]">Costo Directo</div>
-          <div className="font-bold text-[#2D8D68]">{fmtCurrency(costoDirecto)}</div>
-          {(item?.neto_total ?? 0) > 0 && (
-            <>
-              <div className="text-[10px] text-[#1B5E4B] mt-1">Neto Total</div>
-              <div className="font-semibold text-[#2D8D68] text-sm">{fmtCurrency(item?.neto_total ?? 0)}</div>
-            </>
-          )}
-        </div>
+      {/* 5 Resource sections */}
+      <div className="space-y-4 mb-6">
+        {TIPO_SECTIONS.map((tipo) => (
+          <ResourceSection
+            key={tipo}
+            tipo={tipo}
+            recursos={recursos}
+            itemQty={cantidad}
+            budgetId={id ?? ''}
+            itemId={itemId ?? ''}
+            onReload={reloadResources}
+          />
+        ))}
       </div>
 
-      {/* Resource tables 2x2 */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <ResourceTable recursos={recursos} tipo="material" />
-        <ResourceTable recursos={recursos} tipo="mano_obra" />
-        <ResourceTable recursos={recursos} tipo="equipo" />
-        <ResourceTable recursos={recursos} tipo="subcontrato" />
-      </div>
+      {/* Grand total */}
+      {item && (
+        <div className="mb-6">
+          <GrandTotal item={item} indirects={indirects} recursos={recursos} />
+        </div>
+      )}
 
       {/* Memoria de Calculo */}
       <div className="bg-white rounded-xl border overflow-hidden mb-6">
         <button
           onClick={() => setMemoriaOpen(!memoriaOpen)}
-          className="w-full bg-gray-100 px-4 py-2.5 flex items-center gap-2 border-b hover:bg-gray-200 transition-colors"
+          className="w-full bg-[#E8F5EE]/30 px-4 py-2.5 flex items-center gap-2 border-b hover:bg-[#E8F5EE]/60 transition-colors"
         >
           <Calculator size={14} className="text-[#2D8D68]" />
-          <span className="font-bold text-sm text-gray-800">Memoria de Calculo</span>
+          <span className="font-bold text-sm text-[#2D8D68]">Memoria de Calculo</span>
           {item?.notas_calculo && (
             <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
               con datos
             </span>
           )}
           <span className="ml-auto">
-            {memoriaOpen ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
+            {memoriaOpen
+              ? <ChevronDown size={14} className="text-gray-400" />
+              : <ChevronRight size={14} className="text-gray-400" />}
           </span>
         </button>
         {memoriaOpen && (
@@ -389,13 +1015,11 @@ export default function ItemDetail() {
                       try {
                         const result = await budgetApi.updateItem(id, itemId, { notas_calculo: memoriaDraft } as Partial<BudgetItem>)
                         if (result && typeof result === 'object' && 'item' in result) {
-                          const updatedItem = (result as { item: BudgetItem }).item
-                          setItem(updatedItem)
+                          setItem((result as { item: BudgetItem }).item)
                         } else {
                           setItem((prev) => prev ? { ...prev, notas_calculo: memoriaDraft } : prev)
                         }
                         setEditingMemoria(false)
-                        // Refresh audits to show the new entry
                         budgetApi.getItemAudits(id, itemId)
                           .then((data) => setAudits(Array.isArray(data) ? data : []))
                           .catch(() => {})
@@ -445,9 +1069,9 @@ export default function ItemDetail() {
 
       {/* Audit History */}
       <div className="bg-white rounded-xl border overflow-hidden">
-        <div className="bg-gray-100 px-4 py-2.5 flex items-center gap-2 border-b">
+        <div className="bg-[#E8F5EE]/30 px-4 py-2.5 flex items-center gap-2 border-b">
           <History size={14} className="text-[#2D8D68]" />
-          <span className="font-bold text-sm text-gray-800">Historial de cambios</span>
+          <span className="font-bold text-sm text-[#2D8D68]">Historial de cambios</span>
           {audits.length > 0 && (
             <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
               {audits.length}

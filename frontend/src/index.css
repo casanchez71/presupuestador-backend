@@ -1,6 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
 @theme {
   --color-sole-dark: #143D34;
   --color-sole-coral: #E8663C;
