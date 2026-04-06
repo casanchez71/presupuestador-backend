@@ -5,22 +5,13 @@ interface Props {
   mo: number
   directo: number
   indirecto: number
-  beneficio?: number
   neto: number
-  totalFinal?: number
   indirectoPct?: number
 }
 
-export default function CostSummaryBar({ mat, mo, directo, indirecto, beneficio, neto, totalFinal, indirectoPct }: Props) {
-  const showBeneficio = beneficio != null && beneficio > 0
-  const showTotalFinal = totalFinal != null && totalFinal > 0
-
-  // Base 5 cols, +1 for beneficio, +1 for totalFinal
-  const cols = 5 + (showBeneficio ? 1 : 0) + (showTotalFinal ? 1 : 0)
-  const gridClass = cols === 5 ? 'grid-cols-5' : cols === 6 ? 'grid-cols-6' : 'grid-cols-7'
-
+export default function CostSummaryBar({ mat, mo, directo, indirecto, neto, indirectoPct }: Props) {
   return (
-    <div className={`grid ${gridClass} gap-3 p-4 border-b bg-gradient-to-b from-white to-gray-50/50`}>
+    <div className="grid grid-cols-5 gap-3 p-4 border-b bg-gradient-to-b from-white to-gray-50/50">
       {/* Materiales */}
       <div className="relative overflow-hidden rounded-xl p-3 text-center shadow-sm border border-blue-100 bg-gradient-to-br from-blue-50 to-white">
         <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-400 to-blue-200" />
@@ -56,30 +47,12 @@ export default function CostSummaryBar({ mat, mo, directo, indirecto, beneficio,
         <div className="font-bold text-lg text-[#E8663C] tabular-nums">{fmtCurrency(indirecto)}</div>
       </div>
 
-      {/* Beneficio — optional extra card */}
-      {showBeneficio && (
-        <div className="relative overflow-hidden rounded-xl p-3 text-center shadow-sm border border-amber-200 bg-gradient-to-br from-amber-50 to-white">
-          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-amber-400 to-amber-200" />
-          <div className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-1">Beneficio</div>
-          <div className="font-bold text-lg text-amber-800 tabular-nums">{fmtCurrency(beneficio ?? 0)}</div>
-        </div>
-      )}
-
       {/* Neto — hero card */}
       <div className="relative overflow-hidden rounded-xl p-3 text-center shadow-md border border-[#E0A33A]/30 bg-gradient-to-br from-[#FDF6E3] via-[#FEF9EE] to-white">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#E0A33A] to-[#E0A33A]/50" />
         <div className="text-[10px] font-bold text-[#9D7A32] uppercase tracking-wider mb-1">Neto</div>
         <div className="font-extrabold text-xl text-[#9D7A32] tabular-nums">{fmtCurrency(neto)}</div>
       </div>
-
-      {/* Total Final — optional extra card */}
-      {showTotalFinal && (
-        <div className="relative overflow-hidden rounded-xl p-3 text-center shadow-md border border-[#143D34]/30 bg-gradient-to-br from-[#143D34] to-[#2D8D68]">
-          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#E0A33A] to-[#E0A33A]/60" />
-          <div className="text-[10px] font-bold text-[#E0A33A] uppercase tracking-wider mb-1">Total c/IVA</div>
-          <div className="font-extrabold text-xl text-white tabular-nums">{fmtCurrency(totalFinal ?? 0)}</div>
-        </div>
-      )}
     </div>
   )
 }
