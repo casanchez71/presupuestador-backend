@@ -482,7 +482,7 @@ export default function Editor() {
         />
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4" style={{ height: 'calc(100vh - 340px)' }}>
         {/* Tree Panel */}
         <div className="w-64 bg-white rounded-2xl shadow-sm border border-gray-200/80 flex-shrink-0 overflow-hidden">
           {/* Gradient header */}
@@ -558,7 +558,7 @@ export default function Editor() {
         </div>
 
         {/* Main Content Panel */}
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden flex flex-col">
           {/* Section header */}
           <div className="bg-gradient-to-r from-gray-50 to-white border-b px-5 py-3 flex justify-between items-center">
             <div>
@@ -642,10 +642,12 @@ export default function Editor() {
               </div>
             </div>
           ) : (
-            <DataTable items={items} onEditItem={handleEditItem} />
+            <div className="flex-1 overflow-auto">
+              <DataTable items={items} onEditItem={handleEditItem} />
+            </div>
           )}
 
-          <div className="px-5 py-2.5 bg-gradient-to-r from-[#E8F5EE] to-[#E8F5EE]/50 text-[10px] text-[#1B5E4B] border-t flex items-center gap-1.5">
+          <div className="px-5 py-2.5 bg-gradient-to-r from-[#E8F5EE] to-[#E8F5EE]/50 text-[10px] text-[#1B5E4B] border-t flex items-center gap-1.5 flex-shrink-0">
             <span className="w-1 h-1 rounded-full bg-[#2D8D68] inline-block" />
             Click en celdas punteadas para editar. Totales se recalculan automaticamente por la cadena de markups.
           </div>
