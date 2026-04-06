@@ -787,6 +787,8 @@ function StepEstructura({
   jsonFile,
   jsonSections,
   onJsonFile,
+  templateTasks,
+  onTemplateTasks,
 }: {
   structureOption: StructureOption
   setStructureOption: (v: StructureOption) => void
