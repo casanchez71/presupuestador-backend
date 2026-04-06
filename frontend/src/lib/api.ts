@@ -184,20 +184,18 @@ export const catalogApi = {
     get<CatalogEntry[]>(`/catalogs/${id}/search?q=${encodeURIComponent(q)}`),
   apply: (budgetId: string, catalogId: string) =>
     post<{ items_matched: number; items_unmatched: number; total_updated: number }>(`/catalogs/apply/${budgetId}/${catalogId}`),
-  deleteCatalog: (id: string) => api.delete(`/catalogs/${id}`).then(r => r.data),
+  deleteCatalog: (id: string) => del<any>(`/catalogs/${id}`),
   createEntry: (catalogId: string, data: any) =>
-    api.post(`/catalogs/${catalogId}/entries`, data).then(r => r.data),
+    post<any>(`/catalogs/${catalogId}/entries`, data),
   updateEntry: (catalogId: string, entryId: string, data: any) =>
-    api.patch(`/catalogs/${catalogId}/entries/${entryId}`, data).then(r => r.data),
+    patch<any>(`/catalogs/${catalogId}/entries/${entryId}`, data),
   deleteEntry: (catalogId: string, entryId: string) =>
-    api.delete(`/catalogs/${catalogId}/entries/${entryId}`).then(r => r.data),
+    del<any>(`/catalogs/${catalogId}/entries/${entryId}`),
   uploadCsv: (name: string, tipo: string, file: File) => {
     const formData = new FormData()
     formData.append('name', name)
     formData.append('tipo', tipo)
     formData.append('file', file)
-    return api.post('/catalogs/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }).then(r => r.data)
+    return postFile<any>('/catalogs/upload', formData)
   },
 }
