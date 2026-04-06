@@ -101,12 +101,13 @@ export default function DataTable({ items, onEditItem }: Props) {
     (acc, item) => ({
       directo: acc.directo + item.directo_total,
       indirecto: acc.indirecto + item.indirecto_total,
+      beneficio: acc.beneficio + (item.beneficio_total ?? 0),
       neto: acc.neto + item.neto_total,
       impuestos: acc.impuestos + (item.impuestos_total ?? 0),
       iva: acc.iva + (item.iva_total ?? 0),
       totalFinal: acc.totalFinal + (item.total_final ?? 0),
     }),
-    { directo: 0, indirecto: 0, neto: 0, impuestos: 0, iva: 0, totalFinal: 0 },
+    { directo: 0, indirecto: 0, beneficio: 0, neto: 0, impuestos: 0, iva: 0, totalFinal: 0 },
   )
 
   function renderEditableCell(item: BudgetItem, field: EditableField, format: (v: number) => string) {
@@ -203,10 +204,11 @@ export default function DataTable({ items, onEditItem }: Props) {
             </th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Directo</th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Indirecto</th>
+            <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Beneficio</th>
             <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Neto</th>
             {hasImpuestos && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Impuestos</th>}
             {hasIva && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">IVA</th>}
-            {hasTotalFinal && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-yellow-200">Total Final</th>}
+            {hasTotalFinal && <th className="px-3 py-2.5 text-right font-semibold text-[11px] tracking-wide text-white/70">Total Final</th>}
             <th className="px-3 py-2.5 w-6" />
           </tr>
         </thead>
@@ -232,6 +234,9 @@ export default function DataTable({ items, onEditItem }: Props) {
               </td>
               <td className="px-3 py-2.5 cost-cell text-gray-400">
                 {fmtCurrency(item.indirecto_total)}
+              </td>
+              <td className="px-3 py-2.5 cost-cell text-amber-600">
+                {fmtCurrency(item.beneficio_total ?? 0)}
               </td>
               <td className="px-3 py-2.5 cost-cell font-bold text-[#143D34]">
                 {fmtCurrency(item.neto_total)}
@@ -263,6 +268,7 @@ export default function DataTable({ items, onEditItem }: Props) {
               <td colSpan={6} className="px-3 py-3 text-right text-gray-400 uppercase text-[10px] tracking-wider">Total seccion</td>
               <td className="px-3 py-3 cost-cell text-blue-700 font-bold">{fmtCurrency(totals.directo)}</td>
               <td className="px-3 py-3 cost-cell text-[#E8663C] font-bold">{fmtCurrency(totals.indirecto)}</td>
+              <td className="px-3 py-3 cost-cell text-amber-600 font-bold">{fmtCurrency(totals.beneficio)}</td>
               <td className="px-3 py-3 cost-cell text-[#143D34] font-extrabold text-sm">{fmtCurrency(totals.neto)}</td>
               {hasImpuestos && <td className="px-3 py-3 cost-cell text-orange-600 font-bold">{fmtCurrency(totals.impuestos)}</td>}
               {hasIva && <td className="px-3 py-3 cost-cell text-blue-600 font-bold">{fmtCurrency(totals.iva)}</td>}
