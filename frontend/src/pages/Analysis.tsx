@@ -245,13 +245,14 @@ export default function Analysis() {
 
       {/* Section table */}
       <div className="bg-white rounded-xl border overflow-hidden">
-        <div className="bg-gray-50 px-3 py-2 border-b">
-          <span className="text-[10px] font-bold text-gray-500 tracking-wide">
+        <div className="bg-[#E8F5EE]/30 px-3 py-2">
+          <span className="text-[10px] font-bold text-[#2D8D68] tracking-wide">
             DESGLOSE POR {VIEW_MODE_LABELS[viewMode].toUpperCase()}
           </span>
         </div>
+        <div className="overflow-auto max-h-[calc(100vh-420px)]">
         <table className="w-full text-xs">
-          <thead className="bg-gray-100 text-gray-600">
+          <thead className="bg-[#E8F5EE] text-[#143D34] sticky top-0 z-10">
             <tr>
               <th className="px-3 py-2 text-left font-semibold">Seccion</th>
               <th className="px-3 py-2 text-right font-semibold">MAT</th>
@@ -272,7 +273,7 @@ export default function Analysis() {
               </tr>
             ) : (
               sections.map((s, i) => (
-                <tr key={i} className="border-b hover:bg-gray-50">
+                <tr key={i} className={`${i % 2 === 1 ? 'bg-gray-50/30' : ''} hover:bg-[#E8F5EE]/20 transition-colors`}>
                   <td className="px-3 py-2 font-medium text-gray-800">{s.name}</td>
                   <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mat)}</td>
                   <td className="px-3 py-2 cost-cell">{fmtCurrency(s.mo)}</td>
@@ -287,21 +288,22 @@ export default function Analysis() {
               ))
             )}
           </tbody>
-          <tfoot className="bg-[#143D34] text-white font-semibold">
+          <tfoot className="bg-[#E8F5EE] text-[#143D34] font-semibold sticky bottom-0 z-10">
             <tr>
               <td className="px-3 py-3">TOTAL OBRA</td>
               <td className="px-3 py-3 cost-cell">{fmtCurrency(matTotal)}</td>
               <td className="px-3 py-3 cost-cell">{fmtCurrency(moTotal)}</td>
-              <td className="px-3 py-3 cost-cell text-green-200">{fmtCurrency(directoTotal)}</td>
+              <td className="px-3 py-3 cost-cell">{fmtCurrency(directoTotal)}</td>
               <td className="px-3 py-3 cost-cell">{fmtCurrency(indirectoTotal)}</td>
-              <td className="px-3 py-3 cost-cell text-amber-300">{fmtCurrency(beneficioTotal)}</td>
-              <td className="px-3 py-3 cost-cell text-emerald-300">{fmtCurrency(netoTotal)}</td>
-              <td className="px-3 py-3 cost-cell text-[#E0A33A] text-base font-bold">
+              <td className="px-3 py-3 cost-cell">{fmtCurrency(beneficioTotal)}</td>
+              <td className="px-3 py-3 cost-cell">{fmtCurrency(netoTotal)}</td>
+              <td className="px-3 py-3 cost-cell text-base font-bold">
                 {fmtCurrency(totalFinalGlobal > 0 ? totalFinalGlobal : netoTotal)}
               </td>
             </tr>
           </tfoot>
         </table>
+        </div>
       </div>
     </div>
   )
