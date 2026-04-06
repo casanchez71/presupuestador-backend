@@ -194,7 +194,8 @@ export default function Dashboard() {
               const a = analyses[b.id]
               const dateStr = b.updated_at || b.created_at
               const itemsText = a ? `${a.items_count} items` : ''
-              const statusText = b.status === 'draft' ? 'Borrador' : b.status === 'approved' ? 'Aprobado' : (b.status || '')
+              const STATUS_MAP: Record<string, string> = { draft: 'Borrador', active: 'Activo', approved: 'Aprobado', sent: 'Enviado', review: 'En Revisión' }
+              const statusText = STATUS_MAP[b.status?.toLowerCase() || ''] || b.status || ''
               const detail = [statusText, itemsText].filter(Boolean).join(' - ')
               return (
                 <div
@@ -229,12 +230,13 @@ function KpiCard({
   valueClass?: string
 }) {
   return (
-    <div className="bg-white rounded-xl border p-4">
+    <div className="relative overflow-hidden rounded-xl p-4 bg-gradient-to-br from-white to-gray-50/50 shadow-sm border border-gray-100">
+      <div className={`absolute top-0 left-0 w-full h-0.5 ${bg}`} />
       <div className="flex items-center gap-2 mb-1">
-        <div className={`w-8 h-8 ${bg} rounded-lg flex items-center justify-center`}>{icon}</div>
+        <div className={`w-7 h-7 ${bg} rounded-lg flex items-center justify-center`}>{icon}</div>
       </div>
       <div className={`text-2xl font-bold ${valueClass}`}>{value}</div>
-      <div className="text-[11px] text-gray-500">{label}</div>
+      <div className="text-[10px] text-gray-400 uppercase tracking-wider">{label}</div>
     </div>
   )
 }
