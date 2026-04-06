@@ -4,6 +4,42 @@ Todas las versiones notables del proyecto se documentan aca.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 Versionado segun [Semantic Versioning](https://semver.org/).
 
+## [3.0.0] — 2026-04-05
+
+### Agregado
+- Motor de calculo cascada: recursos → unitarios → directo → indirectos → beneficio → impuestos → IVA → total final (`app/calculations.py`)
+- IA con contexto de catalogo: GPT-4o Vision recibe los catalogos del usuario y genera items CON recursos desglosados (`app/routers/ai.py`)
+- CRUD de recursos por item: crear, editar, eliminar, bulk (`app/routers/budgets.py`)
+- Endpoint cascade-recalculate: recalcula TODO desde recursos hasta total final (`app/routers/analysis.py`)
+- Sistema de templates reutilizables: CRUD + aplicar a items (`app/routers/templates.py`)
+- 12 templates TERRAC con codigos reales (H30, LP18, ARG, MO-OF, SUB-PI, etc.)
+- Pagina Templates en sidebar (`frontend/src/pages/Templates.tsx`)
+- Boton "Cargar template" en detalle de item con modal de seleccion
+- ItemDetail reescrito: 5 secciones de recursos (Materiales, MO Personas, MO Equipos, Mat. Indirectos, Subcontratos)
+- Cadena de Markups completa: 9 campos editables (Imprevistos, Estructura, Jefatura, Logistica, Herramientas, Beneficio, IIBB, Imp.Cheque, IVA)
+- CostSummaryBar expandible: 5 tarjetas base + Beneficio y Total c/IVA cuando hay datos
+- Auto-recalculo al editar celdas (sin boton)
+- Boton "Recalculo completo" para cascada desde recursos
+- Indicador de catalogos en wizard IA (verde si hay, amarillo si no)
+- Badges de estado en espanol (Borrador, En Revision, Aprobado, Enviado)
+- Migracion 003: tipos mo_material, campos MO (trabajadores/dias/cargas), impuestos, tabla item_templates
+- Documentacion: PLAN_FLUJO_AUTOMATICO.md, INSTRUCTIVO_EJEMPLO_COMPLETO.md, ARQUITECTURA_PLATAFORMA.md, MANUAL_REVISION_SOLE.md
+
+### Corregido
+- NewProject crash: StepEstructura no destructuraba templateTasks de props (bug pre-existente)
+- Boton detalle por fila invisible: Editor no pasaba onViewDetail a DataTable
+- Analysis KPIs desaparecidos: restauradas 3 tarjetas grandes + 6 KPI mini
+- Pantalla en blanco por null en format: fmtCurrency/fmtNumber/fmtPercent ahora toleran null
+- CostSummaryBar crash: props beneficio/totalFinal no aceptadas por version vieja
+- Deploy Render fallaba: CatalogEntryCreate/Update schemas perdidas durante merge
+- Altura hardcodeada calc(100vh-340px) reemplazada por flex layout responsive
+
+### Cambiado
+- Cascada indirectos: beneficio ahora se aplica sobre Subtotal con Indirectos (no sobre Directo)
+- Indirectos incluyen: imprevistos_pct, ingresos_brutos_pct, imp_cheque_pct, iva_pct
+
+---
+
 ## [2.1.0] — En desarrollo
 
 ### Agregado

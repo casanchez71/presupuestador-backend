@@ -350,7 +350,7 @@ export default function Editor() {
     : 41
 
   return (
-    <div className="p-4 fade-in">
+    <div className="p-4 fade-in h-full flex flex-col">
       {/* Toast notifications */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
         {toasts.map((toast) => (
@@ -482,7 +482,7 @@ export default function Editor() {
         />
       </div>
 
-      <div className="flex gap-4" style={{ height: 'calc(100vh - 340px)' }}>
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Tree Panel */}
         <div className="w-64 bg-white rounded-2xl shadow-sm border border-gray-200/80 flex-shrink-0 overflow-hidden">
           {/* Gradient header */}
@@ -643,7 +643,11 @@ export default function Editor() {
             </div>
           ) : (
             <div className="flex-1 overflow-auto">
-              <DataTable items={items} onEditItem={handleEditItem} />
+              <DataTable
+                items={items}
+                onEditItem={handleEditItem}
+                onViewDetail={(itemId) => navigate(`/app/budgets/${id}/item/${itemId}`)}
+              />
             </div>
           )}
 

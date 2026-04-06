@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { BarChart2, Download } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import { fmtCurrency } from '../lib/format'
-import CostSummaryBar from '../components/ui/CostSummaryBar'
 import ViewModeSelector from '../components/ui/ViewModeSelector'
 import { groupByFloor, groupByMaterial, groupByWorkType } from '../lib/viewModes'
 import type { ViewMode } from '../lib/viewModes'
@@ -192,9 +191,50 @@ export default function Analysis() {
           </div>
         )}
 
-        {/* Summary bar — same CostSummaryBar as Editor */}
-        <div className="rounded-xl border mb-3 overflow-hidden">
-          <CostSummaryBar mat={matTotal} mo={moTotal} directo={directoTotal} indirecto={indirectoTotal} neto={netoTotal} />
+        {/* 3 big summary cards */}
+        <div className="grid grid-cols-3 gap-3 mb-3">
+          <div className="bg-white rounded-xl border p-4">
+            <div className="text-[10px] text-gray-400 mb-1">ITEMS TOTALES</div>
+            <div className="text-2xl font-bold text-gray-900">{itemsCount}</div>
+            <div className="text-[10px] text-gray-500 mt-1">En {sections.length} secciones principales</div>
+          </div>
+          <div className="bg-white rounded-xl border p-4">
+            <div className="text-[10px] text-gray-400 mb-1">COSTO DIRECTO</div>
+            <div className="text-2xl font-bold text-gray-900">{fmtCurrency(directoTotal)}</div>
+            <div className="text-[10px] text-gray-500 mt-1">MAT {fmtCurrency(matTotal)} + MO {fmtCurrency(moTotal)}</div>
+          </div>
+          <div className="bg-[#2D8D68] rounded-xl p-4 text-white">
+            <div className="text-[10px] text-white/70 mb-1">NETO TOTAL</div>
+            <div className="text-2xl font-bold">{fmtCurrency(netoTotal)}</div>
+          </div>
+        </div>
+
+        {/* 6 KPI mini cards */}
+        <div className="grid grid-cols-6 gap-2 mb-3">
+          <div className="bg-white rounded-lg border p-2.5 text-center">
+            <div className="text-[9px] text-gray-400">Materiales</div>
+            <div className="text-sm font-bold text-gray-800">{fmtCurrency(matTotal)}</div>
+          </div>
+          <div className="bg-white rounded-lg border p-2.5 text-center">
+            <div className="text-[9px] text-gray-400">Mano de Obra</div>
+            <div className="text-sm font-bold text-gray-800">{fmtCurrency(moTotal)}</div>
+          </div>
+          <div className="bg-blue-50 rounded-lg border border-blue-200 p-2.5 text-center">
+            <div className="text-[9px] text-blue-500">Directo</div>
+            <div className="text-sm font-bold text-blue-700">{fmtCurrency(directoTotal)}</div>
+          </div>
+          <div className="bg-orange-50 rounded-lg border border-orange-200 p-2.5 text-center">
+            <div className="text-[9px] text-orange-500">Indirectos</div>
+            <div className="text-sm font-bold text-orange-600">{fmtCurrency(indirectoTotal)}</div>
+          </div>
+          <div className="bg-amber-50 rounded-lg border border-amber-200 p-2.5 text-center">
+            <div className="text-[9px] text-amber-600">Beneficio</div>
+            <div className="text-sm font-bold text-amber-700">{fmtCurrency(beneficioTotal)}</div>
+          </div>
+          <div className="bg-[#143D34] rounded-lg p-2.5 text-center text-white">
+            <div className="text-[9px] text-[#E0A33A]">NETO</div>
+            <div className="text-sm font-bold">{fmtCurrency(netoTotal)}</div>
+          </div>
         </div>
       </div>
 

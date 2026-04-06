@@ -1,0 +1,163 @@
+[
+  {
+    "nombre": "Hormigón H-30 columnas",
+    "unidad": "m3",
+    "categoria": "estructura",
+    "descripcion": "Columnas de hormigón armado H-30 con encofrado — composición TERRAC",
+    "recursos": [
+      {"tipo": "material", "codigo": "H30", "descripcion": "Hormigón H30", "unidad": "m3", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "HADN6", "descripcion": "Hierros ADN 420 Ø6", "unidad": "barra", "cantidad_por_unidad": 9.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "HADN12", "descripcion": "Hierros ADN 420 Ø12", "unidad": "barra", "cantidad_por_unidad": 2.3, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "HADN16", "descripcion": "Hierros ADN 420 Ø16", "unidad": "barra", "cantidad_por_unidad": 1.6, "desperdicio_pct": 10},
+      {"tipo": "mo_material", "codigo": "F-GR2", "descripcion": "Fenólico 18mm Grandis 2 Buenas", "unidad": "placa", "cantidad_por_unidad": 2.0, "desperdicio_pct": 25},
+      {"tipo": "mo_material", "codigo": "CL2.5", "descripcion": "Clavos 2,5\" punta paris", "unidad": "kg", "cantidad_por_unidad": 0.5, "desperdicio_pct": 10},
+      {"tipo": "mo_material", "codigo": "AL-50k", "descripcion": "Alambre Fardo", "unidad": "kg", "cantidad_por_unidad": 1.5, "desperdicio_pct": 10},
+      {"tipo": "mano_obra", "codigo": "MO-CA", "descripcion": "Capataz", "trabajadores_por_unidad": 0.04, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.17, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.13, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "equipo", "codigo": "H-PL-TI", "descripcion": "Bomba Pluma Traslado e Instalación", "unidad": "gl", "cantidad_por_unidad": 0.04, "desperdicio_pct": 0},
+      {"tipo": "equipo", "codigo": "H-PL-m", "descripcion": "Bomba Pluma m3 bombeable", "unidad": "m3", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10}
+    ]
+  },
+  {
+    "nombre": "Hormigón H-21 losa",
+    "unidad": "m3",
+    "categoria": "estructura",
+    "descripcion": "Losa de hormigón armado H-21 con encofrado — composición TERRAC",
+    "recursos": [
+      {"tipo": "material", "codigo": "H21", "descripcion": "Hormigón H21", "unidad": "m3", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "HADN8", "descripcion": "Hierros ADN 420 Ø8", "unidad": "barra", "cantidad_por_unidad": 6.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "HADN10", "descripcion": "Hierros ADN 420 Ø10", "unidad": "barra", "cantidad_por_unidad": 3.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "M5", "descripcion": "Malla Ø5 (2mx5m)", "unidad": "paño", "cantidad_por_unidad": 0.1, "desperdicio_pct": 10},
+      {"tipo": "mo_material", "codigo": "F-GR2", "descripcion": "Fenólico 18mm Grandis 2 Buenas", "unidad": "placa", "cantidad_por_unidad": 3.5, "desperdicio_pct": 25},
+      {"tipo": "mo_material", "codigo": "F-P", "descripcion": "Puntal 3x3x3,66m tirante saligna", "unidad": "u", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10},
+      {"tipo": "mano_obra", "codigo": "MO-CA", "descripcion": "Capataz", "trabajadores_por_unidad": 0.05, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.22, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.17, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "equipo", "codigo": "H-PL-TI", "descripcion": "Bomba Pluma Traslado e Instalación", "unidad": "gl", "cantidad_por_unidad": 0.04, "desperdicio_pct": 0},
+      {"tipo": "equipo", "codigo": "H-PL-m", "descripcion": "Bomba Pluma m3 bombeable", "unidad": "m3", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10}
+    ]
+  },
+  {
+    "nombre": "Mampostería ladrillo portante 18cm",
+    "unidad": "m2",
+    "categoria": "albañilería",
+    "descripcion": "Muro de ladrillo portante 18cm con mezcla — composición TERRAC",
+    "recursos": [
+      {"tipo": "material", "codigo": "LP18", "descripcion": "Ladrillo Portante 18", "unidad": "u", "cantidad_por_unidad": 16, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "ARG", "descripcion": "Arena a granel (1m3)", "unidad": "m3", "cantidad_por_unidad": 0.025, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CEM", "descripcion": "Cemento Loma Negra 25k", "unidad": "bolsa", "cantidad_por_unidad": 0.218, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CAL", "descripcion": "Cal Cacique 25k", "unidad": "bolsa", "cantidad_por_unidad": 0.213, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "HADN6", "descripcion": "Hierros ADN 420 Ø6 (dinteles)", "unidad": "barra", "cantidad_por_unidad": 0.33, "desperdicio_pct": 10},
+      {"tipo": "mano_obra", "codigo": "MO-CA", "descripcion": "Capataz", "trabajadores_por_unidad": 0.017, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-PU", "descripcion": "Puntero", "trabajadores_por_unidad": 0.033, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.05, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.05, "dias_por_unidad": 1, "cargas_sociales_pct": 25}
+    ]
+  },
+  {
+    "nombre": "Revoque grueso interior",
+    "unidad": "m2",
+    "categoria": "albañilería",
+    "descripcion": "Revoque grueso interior sobre mampostería — composición TERRAC",
+    "recursos": [
+      {"tipo": "material", "codigo": "ARG", "descripcion": "Arena a granel (1m3)", "unidad": "m3", "cantidad_por_unidad": 0.02, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CEM", "descripcion": "Cemento Loma Negra 25k", "unidad": "bolsa", "cantidad_por_unidad": 0.16, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CAL", "descripcion": "Cal Cacique 25k", "unidad": "bolsa", "cantidad_por_unidad": 0.16, "desperdicio_pct": 10},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.04, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.04, "dias_por_unidad": 1, "cargas_sociales_pct": 25}
+    ]
+  },
+  {
+    "nombre": "Revoque fino interior",
+    "unidad": "m2",
+    "categoria": "albañilería",
+    "descripcion": "Revoque fino interior sobre grueso — composición TERRAC",
+    "recursos": [
+      {"tipo": "material", "codigo": "ARG", "descripcion": "Arena a granel (1m3)", "unidad": "m3", "cantidad_por_unidad": 0.01, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CEM", "descripcion": "Cemento Loma Negra 25k", "unidad": "bolsa", "cantidad_por_unidad": 0.08, "desperdicio_pct": 15},
+      {"tipo": "material", "codigo": "CAL", "descripcion": "Cal Cacique 25k", "unidad": "bolsa", "cantidad_por_unidad": 0.12, "desperdicio_pct": 10},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.033, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.033, "dias_por_unidad": 1, "cargas_sociales_pct": 25}
+    ]
+  },
+  {
+    "nombre": "Contrapiso H8",
+    "unidad": "m2",
+    "categoria": "albañilería",
+    "descripcion": "Contrapiso de hormigón pobre H8 espesor 10cm — composición TERRAC",
+    "recursos": [
+      {"tipo": "material", "codigo": "H8", "descripcion": "Hormigón H8", "unidad": "m3", "cantidad_por_unidad": 0.10, "desperdicio_pct": 10},
+      {"tipo": "mano_obra", "codigo": "MO-OF", "descripcion": "Oficial", "trabajadores_por_unidad": 0.025, "dias_por_unidad": 1, "cargas_sociales_pct": 25},
+      {"tipo": "mano_obra", "codigo": "MO-AY", "descripcion": "Ayudante", "trabajadores_por_unidad": 0.025, "dias_por_unidad": 1, "cargas_sociales_pct": 25}
+    ]
+  },
+  {
+    "nombre": "Pintura interior látex 2 manos",
+    "unidad": "m2",
+    "categoria": "terminaciones",
+    "descripcion": "Pintura interior látex con enduido y fijador — composición TERRAC",
+    "recursos": [
+      {"tipo": "material", "codigo": "RE-PLI20", "descripcion": "Pintura Latex Interior Loxon 20l", "unidad": "litro", "cantidad_por_unidad": 0.3, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "RE-FIJ", "descripcion": "Fijador Sellador Sellaplast 10L", "unidad": "litro", "cantidad_por_unidad": 0.15, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "RE-END15", "descripcion": "Enduido Plástico Interior 15l", "unidad": "litro", "cantidad_por_unidad": 0.2, "desperdicio_pct": 10},
+      {"tipo": "subcontrato", "codigo": "SUB-PI", "descripcion": "Pintura Interior", "unidad": "m2", "cantidad_por_unidad": 1.0, "desperdicio_pct": 0}
+    ]
+  },
+  {
+    "nombre": "Cerámica piso colocada",
+    "unidad": "m2",
+    "categoria": "terminaciones",
+    "descripcion": "Cerámica de piso con Klaukol y pastina — composición TERRAC",
+    "recursos": [
+      {"tipo": "material", "codigo": "RP-CER", "descripcion": "Cerámica 74x74", "unidad": "m2", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "RP-KC", "descripcion": "Klaukol Cerámica 25k", "unidad": "bolsa", "cantidad_por_unidad": 0.2, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "PR-PASC1", "descripcion": "Pastina Klaukol Cerámica 1kg", "unidad": "kg", "cantidad_por_unidad": 0.5, "desperdicio_pct": 10},
+      {"tipo": "subcontrato", "codigo": "SUB-PIS", "descripcion": "Pisero colocación", "unidad": "m2", "cantidad_por_unidad": 1.0, "desperdicio_pct": 0}
+    ]
+  },
+  {
+    "nombre": "Porcelanato piso colocado",
+    "unidad": "m2",
+    "categoria": "terminaciones",
+    "descripcion": "Porcelanato con Klaukol porcelanato y pastina — composición TERRAC",
+    "recursos": [
+      {"tipo": "material", "codigo": "RP-PORC", "descripcion": "Porcelanato Villagres 82x141,5", "unidad": "m2", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "RP-KP", "descripcion": "Klaukol Porcelanato 25k", "unidad": "bolsa", "cantidad_por_unidad": 0.2, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "PR-PASP1", "descripcion": "Pastina Klaukol Porcelanato 1kg", "unidad": "kg", "cantidad_por_unidad": 0.5, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "RP-NIVPORC", "descripcion": "Niveladores Porcelanato", "unidad": "u", "cantidad_por_unidad": 4, "desperdicio_pct": 10},
+      {"tipo": "subcontrato", "codigo": "SUB-PIS", "descripcion": "Pisero colocación", "unidad": "m2", "cantidad_por_unidad": 1.0, "desperdicio_pct": 0}
+    ]
+  },
+  {
+    "nombre": "Instalación eléctrica por boca completa",
+    "unidad": "u",
+    "categoria": "instalaciones",
+    "descripcion": "Boca eléctrica completa MO + materiales — composición TERRAC",
+    "recursos": [
+      {"tipo": "subcontrato", "codigo": "SUB-E-BOC", "descripcion": "Boca MO y Materiales", "unidad": "u", "cantidad_por_unidad": 1.0, "desperdicio_pct": 0}
+    ]
+  },
+  {
+    "nombre": "Cielorraso Durlock",
+    "unidad": "m2",
+    "categoria": "terminaciones",
+    "descripcion": "Cielorraso suspendido de Durlock — composición TERRAC",
+    "recursos": [
+      {"tipo": "material", "codigo": "D-PL12.5", "descripcion": "Placa Durlock 12,5mm", "unidad": "u", "cantidad_por_unidad": 0.33, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "D-POM", "descripcion": "Perfil Omega", "unidad": "u", "cantidad_por_unidad": 0.7, "desperdicio_pct": 10},
+      {"tipo": "material", "codigo": "D-BUN", "descripcion": "Buña Z Perimetral", "unidad": "ml", "cantidad_por_unidad": 0.5, "desperdicio_pct": 10},
+      {"tipo": "subcontrato", "codigo": "SUB-CIE", "descripcion": "Instalación Cielorraso Durlock", "unidad": "m2", "cantidad_por_unidad": 1.0, "desperdicio_pct": 0}
+    ]
+  },
+  {
+    "nombre": "Yeso proyectado pared",
+    "unidad": "m2",
+    "categoria": "terminaciones",
+    "descripcion": "Yeso proyectado sobre pared interior — composición TERRAC",
+    "recursos": [
+      {"tipo": "material", "codigo": "YES-P", "descripcion": "Yeso Proyectado Tuyango 30k", "unidad": "bolsa", "cantidad_por_unidad": 0.33, "desperdicio_pct": 10},
+      {"tipo": "subcontrato", "codigo": "SUB-YP", "descripcion": "Yeso proyectado en Pared", "unidad": "m2", "cantidad_por_unidad": 1.0, "desperdicio_pct": 0}
+    ]
+  }
+]
