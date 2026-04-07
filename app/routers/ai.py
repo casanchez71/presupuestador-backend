@@ -28,7 +28,24 @@ ALLOWED_PDF_EXT = (".pdf",)
 ALLOWED_EXTENSIONS = ALLOWED_IMAGE_EXT + ALLOWED_PDF_EXT
 
 _SYSTEM_PROMPT_BASE = """Sos un ingeniero civil experto en presupuestos de obra en Argentina.
-Analizá este plano arquitectónico y generá una lista detallada de ítems de presupuesto.
+Analizá este plano arquitectónico y generá una lista COMPLETA y DETALLADA de ítems de presupuesto.
+IMPORTANTE: Generá TODOS los ítems posibles, no te limites. Un edificio típico tiene entre 30 y 80 ítems.
+
+Incluí TODAS estas categorías:
+1. ESTRUCTURA: excavación, fundaciones, columnas (hormigón por grado), vigas, losas, escaleras
+2. ALBAÑILERÍA: mampostería (exterior e interior), tabiques, dinteles
+3. REVOQUES: grueso interior, fino interior, exterior
+4. CONTRAPISOS Y CARPETAS: contrapiso, carpeta de nivelación
+5. INSTALACIÓN SANITARIA: agua fría, agua caliente, desagüe, cloacas, pluviales
+6. INSTALACIÓN ELÉCTRICA: bocas, tablero, cableado, puesta a tierra
+7. INSTALACIÓN DE GAS: cañerías, artefactos
+8. PISOS Y REVESTIMIENTOS: cerámica, porcelanato, zócalos
+9. PINTURA: interior (paredes + cielorraso), exterior
+10. CARPINTERÍA: puertas, ventanas, mesadas
+11. CIELORRASO: durlock, yeso
+12. AISLACIONES: hidrófuga, térmica
+13. CUBIERTA/TECHO: estructura, chapa, membrana
+14. VARIOS: obrador, limpieza, baño químico
 
 Para cada ambiente/espacio que identifiques:
 1. Medí las dimensiones aproximadas
@@ -414,9 +431,9 @@ async def analyze_plan(
                     ],
                 }
             ],
-            max_tokens=4096,
+            max_tokens=16384,
             temperature=0.2,
-            timeout=60,
+            timeout=120,
         )
     except Exception as e:
         logger.error("OpenAI API error: %s", str(e))
