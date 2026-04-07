@@ -160,7 +160,7 @@ export default function Dashboard() {
 
       {/* Budget cards */}
       {!loading && budgets.length === 0 && !error && (
-        <div className="mb-6 text-center py-12 bg-white rounded-xl border">
+        <div className="mb-6 text-center py-12 bg-white rounded-xl border border-gray-100 shadow-sm">
           <p className="text-gray-500 text-sm mb-2">No hay presupuestos todavía.</p>
           <button
             onClick={() => navigate('/app/new-project')}
@@ -171,7 +171,7 @@ export default function Dashboard() {
         </div>
       )}
       {!loading && budgets.length > 0 && filteredBudgets.length === 0 && (
-        <div className="mb-6 text-center py-8 bg-white rounded-xl border">
+        <div className="mb-6 text-center py-8 bg-white rounded-xl border border-gray-100 shadow-sm">
           <p className="text-gray-500 text-sm">No hay presupuestos que coincidan con la búsqueda.</p>
         </div>
       )}
@@ -193,7 +193,7 @@ export default function Dashboard() {
 
       {/* Activity — real recent budgets */}
       {budgets.length > 0 && (
-        <div className="bg-white rounded-xl border p-5">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
           <h3 className="font-semibold text-gray-900 text-sm mb-3">ACTIVIDAD RECIENTE</h3>
           <div className="space-y-2 text-sm">
             {budgets.slice(0, 5).map((b, i) => {

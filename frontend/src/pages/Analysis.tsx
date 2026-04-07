@@ -193,13 +193,13 @@ export default function Analysis() {
         )}
 
         {/* Summary bar — same CostSummaryBar as Editor */}
-        <div className="rounded-xl border mb-3 overflow-hidden">
+        <div className="rounded-xl border border-gray-100 shadow-sm mb-3 overflow-hidden">
           <CostSummaryBar mat={matTotal} mo={moTotal} directo={directoTotal} indirecto={indirectoTotal} neto={netoTotal} />
         </div>
       </div>
 
       {/* Scrollable table area */}
-      <div className="flex-1 min-h-0 bg-white rounded-xl border overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
         <div className="bg-[#E8F5EE]/30 px-3 py-2 border-b flex-shrink-0">
           <span className="text-[10px] font-bold text-[#2D8D68] tracking-wide">
             DESGLOSE POR {VIEW_MODE_LABELS[viewMode].toUpperCase()}
