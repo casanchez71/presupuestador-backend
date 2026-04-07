@@ -154,14 +154,20 @@ def _resize_image_if_needed(content: bytes, ext: str) -> bytes:
 
 
 def _pdf_first_page_to_image(content: bytes) -> bytes:
-    """Extract first page of PDF as a PNG image."""
+    """Extract first page of PDF as a PNG image, capped at MAX_DIMENSION px."""
     try:
         import fitz  # PyMuPDF
 
         doc = fitz.open(stream=content, filetype="pdf")
         page = doc[0]
-        # Render at 2x for detail
-        mat = fitz.Matrix(2.0, 2.0)
+        # Render at 1x (72 DPI) first to check native size, then scale
+        # so the longest side does not exceed MAX_DIMENSION.
+        rect = page.rect
+        native_w, native_h = rect.width, rect.height
+        # Choose a scale so the output stays within MAX_DIMENSION px
+        max_native = max(native_w, native_h)
+        scale = min(MAX_DIMENSION / max_native, 2.0) if max_native > 0 else 1.0
+        mat = fitz.Matrix(scale, scale)
         pix = page.get_pixmap(matrix=mat)
         png_bytes = pix.tobytes("png")
         doc.close()
@@ -357,6 +363,14 @@ async def analyze_plan(
         # Resize large images
         content = _resize_image_if_needed(content, ext)
         mime = "image/jpeg" if ext in (".jpg", ".jpeg") else f"image/{ext.lstrip('.')}"
+
+    # Validate final size after processing
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(
+            400,
+            "El archivo procesado supera los 10 MB. "
+            "Por favor, reducí la resolución del plano o exportalo como JPG de menor calidad antes de subirlo.",
+        )
 
     b64 = base64.b64encode(content).decode("utf-8")
 

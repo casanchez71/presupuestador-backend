@@ -54,6 +54,14 @@ interface IndirectCosts {
 }
 
 type PriceOption = 'csv' | 'catalog' | 'skip'
+type CsvTipo = 'material' | 'mano_obra' | 'equipo' | 'subcontrato'
+
+interface CsvEntry {
+  id: string
+  nombre: string
+  tipo: CsvTipo
+  file: File
+}
 type StructureOption = 'template' | 'plan' | 'manual' | 'json'
 
 const STEPS = [
@@ -86,8 +94,7 @@ export default function NewProject() {
 
   // Step 2
   const [priceOption, setPriceOption] = useState<PriceOption>('skip')
-  const [csvFile, setCsvFile] = useState<File | null>(null)
-  const [csvPreview, setCsvPreview] = useState<string[][]>([])
+  const [csvEntries, setCsvEntries] = useState<CsvEntry[]>([])
   const [catalogs, setCatalogs] = useState<PriceCatalog[]>([])
   const [selectedCatalog, setSelectedCatalog] = useState('')
   const [catalogsLoaded, setCatalogsLoaded] = useState(false)
@@ -157,18 +164,14 @@ export default function NewProject() {
       .finally(() => setCatalogsLoaded(true))
   }, [catalogsLoaded])
 
-  // ─── CSV preview parsing ──────────────────────────────────────────────────
+  // ─── CSV multi-entry management ──────────────────────────────────────────
 
-  function handleCsvFile(f: File) {
-    setCsvFile(f)
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const text = e.target?.result as string
-      const lines = text.split('\n').filter((l) => l.trim())
-      const rows = lines.slice(0, 11).map((l) => l.split(/[,;\t]/).map((c) => c.trim()))
-      setCsvPreview(rows)
-    }
-    reader.readAsText(f)
+  function addCsvEntry(nombre: string, tipo: CsvTipo, file: File) {
+    setCsvEntries((prev) => [...prev, { id: uid(), nombre, tipo, file }])
+  }
+
+  function removeCsvEntry(id: string) {
+    setCsvEntries((prev) => prev.filter((e) => e.id !== id))
   }
 
   // ─── JSON structure import ────────────────────────────────────────────────
@@ -402,8 +405,16 @@ export default function NewProject() {
         // Indirects endpoint may not exist yet - continue
       }
 
-      // 5. Apply catalog if selected
-      if (priceOption === 'catalog' && selectedCatalog) {
+      // 5. Upload CSVs or apply catalog
+      if (priceOption === 'csv' && csvEntries.length > 0) {
+        for (const entry of csvEntries) {
+          try {
+            await catalogApi.uploadCsv(entry.nombre, entry.tipo, entry.file)
+          } catch {
+            // Continue even if one CSV fails
+          }
+        }
+      } else if (priceOption === 'catalog' && selectedCatalog) {
         try {
           await catalogApi.apply(budgetId, selectedCatalog)
         } catch {
@@ -497,9 +508,9 @@ export default function NewProject() {
           <StepPrecios
             priceOption={priceOption}
             setPriceOption={setPriceOption}
-            csvFile={csvFile}
-            csvPreview={csvPreview}
-            onCsvFile={handleCsvFile}
+            csvEntries={csvEntries}
+            onAddCsvEntry={addCsvEntry}
+            onRemoveCsvEntry={removeCsvEntry}
             catalogs={catalogs}
             selectedCatalog={selectedCatalog}
             setSelectedCatalog={setSelectedCatalog}
@@ -646,12 +657,26 @@ function StepDatos({
 
 // ─── Step 2: Lista de Precios ───────────────────────────────────────────────
 
+const CSV_TIPO_LABELS: Record<CsvTipo, string> = {
+  material: 'Material',
+  mano_obra: 'Mano de obra',
+  equipo: 'Equipo',
+  subcontrato: 'Subcontrato',
+}
+
+const CSV_TIPO_COLORS: Record<CsvTipo, string> = {
+  material: 'bg-blue-50 text-blue-700',
+  mano_obra: 'bg-orange-50 text-orange-700',
+  equipo: 'bg-purple-50 text-purple-700',
+  subcontrato: 'bg-gray-100 text-gray-600',
+}
+
 function StepPrecios({
   priceOption,
   setPriceOption,
-  csvFile,
-  csvPreview,
-  onCsvFile,
+  csvEntries,
+  onAddCsvEntry,
+  onRemoveCsvEntry,
   catalogs,
   selectedCatalog,
   setSelectedCatalog,
@@ -659,14 +684,28 @@ function StepPrecios({
 }: {
   priceOption: PriceOption
   setPriceOption: (v: PriceOption) => void
-  csvFile: File | null
-  csvPreview: string[][]
-  onCsvFile: (f: File) => void
+  csvEntries: CsvEntry[]
+  onAddCsvEntry: (nombre: string, tipo: CsvTipo, file: File) => void
+  onRemoveCsvEntry: (id: string) => void
   catalogs: PriceCatalog[]
   selectedCatalog: string
   setSelectedCatalog: (v: string) => void
   loadCatalogs: () => void
 }) {
+  const [newNombre, setNewNombre] = useState('')
+  const [newTipo, setNewTipo] = useState<CsvTipo>('material')
+  const [newFile, setNewFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  function handleAgregar() {
+    if (!newNombre.trim() || !newFile) return
+    onAddCsvEntry(newNombre.trim(), newTipo, newFile)
+    setNewNombre('')
+    setNewTipo('material')
+    setNewFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
   return (
     <div className="fade-in space-y-4">
       <div className="bg-white rounded-xl border p-6">
@@ -703,31 +742,80 @@ function StepPrecios({
         </div>
 
         {priceOption === 'csv' && (
-          <div className="fade-in">
-            <FileUpload
-              accept=".csv,.tsv,.txt"
-              label="Arrastra tu archivo de precios"
-              hint=".csv con columnas: tipo, codigo, descripcion, unidad, precio"
-              onFile={onCsvFile}
-            />
-            {csvFile && csvPreview.length > 0 && (
-              <div className="mt-4 overflow-x-auto">
-                <div className="text-xs font-medium text-gray-500 mb-2">
-                  Vista previa ({csvPreview.length > 10 ? '10 primeras filas' : `${csvPreview.length} filas`})
+          <div className="fade-in space-y-4">
+            {/* Add form */}
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={newNombre}
+                  onChange={(e) => setNewNombre(e.target.value)}
+                  placeholder="Ej: Materiales marzo 2025"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D8D68]/30 focus:border-[#2D8D68] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+                <select
+                  value={newTipo}
+                  onChange={(e) => setNewTipo(e.target.value as CsvTipo)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D8D68]/30 focus:border-[#2D8D68] bg-white"
+                >
+                  <option value="material">Material</option>
+                  <option value="mano_obra">Mano de obra</option>
+                  <option value="equipo">Equipo</option>
+                  <option value="subcontrato">Subcontrato</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Archivo</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.tsv,.txt"
+                  onChange={(e) => setNewFile(e.target.files?.[0] ?? null)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white file:mr-2 file:text-xs file:font-medium file:border-0 file:bg-[#E8F5EE] file:text-[#1B5E4B] file:rounded file:px-2 file:py-0.5 cursor-pointer"
+                />
+              </div>
+              <button
+                onClick={handleAgregar}
+                disabled={!newNombre.trim() || !newFile}
+                className="flex items-center gap-1.5 bg-[#2D8D68] hover:bg-[#1B5E4B] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors whitespace-nowrap"
+              >
+                <Plus size={15} /> Agregar
+              </button>
+            </div>
+
+            {/* Uploaded CSV list */}
+            {csvEntries.length === 0 ? (
+              <div className="text-sm text-gray-400 bg-gray-50 rounded-lg p-4 text-center border border-dashed border-gray-200">
+                Aun no agregaste ningun CSV. Completa el formulario y hace clic en Agregar.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-gray-500 mb-1">
+                  {csvEntries.length} archivo{csvEntries.length !== 1 ? 's' : ''} para subir
                 </div>
-                <table className="w-full text-xs border-collapse">
-                  <tbody>
-                    {csvPreview.slice(0, 11).map((row, ri) => (
-                      <tr key={ri} className={ri === 0 ? 'bg-gray-100 font-semibold' : 'border-t border-gray-100'}>
-                        {row.map((cell, ci) => (
-                          <td key={ci} className="px-3 py-1.5 text-gray-600 truncate max-w-[150px]">
-                            {cell}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {csvEntries.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5"
+                  >
+                    <span className="font-medium text-sm text-gray-800 flex-1 truncate">{entry.nombre}</span>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${CSV_TIPO_COLORS[entry.tipo]}`}>
+                      {CSV_TIPO_LABELS[entry.tipo]}
+                    </span>
+                    <span className="text-xs text-gray-500 truncate max-w-[180px]">{entry.file.name}</span>
+                    <button
+                      onClick={() => onRemoveCsvEntry(entry.id)}
+                      className="text-gray-400 hover:text-red-500 transition-colors p-1 flex-shrink-0"
+                      title="Quitar"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>

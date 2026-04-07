@@ -46,7 +46,8 @@ export default function Dashboard() {
     })
   }, [budgets, search, statusFilter])
 
-  useEffect(() => {
+  function loadBudgets() {
+    setLoading(true)
     budgetApi.list()
       .then((list) => {
         setBudgets(list)
@@ -68,6 +69,10 @@ export default function Dashboard() {
       })
       .catch(() => setError('No se pudieron cargar los presupuestos.'))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadBudgets()
   }, [])
 
   const totalItems = Object.values(analyses).reduce((s, a) => s + (a.items_count ?? 0), 0)
@@ -180,6 +185,7 @@ export default function Dashboard() {
               directTotal={a?.directo_total}
               netoTotal={a?.neto_total}
               subtitle={a ? `${a.items_count} ítems` : undefined}
+              onDelete={() => loadBudgets()}
             />
           )
         })}
