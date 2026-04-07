@@ -151,6 +151,13 @@ export interface AIProyecto {
   ambientes_detectados: string[]
 }
 
+export interface AITemplateMatch {
+  id: string
+  nombre: string
+  score: number
+  recursos: any[]
+}
+
 export interface AIItem {
   codigo: string
   descripcion: string
@@ -166,6 +173,7 @@ export interface AIItem {
     mo_materiales?: any[]
     subcontratos?: any[]
   }
+  template_match?: AITemplateMatch
 }
 
 export interface AISeccion {
@@ -179,6 +187,8 @@ export interface AIAnalysisResult {
   proyecto: AIProyecto
   secciones: AISeccion[]
   total_items: number
+  catalog_loaded?: boolean
+  templates_available?: number
 }
 
 export interface AIItemToInsert {

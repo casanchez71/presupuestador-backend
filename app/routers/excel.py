@@ -489,6 +489,105 @@ async def export_budget_excel(
 
 # ── PDF Export ──────────────────────────────────────────────────────────────
 
+# Brand colors
+_COLOR_HEADER = "#143D34"   # dark teal — header background
+_COLOR_ACCENT = "#2D8D68"   # teal — accent lines and KPI borders
+_COLOR_SECTION = "#E8F5EE"  # light green — section row background
+_COLOR_SECTION_TEXT = "#143D34"
+_COLOR_BORDER = "#D1D5DB"   # light gray borders
+_COLOR_ROW_ALT = "#F9FAFB"  # alternate row background
+_COLOR_TOTAL_ROW = "#143D34"
+
+# Default indirect config (used if table is empty)
+_INDIRECT_DEFAULTS: dict[str, float] = {
+    "imprevistos_pct": 3,
+    "estructura_pct": 15,
+    "jefatura_pct": 8,
+    "logistica_pct": 5,
+    "herramientas_pct": 3,
+    "beneficio_pct": 10,
+    "ingresos_brutos_pct": 7,
+    "imp_cheque_pct": 1.2,
+    "iva_pct": 21,
+}
+
+
+def _fmt_ars(val: float) -> str:
+    """Format a number as Argentine peso: $ 1.234.567,89"""
+    if val == 0:
+        return "$ 0"
+    # Use comma as thousands sep, dot as decimal (es-AR style)
+    formatted = f"{abs(val):,.2f}"
+    # swap separators: 1,234,567.89 -> 1.234.567,89
+    formatted = formatted.replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"$ {'-' if val < 0 else ''}{formatted}"
+
+
+def _fmt_pct(val: float) -> str:
+    return f"{val:g}%"
+
+
+def _apply_cfg_defaults(cfg: dict) -> dict:
+    result = dict(cfg)
+    for k, v in _INDIRECT_DEFAULTS.items():
+        if result.get(k) is None:
+            result[k] = v
+    return result
+
+
+def _cascade_from_config(directo: float, cfg: dict) -> dict:
+    """Compute full cascade from a directo total and a config dict."""
+    imp = float(cfg.get("imprevistos_pct") or 3)
+    est = float(cfg.get("estructura_pct") or 15)
+    jef = float(cfg.get("jefatura_pct") or 8)
+    log = float(cfg.get("logistica_pct") or 5)
+    her = float(cfg.get("herramientas_pct") or 3)
+    ben_pct = float(cfg.get("beneficio_pct") or 10)
+    iibb = float(cfg.get("ingresos_brutos_pct") or 7)
+    cheque = float(cfg.get("imp_cheque_pct") or 1.2)
+    iva_pct = float(cfg.get("iva_pct") or 21)
+
+    total_ind_pct = imp + est + jef + log + her
+    indirecto = round(directo * total_ind_pct / 100, 2)
+    subtotal_02 = directo + indirecto
+    beneficio = round(subtotal_02 * ben_pct / 100, 2)
+    subtotal_03 = subtotal_02 + beneficio
+    impuestos = round(subtotal_03 * (iibb + cheque) / 100, 2)
+    neto = subtotal_03 + impuestos
+    iva = round(neto * iva_pct / 100, 2)
+    total_final = neto + iva
+
+    return {
+        "directo": directo,
+        "imp_pct": imp, "est_pct": est, "jef_pct": jef,
+        "log_pct": log, "her_pct": her,
+        "total_ind_pct": total_ind_pct, "indirecto": indirecto,
+        "subtotal_02": subtotal_02,
+        "ben_pct": ben_pct, "beneficio": beneficio,
+        "subtotal_03": subtotal_03,
+        "iibb": iibb, "cheque": cheque, "impuestos": impuestos,
+        "neto": neto,
+        "iva_pct": iva_pct, "iva": iva,
+        "total_final": total_final,
+    }
+
+
+def _build_page_footer(canvas, doc):
+    """Draw page number footer on every page."""
+    from reportlab.lib import colors
+    from reportlab.lib.units import cm
+
+    canvas.saveState()
+    page_num = canvas.getPageNumber()
+    canvas.setFont("Helvetica", 7)
+    canvas.setFillColor(colors.HexColor("#9CA3AF"))
+    text = f"Página {page_num} — Generado por Presupuestador"
+    canvas.drawRightString(doc.pagesize[0] - 1.5 * cm, 0.8 * cm, text)
+    # Left: brand line
+    canvas.setFillColor(colors.HexColor(_COLOR_ACCENT))
+    canvas.drawString(1.5 * cm, 0.8 * cm, "PRESUPUESTADOR — SOLE")
+    canvas.restoreState()
+
 
 @router.get("/{budget_id}/export/pdf")
 async def export_budget_pdf(
@@ -501,6 +600,7 @@ async def export_budget_pdf(
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import cm
     from reportlab.platypus import (
+        PageBreak,
         Paragraph,
         SimpleDocTemplate,
         Spacer,
@@ -512,7 +612,8 @@ async def export_budget_pdf(
     bid = str(budget_id)
     org_id = user["org_id"]
 
-    budget = (
+    # ── Fetch data ──────────────────────────────────────────────────────────
+    budget_result = (
         db.table("budgets")
         .select("*")
         .eq("id", bid)
@@ -520,10 +621,11 @@ async def export_budget_pdf(
         .single()
         .execute()
     )
-    if not budget.data:
+    if not budget_result.data:
         raise HTTPException(404, "Presupuesto no encontrado")
+    budget_data = budget_result.data
 
-    items = (
+    items_result = (
         db.table("budget_items")
         .select("*")
         .eq("budget_id", bid)
@@ -531,18 +633,41 @@ async def export_budget_pdf(
         .order("sort_order")
         .execute()
     )
-    if not items.data:
+    if not items_result.data:
         raise HTTPException(404, "Presupuesto sin items")
+    all_items = items_result.data
 
-    # Calculate totals
-    mat_total = sum(i.get("mat_total") or 0 for i in items.data)
-    mo_total = sum(i.get("mo_total") or 0 for i in items.data)
-    directo_total = sum(i.get("directo_total") or 0 for i in items.data)
-    indirecto_total = sum(i.get("indirecto_total") or 0 for i in items.data)
-    beneficio_total = sum(i.get("beneficio_total") or 0 for i in items.data)
-    neto_total = sum(i.get("neto_total") or 0 for i in items.data)
+    # Load indirect config (no error if missing — use defaults)
+    cfg_result = (
+        db.table("indirect_config")
+        .select("*")
+        .eq("org_id", org_id)
+        .limit(1)
+        .execute()
+    )
+    cfg = _apply_cfg_defaults(cfg_result.data[0] if cfg_result.data else {})
 
-    # Build PDF
+    # ── Compute totals from leaf items (non-section rows) ────────────────────
+    leaf_items = [i for i in all_items if i.get("notas") != "Seccion" and float(i.get("cantidad") or 0) > 0]
+    # Also accept items that have directo_total > 0 even if cantidad is null (imported)
+    if not leaf_items:
+        leaf_items = [i for i in all_items if i.get("notas") != "Seccion"]
+
+    mat_total = sum(float(i.get("mat_total") or 0) for i in leaf_items)
+    mo_total = sum(float(i.get("mo_total") or 0) for i in leaf_items)
+    directo_total = sum(float(i.get("directo_total") or 0) for i in leaf_items)
+    indirecto_total = sum(float(i.get("indirecto_total") or 0) for i in leaf_items)
+    beneficio_total = sum(float(i.get("beneficio_total") or 0) for i in leaf_items)
+    neto_total = sum(float(i.get("neto_total") or 0) for i in leaf_items)
+    items_count = len(leaf_items)
+
+    # Cascade from config (for cascade summary page)
+    cascade = _cascade_from_config(directo_total, cfg)
+    # Use stored neto if available (items already have indirects applied), else use cascade
+    neto_display = neto_total if neto_total > 0 else cascade["neto"]
+    total_final_display = cascade["total_final"]
+
+    # ── Build PDF ─────────────────────────────────────────────────────────────
     output = BytesIO()
     page_size = landscape(A4)
     doc = SimpleDocTemplate(
@@ -550,159 +675,472 @@ async def export_budget_pdf(
         pagesize=page_size,
         leftMargin=1.5 * cm,
         rightMargin=1.5 * cm,
-        topMargin=1.5 * cm,
-        bottomMargin=1.5 * cm,
+        topMargin=1.8 * cm,
+        bottomMargin=1.8 * cm,
+        title=budget_data.get("name") or "Presupuesto",
+        author="Presupuestador SOLE",
     )
 
+    # ── Styles ─────────────────────────────────────────────────────────────────
     styles = getSampleStyleSheet()
+    C_HEADER = colors.HexColor(_COLOR_HEADER)
+    C_ACCENT = colors.HexColor(_COLOR_ACCENT)
+    C_SECTION_BG = colors.HexColor(_COLOR_SECTION)
+    C_SECTION_TXT = colors.HexColor(_COLOR_SECTION_TEXT)
+    C_BORDER = colors.HexColor(_COLOR_BORDER)
+    C_ROW_ALT = colors.HexColor(_COLOR_ROW_ALT)
+    C_TOTAL = colors.HexColor(_COLOR_TOTAL_ROW)
+
     title_style = ParagraphStyle(
-        "CustomTitle",
-        parent=styles["Title"],
-        fontSize=16,
-        spaceAfter=6,
+        "BTitle", parent=styles["Title"],
+        fontSize=22, textColor=colors.white,
+        spaceAfter=4, fontName="Helvetica-Bold",
     )
     subtitle_style = ParagraphStyle(
-        "CustomSubtitle",
-        parent=styles["Normal"],
-        fontSize=10,
-        textColor=colors.grey,
-        spaceAfter=12,
+        "BSubtitle", parent=styles["Normal"],
+        fontSize=10, textColor=colors.HexColor("#D1FAE5"),
+        spaceAfter=0,
     )
-    section_style = ParagraphStyle(
-        "SectionHeader",
-        parent=styles["Heading2"],
-        fontSize=12,
-        spaceAfter=6,
-        spaceBefore=12,
+    section_label_style = ParagraphStyle(
+        "SLabel", parent=styles["Normal"],
+        fontSize=9, fontName="Helvetica-Bold",
+        textColor=C_SECTION_TXT,
     )
-    footer_style = ParagraphStyle(
-        "Footer",
-        parent=styles["Normal"],
-        fontSize=8,
-        textColor=colors.grey,
-        spaceBefore=20,
+    section_heading_style = ParagraphStyle(
+        "SHeading", parent=styles["Heading2"],
+        fontSize=12, fontName="Helvetica-Bold",
+        textColor=C_HEADER, spaceAfter=6, spaceBefore=14,
     )
     cell_style = ParagraphStyle(
-        "Cell",
-        parent=styles["Normal"],
-        fontSize=7,
-        leading=9,
+        "Cell", parent=styles["Normal"],
+        fontSize=7, leading=9,
     )
+    cell_bold_style = ParagraphStyle(
+        "CellBold", parent=styles["Normal"],
+        fontSize=7, leading=9, fontName="Helvetica-Bold",
+    )
+    small_gray = ParagraphStyle(
+        "SmGray", parent=styles["Normal"],
+        fontSize=7, textColor=colors.HexColor("#6B7280"),
+    )
+
+    # ── Page width for layout ──────────────────────────────────────────────────
+    pw = page_size[0] - 3 * cm  # usable page width (landscape A4 ~ 297mm - margins)
 
     elements: list = []
 
-    # Header
-    budget_name = budget.data.get("name") or "Presupuesto"
-    budget_desc = budget.data.get("description") or ""
-    created_at = budget.data.get("created_at", "")[:10]
+    # ══════════════════════════════════════════════════════════════════════════
+    #  PAGE 1: COVER / SUMMARY
+    # ══════════════════════════════════════════════════════════════════════════
 
-    elements.append(Paragraph(budget_name, title_style))
-    header_info = f"Fecha: {created_at}"
-    if budget_desc:
-        header_info += f" &nbsp;|&nbsp; {budget_desc}"
-    elements.append(Paragraph(header_info, subtitle_style))
+    budget_name = budget_data.get("name") or "Presupuesto"
+    budget_desc = budget_data.get("description") or ""
+    created_raw = budget_data.get("created_at", "") or ""
+    created_at = created_raw[:10] if created_raw else datetime.now().strftime("%Y-%m-%d")
+    version = budget_data.get("version") or "1"
 
-    # Summary table
-    elements.append(Paragraph("Resumen de Costos", section_style))
-
-    def fmt(val: float) -> str:
-        return f"$ {val:,.2f}"
-
-    summary_data = [
-        ["Concepto", "Monto"],
-        ["Total Materiales", fmt(mat_total)],
-        ["Total Mano de Obra", fmt(mo_total)],
-        ["Costo Directo", fmt(directo_total)],
-        ["Costos Indirectos", fmt(indirecto_total)],
-        ["Beneficio", fmt(beneficio_total)],
-        ["NETO TOTAL", fmt(neto_total)],
-    ]
-
-    summary_table = Table(summary_data, colWidths=[8 * cm, 6 * cm])
-    summary_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 9),
+    # ── Header band ───────────────────────────────────────────────────────────
+    header_table = Table(
+        [[Paragraph(budget_name, title_style), Paragraph(f"Fecha: {created_at}  |  Versión {version}", subtitle_style)]],
+        colWidths=[pw * 0.7, pw * 0.3],
+    )
+    header_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), C_HEADER),
+        ("TOPPADDING", (0, 0), (-1, -1), 14),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
+        ("LEFTPADDING", (0, 0), (0, -1), 16),
+        ("RIGHTPADDING", (-1, 0), (-1, -1), 16),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ALIGN", (1, 0), (1, -1), "RIGHT"),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -2), [colors.white, colors.HexColor("#ecf0f1")]),
-        ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#2c3e50")),
-        ("TEXTCOLOR", (0, -1), (-1, -1), colors.white),
-        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
-        ("TOPPADDING", (0, 0), (-1, -1), 4),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
-    elements.append(summary_table)
-    elements.append(Spacer(1, 12))
+    elements.append(header_table)
 
-    # Items table
-    elements.append(Paragraph("Detalle de Items", section_style))
+    # Accent bar
+    accent_bar = Table([["  "]], colWidths=[pw])
+    accent_bar.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), C_ACCENT),
+        ("TOPPADDING", (0, 0), (-1, -1), 2),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+    ]))
+    elements.append(accent_bar)
+    elements.append(Spacer(1, 0.4 * cm))
 
-    items_header = [
-        "Codigo", "Descripcion", "Unidad", "Cantidad",
-        "MAT Unit.", "MO Unit.", "Directo Total", "Neto Total",
+    if budget_desc:
+        elements.append(Paragraph(budget_desc, small_gray))
+        elements.append(Spacer(1, 0.3 * cm))
+
+    # ── KPI boxes (4 columns) ─────────────────────────────────────────────────
+    kpi_width = pw / 4
+
+    def kpi_cell(label: str, value: str) -> list:
+        return [
+            Paragraph(label, ParagraphStyle(
+                "KpiLabel", parent=styles["Normal"],
+                fontSize=8, textColor=colors.HexColor("#6B7280"), fontName="Helvetica",
+            )),
+            Paragraph(value, ParagraphStyle(
+                "KpiVal", parent=styles["Normal"],
+                fontSize=13, fontName="Helvetica-Bold",
+                textColor=C_HEADER, spaceAfter=0,
+            )),
+        ]
+
+    kpi_data = [
+        kpi_cell("Items totales", str(items_count)),
+        kpi_cell("Costo Directo", _fmt_ars(directo_total)),
+        kpi_cell("Indirectos + Beneficio", _fmt_ars(indirecto_total + beneficio_total)),
+        kpi_cell("NETO TOTAL", _fmt_ars(neto_display)),
     ]
-    items_rows = [items_header]
 
-    for item in items.data:
-        desc_text = item.get("description") or ""
-        # Wrap long descriptions in Paragraph for proper line breaking
-        desc_para = Paragraph(desc_text, cell_style)
-        cantidad = item.get("cantidad")
-        cantidad_str = f"{cantidad:,.2f}" if cantidad else ""
+    kpi_rows_mat = []
+    for kpi in kpi_data:
+        cell_t = Table([[kpi[0]], [kpi[1]]], colWidths=[kpi_width - 0.6 * cm])
+        cell_t.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+            ("BOX", (0, 0), (-1, -1), 1, C_ACCENT),
+            ("ROUNDEDCORNERS", [4, 4, 4, 4]),
+        ]))
+        kpi_rows_mat.append(cell_t)
 
-        items_rows.append([
-            item.get("code") or "",
-            desc_para,
-            item.get("unidad") or "",
-            cantidad_str,
-            fmt(item.get("mat_unitario") or 0),
-            fmt(item.get("mo_unitario") or 0),
-            fmt(item.get("directo_total") or 0),
-            fmt(item.get("neto_total") or 0),
-        ])
+    kpi_table = Table([kpi_rows_mat], colWidths=[kpi_width] * 4)
+    kpi_table.setStyle(TableStyle([
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(kpi_table)
+    elements.append(Spacer(1, 0.5 * cm))
 
-    # Totals row
-    items_rows.append([
-        "TOTAL", "", "", "",
-        "", "",
-        fmt(directo_total),
-        fmt(neto_total),
-    ])
+    # ── Summary table (cost breakdown) ────────────────────────────────────────
+    elements.append(Paragraph("Resumen de Costos", section_heading_style))
 
-    col_widths = [2.2 * cm, 7 * cm, 1.8 * cm, 2.2 * cm, 2.8 * cm, 2.8 * cm, 3 * cm, 3 * cm]
+    summary_rows = [
+        ["Concepto", "Monto"],
+        ["Total Materiales", _fmt_ars(mat_total)],
+        ["Total Mano de Obra", _fmt_ars(mo_total)],
+        ["Costo Directo (01)", _fmt_ars(directo_total)],
+        ["Costos Indirectos", _fmt_ars(indirecto_total)],
+        ["Beneficio", _fmt_ars(beneficio_total)],
+        ["NETO TOTAL", _fmt_ars(neto_display)],
+    ]
 
-    items_table = Table(items_rows, colWidths=col_widths, repeatRows=1)
-    items_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
+    col_s1 = 9 * cm
+    col_s2 = 5.5 * cm
+    sum_table = Table(summary_rows, colWidths=[col_s1, col_s2])
+    sum_table.setStyle(TableStyle([
+        # Header row
+        ("BACKGROUND", (0, 0), (-1, 0), C_HEADER),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTSIZE", (0, 0), (-1, 0), 8),
-        ("FONTSIZE", (0, 1), (-1, -1), 7),
-        ("ALIGN", (2, 0), (-1, -1), "RIGHT"),
-        ("ALIGN", (0, 0), (1, -1), "LEFT"),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#bdc3c7")),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -2), [colors.white, colors.HexColor("#f8f9fa")]),
-        ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#2c3e50")),
+        # Alternating rows
+        ("BACKGROUND", (0, 2), (-1, 2), C_ROW_ALT),
+        ("BACKGROUND", (0, 4), (-1, 4), C_ROW_ALT),
+        ("BACKGROUND", (0, 6), (-1, 6), C_ROW_ALT),
+        # Last row (neto)
+        ("BACKGROUND", (0, -1), (-1, -1), C_HEADER),
         ("TEXTCOLOR", (0, -1), (-1, -1), colors.white),
         ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+        # Alignment
+        ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+        ("ALIGN", (0, 0), (0, -1), "LEFT"),
+        ("FONTSIZE", (0, 1), (-1, -1), 9),
+        # Grid
+        ("GRID", (0, 0), (-1, -1), 0.5, C_BORDER),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(sum_table)
+    elements.append(Spacer(1, 1.2 * cm))
+
+    # ── Signature lines ────────────────────────────────────────────────────────
+    sig_style = ParagraphStyle(
+        "Sig", parent=styles["Normal"],
+        fontSize=9, textColor=colors.HexColor("#374151"),
+    )
+    sig_line = "_" * 38
+    sig_row = [
+        [Paragraph(f"{sig_line}<br/>Preparado por", sig_style)],
+        [Paragraph(f"{sig_line}<br/>Aprobado por", sig_style)],
+    ]
+    sig_table = Table(sig_row, colWidths=[pw * 0.45, pw * 0.45])
+    sig_table.setStyle(TableStyle([
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+    ]))
+    elements.append(sig_table)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    #  PAGE 2+: DETAIL TABLE grouped by section
+    # ══════════════════════════════════════════════════════════════════════════
+
+    elements.append(PageBreak())
+    elements.append(Paragraph("Detalle de Items", section_heading_style))
+
+    # Build section-grouped structure
+    # sections: list of (section_item_or_None, [child_items])
+    sections: list[tuple] = []
+    id_to_item = {i["id"]: i for i in all_items}
+    # Map parent_id -> list of children
+    children_map: dict[str | None, list] = {}
+    for i in all_items:
+        pid = i.get("parent_id")
+        children_map.setdefault(pid, []).append(i)
+
+    # Top-level items (parent_id is None)
+    top_level = children_map.get(None, [])
+    for top in top_level:
+        if top.get("notas") == "Seccion":
+            children = children_map.get(top["id"], [])
+            sections.append((top, children))
+        else:
+            # Standalone item (no section parent)
+            sections.append((None, [top]))
+
+    # If no top-level grouping, just dump all leaf items
+    if not sections:
+        sections = [(None, leaf_items)]
+
+    # Column layout for detail table
+    # Codigo | Descripcion | Unidad | Cantidad | P.Unit MAT | P.Unit MO | Directo | Indirecto | Beneficio | Neto
+    COL_W = [1.8*cm, 6.5*cm, 1.4*cm, 1.8*cm, 2.4*cm, 2.4*cm, 2.6*cm, 2.4*cm, 2.4*cm, 2.6*cm]
+    detail_header = [
+        "Código", "Descripción", "Unid.", "Cantidad",
+        "P.Unit MAT", "P.Unit MO", "Directo", "Indirecto", "Beneficio", "Neto",
+    ]
+
+    table_rows: list = [detail_header]
+    # Track row indices for section rows styling
+    section_row_indices: list[int] = []
+    subtotal_row_indices: list[int] = []
+
+    row_idx = 1  # 0 is header
+
+    for sec_item, children in sections:
+        if sec_item is not None:
+            # Section header row
+            sec_code = sec_item.get("code") or ""
+            sec_desc = sec_item.get("description") or "—"
+            label = f"{sec_code}  {sec_desc}".strip() if sec_code else sec_desc
+            table_rows.append([
+                Paragraph(label, ParagraphStyle(
+                    "SecRow", parent=styles["Normal"],
+                    fontSize=8, fontName="Helvetica-Bold", textColor=C_SECTION_TXT,
+                )),
+                "", "", "", "", "", "", "", "", "",
+            ])
+            section_row_indices.append(row_idx)
+            row_idx += 1
+
+        sec_directo = 0.0
+        sec_indirecto = 0.0
+        sec_beneficio = 0.0
+        sec_neto = 0.0
+
+        for item in children:
+            is_section = item.get("notas") == "Seccion"
+            if is_section:
+                continue
+            cantidad = item.get("cantidad")
+            cantidad_str = _fmt_ars(float(cantidad)).replace("$ ", "").replace(",00", "") if cantidad else "—"
+            # Simplified: just show the number without $ for quantity
+            try:
+                cantidad_str = f"{float(cantidad):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if cantidad else "—"
+            except Exception:
+                cantidad_str = str(cantidad) if cantidad else "—"
+
+            d = float(item.get("directo_total") or 0)
+            ind = float(item.get("indirecto_total") or 0)
+            ben = float(item.get("beneficio_total") or 0)
+            neto = float(item.get("neto_total") or 0)
+
+            sec_directo += d
+            sec_indirecto += ind
+            sec_beneficio += ben
+            sec_neto += neto
+
+            desc_para = Paragraph(item.get("description") or "—", cell_style)
+            table_rows.append([
+                item.get("code") or "",
+                desc_para,
+                item.get("unidad") or "",
+                cantidad_str,
+                _fmt_ars(float(item.get("mat_unitario") or 0)),
+                _fmt_ars(float(item.get("mo_unitario") or 0)),
+                _fmt_ars(d),
+                _fmt_ars(ind),
+                _fmt_ars(ben),
+                _fmt_ars(neto),
+            ])
+            row_idx += 1
+
+        # Section subtotal row (only if there was a section header)
+        if sec_item is not None and children:
+            table_rows.append([
+                "",
+                Paragraph(f"Subtotal {sec_item.get('description') or ''}", cell_bold_style),
+                "", "", "", "",
+                _fmt_ars(sec_directo),
+                _fmt_ars(sec_indirecto),
+                _fmt_ars(sec_beneficio),
+                _fmt_ars(sec_neto),
+            ])
+            subtotal_row_indices.append(row_idx)
+            row_idx += 1
+
+    # Grand total row
+    table_rows.append([
+        "TOTAL", "", "", "", "", "",
+        _fmt_ars(directo_total),
+        _fmt_ars(indirecto_total),
+        _fmt_ars(beneficio_total),
+        _fmt_ars(neto_display),
+    ])
+    grand_total_row_idx = row_idx
+
+    detail_table = Table(table_rows, colWidths=COL_W, repeatRows=1)
+    # Base style
+    ts = [
+        # Header
+        ("BACKGROUND", (0, 0), (-1, 0), C_HEADER),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 7),
+        # Body
+        ("FONTSIZE", (0, 1), (-1, -2), 7),
+        ("FONTNAME", (0, 1), (-1, -2), "Helvetica"),
+        # Alignment: numeric columns right
+        ("ALIGN", (3, 0), (-1, -1), "RIGHT"),
+        ("ALIGN", (0, 0), (2, -1), "LEFT"),
+        # Grid
+        ("GRID", (0, 0), (-1, -1), 0.3, C_BORDER),
+        # Padding
         ("TOPPADDING", (0, 0), (-1, -1), 3),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-        ("LEFTPADDING", (0, 0), (-1, -1), 4),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("LEFTPADDING", (0, 0), (-1, -1), 3),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 3),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    ]))
-    elements.append(items_table)
+        # Grand total row
+        ("BACKGROUND", (0, grand_total_row_idx), (-1, grand_total_row_idx), C_TOTAL),
+        ("TEXTCOLOR", (0, grand_total_row_idx), (-1, grand_total_row_idx), colors.white),
+        ("FONTNAME", (0, grand_total_row_idx), (-1, grand_total_row_idx), "Helvetica-Bold"),
+        ("FONTSIZE", (0, grand_total_row_idx), (-1, grand_total_row_idx), 8),
+    ]
+    # Alternating rows (odd body rows)
+    for i in range(1, len(table_rows) - 1, 2):
+        if i not in section_row_indices and i not in subtotal_row_indices:
+            ts.append(("BACKGROUND", (0, i), (-1, i), C_ROW_ALT))
+    # Section rows
+    for i in section_row_indices:
+        ts.append(("BACKGROUND", (0, i), (-1, i), colors.HexColor(_COLOR_SECTION)))
+        ts.append(("SPAN", (0, i), (-1, i)))
+        ts.append(("FONTNAME", (0, i), (-1, i), "Helvetica-Bold"))
+    # Subtotal rows
+    for i in subtotal_row_indices:
+        ts.append(("BACKGROUND", (0, i), (-1, i), colors.HexColor("#F3F4F6")))
+        ts.append(("FONTNAME", (0, i), (-1, i), "Helvetica-Bold"))
+        ts.append(("LINEABOVE", (0, i), (-1, i), 0.5, C_ACCENT))
 
-    # Footer
-    elements.append(Paragraph("Generado por Presupuestador v2.1", footer_style))
+    detail_table.setStyle(TableStyle(ts))
+    elements.append(detail_table)
 
-    doc.build(elements)
+    # ══════════════════════════════════════════════════════════════════════════
+    #  LAST SECTION: CASCADE SUMMARY
+    # ══════════════════════════════════════════════════════════════════════════
+
+    elements.append(PageBreak())
+    elements.append(Paragraph("Cascada de Costos", section_heading_style))
+
+    c = cascade  # shorthand
+
+    cascade_rows = [
+        ["Concepto", "%", "Monto"],
+        ["Subtotal 01 — Costos Directos", "", _fmt_ars(c["directo"])],
+        [f"+ Imprevistos", _fmt_pct(c["imp_pct"]), _fmt_ars(c["directo"] * c["imp_pct"] / 100)],
+        [f"+ Estructura", _fmt_pct(c["est_pct"]), _fmt_ars(c["directo"] * c["est_pct"] / 100)],
+        [f"+ Jefatura de Obra", _fmt_pct(c["jef_pct"]), _fmt_ars(c["directo"] * c["jef_pct"] / 100)],
+        [f"+ Logística", _fmt_pct(c["log_pct"]), _fmt_ars(c["directo"] * c["log_pct"] / 100)],
+        [f"+ Herramientas", _fmt_pct(c["her_pct"]), _fmt_ars(c["directo"] * c["her_pct"] / 100)],
+        ["= Subtotal 02 (con Indirectos)", _fmt_pct(c["total_ind_pct"]), _fmt_ars(c["subtotal_02"])],
+        [f"+ Beneficio", _fmt_pct(c["ben_pct"]), _fmt_ars(c["beneficio"])],
+        ["= Subtotal 03 (con Beneficio)", "", _fmt_ars(c["subtotal_03"])],
+        [f"+ Ingresos Brutos", _fmt_pct(c["iibb"]), _fmt_ars(c["subtotal_03"] * c["iibb"] / 100)],
+        [f"+ Impuesto al Cheque", _fmt_pct(c["cheque"]), _fmt_ars(c["subtotal_03"] * c["cheque"] / 100)],
+        ["= NETO (sin IVA)", "", _fmt_ars(c["neto"])],
+        [f"+ IVA", _fmt_pct(c["iva_pct"]), _fmt_ars(c["iva"])],
+        ["= TOTAL FINAL", "", _fmt_ars(c["total_final"])],
+    ]
+
+    # Row indices that are subtotals or totals (bold + background)
+    cascade_bold_rows = {0, 7, 9, 12, 14}   # header, subtotal 02, 03, neto, total
+    cascade_total_rows = {12, 14}             # neto, total final
+
+    col_casc = [10 * cm, 2.5 * cm, 5 * cm]
+    casc_table = Table(cascade_rows, colWidths=col_casc)
+    ts_c = [
+        # Header
+        ("BACKGROUND", (0, 0), (-1, 0), C_HEADER),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 9),
+        # Body
+        ("FONTSIZE", (0, 1), (-1, -1), 9),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+        # Alignment
+        ("ALIGN", (1, 0), (2, -1), "RIGHT"),
+        ("ALIGN", (0, 0), (0, -1), "LEFT"),
+        # Grid
+        ("GRID", (0, 0), (-1, -1), 0.4, C_BORDER),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        # Subtotal row (subtotal 02 = index 7)
+        ("BACKGROUND", (0, 7), (-1, 7), colors.HexColor(_COLOR_SECTION)),
+        ("FONTNAME", (0, 7), (-1, 7), "Helvetica-Bold"),
+        ("LINEABOVE", (0, 7), (-1, 7), 1, C_ACCENT),
+        # Subtotal 03 = index 9
+        ("BACKGROUND", (0, 9), (-1, 9), colors.HexColor(_COLOR_SECTION)),
+        ("FONTNAME", (0, 9), (-1, 9), "Helvetica-Bold"),
+        ("LINEABOVE", (0, 9), (-1, 9), 1, C_ACCENT),
+        # NETO = index 12
+        ("BACKGROUND", (0, 12), (-1, 12), C_HEADER),
+        ("TEXTCOLOR", (0, 12), (-1, 12), colors.white),
+        ("FONTNAME", (0, 12), (-1, 12), "Helvetica-Bold"),
+        # TOTAL FINAL = index 14
+        ("BACKGROUND", (0, 14), (-1, 14), C_HEADER),
+        ("TEXTCOLOR", (0, 14), (-1, 14), colors.white),
+        ("FONTNAME", (0, 14), (-1, 14), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 14), (-1, 14), 11),
+        # Alternating plain rows
+        ("BACKGROUND", (0, 2), (-1, 2), C_ROW_ALT),
+        ("BACKGROUND", (0, 4), (-1, 4), C_ROW_ALT),
+        ("BACKGROUND", (0, 6), (-1, 6), C_ROW_ALT),
+        ("BACKGROUND", (0, 10), (-1, 10), C_ROW_ALT),
+    ]
+    casc_table.setStyle(TableStyle(ts_c))
+    elements.append(casc_table)
+    elements.append(Spacer(1, 0.8 * cm))
+
+    # Nota al pie de la cascada
+    elements.append(Paragraph(
+        "Nota: Los porcentajes de indirectos y beneficio se aplican en cascada conforme al modelo Excel.",
+        small_gray,
+    ))
+
+    # ── Build and stream ───────────────────────────────────────────────────────
+    doc.build(elements, onFirstPage=_build_page_footer, onLaterPages=_build_page_footer)
     output.seek(0)
 
-    safe_name = (budget.data["name"] or "presupuesto").replace(" ", "_")
-    filename = f"{safe_name}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    safe_name = (budget_data.get("name") or "presupuesto").replace(" ", "_").replace("/", "-")
+    filename = f"{safe_name}_presupuesto.pdf"
 
     return StreamingResponse(
         output,

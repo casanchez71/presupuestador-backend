@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  BookOpen, Check, ChevronDown, ChevronRight, Pencil, Plus,
+  BookOpen, Check, ChevronDown, ChevronRight, FileSpreadsheet, Pencil, Plus,
   Search, Trash2, Upload, X, Zap,
 } from 'lucide-react'
 import { budgetApi, catalogApi } from '../lib/api'
@@ -95,6 +95,105 @@ function UploadForm({ onSuccess, onCancel }: { onSuccess: (catalog: PriceCatalog
           Cancelar
         </button>
       </div>
+    </div>
+  )
+}
+
+// ─── Inline Excel upload form ─────────────────────────────────────────────────
+
+function ExcelUploadForm({ onSuccess, onCancel }: { onSuccess: (count: number) => void; onCancel: () => void }) {
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<{ catalogs_created: number; entries: Record<string, number>; warnings: string[] } | null>(null)
+
+  async function handleUpload() {
+    if (!file) return
+    setUploading(true)
+    setError(null)
+    setResult(null)
+    try {
+      const res = await catalogApi.uploadExcel(file)
+      setResult(res)
+      onSuccess(res.catalogs_created)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error subiendo Excel')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const TIPO_LABEL: Record<string, string> = {
+    material: 'Material',
+    mano_obra: 'Mano de obra',
+    equipo: 'Equipo',
+    subcontrato: 'Subcontrato',
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-[#2D8D68] p-4 mb-4 shadow-sm">
+      <div className="flex items-center gap-2 mb-3">
+        <Upload size={14} className="text-[#2D8D68]" />
+        <span className="text-sm font-semibold text-gray-800">Subir Excel con múltiples solapas</span>
+        <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded">.xlsx</span>
+      </div>
+      <p className="text-[11px] text-gray-500 mb-3">
+        El archivo debe tener solapas llamadas: <strong>Materiales</strong>, <strong>Mano de obra</strong>, <strong>Equipos</strong>, <strong>Subcontratos</strong> (o variantes como Mat, MO, Eq, Sub).
+        Cada solapa crea un catálogo separado.
+      </p>
+      <div className="flex items-end gap-3">
+        <div className="flex-1">
+          <label className="block text-[11px] text-gray-500 mb-1 font-medium">Archivo Excel *</label>
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={(e) => { setFile(e.target.files?.[0] ?? null); setResult(null) }}
+            className="w-full text-xs border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#2D8D68] file:mr-2 file:text-xs file:border-0 file:bg-[#E8F5EE] file:text-[#1B5E4B] file:px-2 file:py-1 file:rounded"
+          />
+        </div>
+        <button
+          onClick={handleUpload}
+          disabled={!file || uploading}
+          className="bg-[#2D8D68] hover:bg-[#1B5E4B] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap"
+        >
+          {uploading ? (
+            <>
+              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Subiendo...
+            </>
+          ) : (
+            <><Upload size={12} /> Subir Excel</>
+          )}
+        </button>
+        <button
+          onClick={onCancel}
+          className="text-xs px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-50 transition-colors whitespace-nowrap"
+        >
+          Cancelar
+        </button>
+      </div>
+      {error && (
+        <div className="mt-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>
+      )}
+      {result && (
+        <div className="mt-3 bg-[#E8F5EE] border border-green-200 rounded-lg px-3 py-2">
+          <div className="text-xs font-semibold text-[#143D34] mb-1">
+            {result.catalogs_created} catálogo{result.catalogs_created !== 1 ? 's' : ''} creado{result.catalogs_created !== 1 ? 's' : ''}
+          </div>
+          <div className="flex flex-wrap gap-2 text-[11px]">
+            {Object.entries(result.entries).map(([tipo, count]) => (
+              <span key={tipo} className="bg-white border border-green-200 text-[#1B5E4B] px-2 py-0.5 rounded">
+                {TIPO_LABEL[tipo] ?? tipo}: {count} entradas
+              </span>
+            ))}
+          </div>
+          {result.warnings.length > 0 && (
+            <div className="mt-2 text-[11px] text-amber-700">
+              {result.warnings.map((w, i) => <div key={i}>{w}</div>)}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -663,6 +762,7 @@ export default function Catalogs() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showUpload, setShowUpload] = useState(false)
+  const [showExcelUpload, setShowExcelUpload] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -680,6 +780,14 @@ export default function Catalogs() {
   function handleUploaded(catalog: PriceCatalog) {
     setCatalogs((prev) => [catalog, ...prev])
     setShowUpload(false)
+  }
+
+  function handleExcelUploaded(_count: number) {
+    // Reload the full catalog list so all newly created catalogs appear
+    catalogApi.list()
+      .then((cats) => setCatalogs(cats))
+      .catch(() => {/* ignore */})
+    setShowExcelUpload(false)
   }
 
   function handleDeleted(id: string) {
@@ -702,7 +810,7 @@ export default function Catalogs() {
       {/* Actions bar */}
       <div className="flex items-center gap-2 mb-4 max-w-3xl">
         <button
-          onClick={() => setShowUpload((prev) => !prev)}
+          onClick={() => { setShowUpload((prev) => !prev); setShowExcelUpload(false) }}
           className={`flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg transition-colors ${
             showUpload
               ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -712,12 +820,26 @@ export default function Catalogs() {
           {showUpload ? <X size={13} /> : <Plus size={13} />}
           {showUpload ? 'Cancelar' : 'Nuevo catálogo (CSV)'}
         </button>
+        <button
+          onClick={() => { setShowExcelUpload((prev) => !prev); setShowUpload(false) }}
+          className={`flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg border transition-colors ${
+            showExcelUpload
+              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-300'
+              : 'border-[#2D8D68] text-[#2D8D68] hover:bg-[#E8F5EE]'
+          }`}
+        >
+          {showExcelUpload ? <X size={13} /> : <FileSpreadsheet size={13} />}
+          {showExcelUpload ? 'Cancelar' : 'Subir Excel (4 solapas)'}
+        </button>
       </div>
 
       <div className="max-w-3xl space-y-3">
-        {/* Upload form */}
+        {/* Upload forms */}
         {showUpload && (
           <UploadForm onSuccess={handleUploaded} onCancel={() => setShowUpload(false)} />
+        )}
+        {showExcelUpload && (
+          <ExcelUploadForm onSuccess={handleExcelUploaded} onCancel={() => setShowExcelUpload(false)} />
         )}
 
         {loading && (

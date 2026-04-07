@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
+import warnings
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
@@ -13,6 +14,26 @@ from app.db import get_data_db
 from app.schemas import CatalogTipo
 
 router = APIRouter()
+
+# ── Tab-name → tipo mapping ───────────────────────────────────────────────────
+
+TAB_TIPO_MAP: dict[str, str] = {
+    "materiales": "material",
+    "material": "material",
+    "mat": "material",
+    "mano de obra": "mano_obra",
+    "mano_obra": "mano_obra",
+    "mo": "mano_obra",
+    "equipos": "equipo",
+    "equipo": "equipo",
+    "eq": "equipo",
+    "subcontratos": "subcontrato",
+    "subcontrato": "subcontrato",
+    "sub": "subcontrato",
+}
+
+# Flexible column aliases for price column
+_PRICE_ALIASES = {"precio_unitario", "precio_sin_iva", "precio", "costo", "precio_unit", "p_unitario"}
 
 
 # ── Upload CSV catalog ────────────────────────────────────────────────────
@@ -108,6 +129,190 @@ async def upload_csv_catalog(
         "name": catalog_name,
         "entries_count": len(entries),
         "tipo": tipo,
+    }
+
+
+# ── Upload Excel catalog (multi-tab) ─────────────────────────────────────────
+
+
+def _parse_excel_rows(ws) -> list[dict]:  # type: ignore[no-untyped-def]
+    """Extract rows from an openpyxl worksheet using flexible column aliases."""
+    data_rows = list(ws.iter_rows(values_only=True))
+    if not data_rows:
+        return []
+
+    # Find header row (first row with at least one non-None value)
+    header_idx = 0
+    headers: list[str] = []
+    for idx, row in enumerate(data_rows):
+        if any(v is not None for v in row):
+            headers = [str(v).strip().lower() if v is not None else "" for v in row]
+            header_idx = idx
+            break
+
+    if not headers:
+        return []
+
+    # Map normalized header → column index (first occurrence wins)
+    field_map: dict[str, int] = {}
+    for col_idx, h in enumerate(headers):
+        if h and h not in field_map:
+            field_map[h] = col_idx
+
+    def find_col(candidates: set[str]) -> int | None:
+        for c in candidates:
+            if c in field_map:
+                return field_map[c]
+        return None
+
+    codigo_col = find_col({"codigo", "cod", "code"})
+    descripcion_col = find_col({"descripcion", "descripción", "description", "nombre", "name"})
+    unidad_col = find_col({"unidad", "unit", "ud"})
+    precio_col = find_col(_PRICE_ALIASES)
+
+    if descripcion_col is None or precio_col is None:
+        return []
+
+    def _cell(row: tuple, idx: int | None) -> str:
+        if idx is None or idx >= len(row):
+            return ""
+        v = row[idx]
+        return str(v).strip() if v is not None else ""
+
+    rows: list[dict] = []
+    for row in data_rows[header_idx + 1:]:
+        if not any(v is not None for v in row):
+            continue  # skip blank rows
+
+        codigo = _cell(row, codigo_col) if codigo_col is not None else ""
+        descripcion = _cell(row, descripcion_col)
+        unidad = _cell(row, unidad_col) if unidad_col is not None else ""
+        precio_raw = _cell(row, precio_col)
+
+        if not descripcion or not precio_raw:
+            continue
+
+        try:
+            precio_clean = (
+                precio_raw.replace(".", "").replace(",", ".")
+                if "," in precio_raw
+                else precio_raw
+            )
+            precio = float(precio_clean)
+        except (ValueError, AttributeError):
+            continue
+
+        rows.append({
+            "codigo": codigo,
+            "descripcion": descripcion,
+            "unidad": unidad,
+            "precio_sin_iva": precio,
+        })
+
+    return rows
+
+
+@router.post("/upload-excel")
+async def upload_excel_catalog(
+    file: UploadFile = File(...),
+    name: str = Query(None, description="Prefijo de nombre para los catalogos (default: nombre del archivo)"),
+    user: dict = Depends(get_current_user),
+):
+    """Upload an Excel file (.xlsx/.xls) with up to 4 tabs and create one catalog per tab.
+
+    Tab name matching (case-insensitive):
+    - Materiales / Material / Mat → tipo material
+    - Mano de obra / mano_obra / MO → tipo mano_obra
+    - Equipos / Equipo / Eq → tipo equipo
+    - Subcontratos / Subcontrato / Sub → tipo subcontrato
+
+    Each tab must have columns: codigo, descripcion, unidad + a price column
+    (flexible aliases accepted: precio_unitario, precio_sin_iva, precio, costo, etc.)
+    """
+    if file.filename and not file.filename.lower().endswith((".xlsx", ".xls")):
+        raise HTTPException(400, "El archivo debe ser .xlsx o .xls")
+
+    try:
+        import openpyxl  # type: ignore[import]
+    except ImportError:
+        raise HTTPException(500, "openpyxl no esta instalado en el servidor")
+
+    content = await file.read()
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+    except Exception as exc:
+        raise HTTPException(400, f"No se pudo leer el archivo Excel: {exc}")
+
+    db = get_data_db()
+    org_id = user["org_id"]
+    base_name = name or (file.filename or "catalogo").rsplit(".", 1)[0]
+
+    catalogs_created = 0
+    entries_summary: dict[str, int] = {}
+    warnings_list: list[str] = []
+
+    for sheet_name in wb.sheetnames:
+        tipo = TAB_TIPO_MAP.get(sheet_name.strip().lower())
+        if tipo is None:
+            warnings_list.append(f"Solapa '{sheet_name}' ignorada — nombre no reconocido")
+            continue
+
+        ws = wb[sheet_name]
+        try:
+            rows = _parse_excel_rows(ws)
+        except Exception as exc:
+            warnings_list.append(f"Solapa '{sheet_name}' con error al leer: {exc}")
+            continue
+
+        if not rows:
+            warnings_list.append(f"Solapa '{sheet_name}' sin filas validas — saltada")
+            continue
+
+        # Create catalog
+        catalog_name = f"{base_name} - {sheet_name}"
+        catalog_result = db.table("price_catalogs").insert({
+            "org_id": org_id,
+            "name": catalog_name,
+            "source_file": file.filename,
+        }).execute()
+
+        if not catalog_result.data:
+            warnings_list.append(f"No se pudo crear el catalogo para la solapa '{sheet_name}'")
+            continue
+
+        catalog_id = catalog_result.data[0]["id"]
+
+        # Insert entries with tipo
+        entries = [
+            {
+                "catalog_id": catalog_id,
+                "org_id": org_id,
+                "tipo": tipo,
+                **row,
+            }
+            for row in rows
+        ]
+        db.table("catalog_entries").insert(entries).execute()
+
+        catalogs_created += 1
+        entries_summary[tipo] = entries_summary.get(tipo, 0) + len(entries)
+
+    wb.close()
+
+    if catalogs_created == 0:
+        raise HTTPException(
+            400,
+            "No se creo ningun catalogo. Verificá que las solapas se llamen: "
+            "Materiales, Mano de obra, Equipos, Subcontratos (o variantes como Mat, MO, Eq, Sub).",
+        )
+
+    return {
+        "catalogs_created": catalogs_created,
+        "entries": entries_summary,
+        "warnings": warnings_list,
+        "source_file": file.filename,
     }
 
 
