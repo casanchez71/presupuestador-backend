@@ -64,8 +64,33 @@
 Los agentes de los Sprints sobreescribieron archivos de estetica aprobados.
 **REGLA NUEVA:** Antes de deployar cambios de frontend, verificar diff de archivos de estetica contra la version aprobada.
 
+## SESION 2026-04-06 (mañana ~08:00 a ~10:00 AR) ✅
+46. ~~Dashboard KPIs sutiles~~ — sin bordes pesados, linea de color arriba, shadow sutil
+47. ~~Badges español~~ — draft→Borrador, active→Activo en BudgetCard y actividad reciente
+48. ~~TreeView click separado~~ — flecha=expandir, nombre=seleccionar (re-fix)
+49. ~~Catalogs.tsx restaurado~~ — version CRUD completa 751 lineas (perdida en merge)
+50. ~~index.css scroll fix~~ — html/body/root height:100% overflow:hidden (perdido en merge)
+51. ~~catalogApi metodos~~ — uploadCsv, deleteCatalog, CRUD entries (perdidos en merge)
+52. ~~5 bugs flujo IA~~ — recursos en payload, notas_calculo, cascade indirects, guardar plano
+53. ~~Wizard multi-CSV~~ — permitir subir multiples CSVs con tipo (pendiente)
+
+### SPRINT FUTURO: Plano Interactivo
+- La IA guarda coordenadas/zonas del plano junto con los items
+- Al tocar una zona del plano, muestra el calculo: "4 columnas x 0.30m x 0.30m x 3.00m = 1.08 m3"
+- Highlight visual sobre el plano vinculado a cada item/seccion
+- Requiere: bounding boxes en respuesta IA, visor de imagen con overlay, vinculacion zona→items
+- Estimacion: 1 sprint completo
+
+### SPRINT FUTURO: Agente de Precios de Mercado
+- Agente que busca precios en proveedores online (corralones, distribuidores)
+- Compara precios entre proveedores
+- Actualiza la lista con precios de mercado + fecha
+- Alerta cuando un precio cambio mas de X%
+- Requiere: scraping, base de proveedores, scheduler
+- Estimacion: 2 sprints
+
 ## EN CURSO (trabajando ahora) 🔧
-(restauracion completa — verificando deploy)
+(5 fixes flujo IA — commit pendiente)
 
 ## BACKLOG PRIORITARIO (próximos) 🔴
 27. **Vista por planta REAL** — Items se REPITEN por piso (PB, Piso 1, Piso 2... Azotea) cada uno con su cantidad. CRITICO para Terrac.

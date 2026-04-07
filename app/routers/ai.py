@@ -360,6 +360,21 @@ async def analyze_plan(
 
     b64 = base64.b64encode(content).decode("utf-8")
 
+    # Save plan image to Supabase Storage (non-fatal)
+    try:
+        import uuid as uuid_mod
+        file_ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "png"
+        storage_path = f"plans/{budget_id}/{uuid_mod.uuid4().hex[:8]}.{file_ext}"
+        db.storage.from_("plans").upload(
+            storage_path,
+            content,
+            {"content-type": file.content_type or "image/png"},
+        )
+        db.table("budgets").update({"source_file": storage_path}).eq("id", str(budget_id)).execute()
+    except Exception as e:
+        # Non-fatal — continue even if storage fails
+        logger.warning("Could not save plan to storage: %s", e)
+
     # Load user's catalog entries to inject context into the prompt
     catalog_context = _load_catalog_context(db, org_id)
     if catalog_context:
@@ -753,6 +768,7 @@ async def insert_ai_suggestions(
     total_inserted = 0
     sections_created = 0
     total_resources_created = 0
+    created_items: list[dict] = []  # Track items for cascade indirects
 
     for si, (sec_name, sec_items) in enumerate(sections_map.items()):
         sec_code = sec_items[0].get("seccion_codigo", str(si + 1))
@@ -804,6 +820,7 @@ async def insert_ai_suggestions(
                 continue
             total_inserted += 1
             new_item_id = result.data[0]["id"]
+            created_items.append(result.data[0])
 
             # Create resources if the item has them
             recursos = item.get("recursos")
@@ -828,7 +845,7 @@ async def insert_ai_suggestions(
                             "mat_total": row.get("mat_total", 0),
                             "mo_total": row.get("mo_total", 0),
                             "directo_total": row.get("directo_total", 0),
-                            "neto_total": row.get("directo_total", 0),
+                            "neto_total": row.get("directo_total", 0),  # Will be recalculated by cascade
                         }).eq("id", new_item_id).execute()
                     except Exception:
                         logger.warning(
@@ -836,6 +853,33 @@ async def insert_ai_suggestions(
                             new_item_id,
                             exc_info=True,
                         )
+
+    # After all items are inserted, apply cascade indirects
+    if created_items:
+        try:
+            from app.calculations import calc_cascade_indirects
+            config_result = (
+                db.table("indirect_config")
+                .select("*")
+                .eq("org_id", org_id)
+                .limit(1)
+                .execute()
+            )
+            config = config_result.data[0] if config_result.data else {}
+
+            for item_row in created_items:
+                if float(item_row.get("directo_total", 0)) > 0:
+                    updated = calc_cascade_indirects(dict(item_row), config)
+                    db.table("budget_items").update({
+                        "indirecto_total": updated["indirecto_total"],
+                        "beneficio_total": updated["beneficio_total"],
+                        "impuestos_total": updated.get("impuestos_total", 0),
+                        "neto_total": updated["neto_total"],
+                        "iva_total": updated.get("iva_total", 0),
+                        "total_final": updated.get("total_final", 0),
+                    }).eq("id", item_row["id"]).execute()
+        except Exception:
+            logger.warning("Failed to apply cascade indirects after AI insertion", exc_info=True)
 
     return {
         "inserted": total_inserted,
