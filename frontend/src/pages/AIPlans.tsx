@@ -200,6 +200,7 @@ export default function AIPlans() {
         cantidad: i.editCantidad,
         notas: i.notas,
         notas_calculo: i.notas_calculo ?? '',
+        recursos: i.recursos,
       }))
       const res = await budgetApi.addItemsFromAI(id, payload)
       setInsertedCount(res.inserted)

@@ -375,6 +375,8 @@ export default function NewProject() {
                 unidad: item.unidad,
                 cantidad: item.cantidad,
                 notas: item.notas,
+                notas_calculo: item.notas_calculo || '',
+                recursos: item.recursos,
               }))
             )
             const insertRes = await budgetApi.addItemsFromAI(budgetId, payload)

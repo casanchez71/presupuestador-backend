@@ -159,6 +159,13 @@ export interface AIItem {
   confianza: 'alta' | 'media' | 'baja'
   notas: string
   notas_calculo: string
+  recursos?: {
+    materiales?: any[]
+    mano_obra?: any[]
+    equipos?: any[]
+    mo_materiales?: any[]
+    subcontratos?: any[]
+  }
 }
 
 export interface AISeccion {
@@ -183,4 +190,11 @@ export interface AIItemToInsert {
   cantidad: number
   notas: string
   notas_calculo: string
+  recursos?: {
+    materiales?: any[]
+    mano_obra?: any[]
+    equipos?: any[]
+    mo_materiales?: any[]
+    subcontratos?: any[]
+  }
 }
