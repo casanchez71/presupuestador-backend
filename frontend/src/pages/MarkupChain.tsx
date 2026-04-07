@@ -151,7 +151,7 @@ export default function MarkupChain() {
       )}
 
       <div className="max-w-lg">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {/* Header */}
           <div className="bg-[#E8F5EE] px-6 py-4 border-b border-[#2D8D68]/20">
             <h2 className="text-[#143D34] font-bold text-base">Parámetros de costos</h2>
@@ -242,7 +242,7 @@ export default function MarkupChain() {
         </div>
 
         {/* Visual cascade summary */}
-        <div className="mt-4 bg-gray-50 rounded-xl border p-4">
+        <div className="mt-4 bg-gray-50 rounded-xl border border-gray-100 shadow-sm p-4">
           <div className="text-[11px] font-bold text-gray-500 tracking-wider mb-3">CASCADA DE CÁLCULO</div>
           <div className="space-y-1.5 text-xs text-gray-600">
             <div className="flex items-center gap-2">

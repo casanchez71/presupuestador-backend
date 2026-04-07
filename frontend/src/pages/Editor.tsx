@@ -541,7 +541,7 @@ export default function Editor() {
 
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Tree Panel */}
-        <div className="w-64 bg-white rounded-2xl shadow-sm border border-gray-200/80 flex-shrink-0 overflow-hidden flex flex-col">
+        <div className="w-64 bg-white rounded-2xl shadow-sm border border-gray-100 flex-shrink-0 overflow-hidden flex flex-col">
           {/* Gradient header */}
           <div className="bg-gradient-to-r from-[#143D34] to-[#2D8D68] text-white px-4 py-3 flex justify-between items-center">
             <span className="font-semibold text-xs tracking-wide">Estructura de Obra</span>
@@ -615,7 +615,7 @@ export default function Editor() {
         </div>
 
         {/* Main Content Panel */}
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden flex flex-col">
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
           {/* Section header */}
           <div className="bg-gradient-to-r from-gray-50 to-white border-b px-5 py-3 flex justify-between items-center">
             <div>

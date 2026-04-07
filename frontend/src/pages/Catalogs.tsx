@@ -433,7 +433,7 @@ function CatalogRow({
   const catalogTipo = catalog.tipo
 
   return (
-    <div className="bg-white rounded-xl border overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       {/* Header row */}
       <div className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors" onClick={toggle}>
         <div>
@@ -735,7 +735,7 @@ export default function Catalogs() {
         )}
 
         {!loading && catalogs.length === 0 && !error && (
-          <div className="bg-white rounded-xl border p-8 text-center text-gray-400">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center text-gray-400">
             <BookOpen size={32} className="mx-auto mb-3 text-gray-300" />
             <p className="text-sm">No hay catálogos de precios todavía.</p>
             <p className="text-xs mt-1">Sube un CSV para crear tu primer catálogo.</p>

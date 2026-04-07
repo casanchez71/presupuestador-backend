@@ -91,7 +91,7 @@ function TemplateCard({
   }
 
   return (
-    <div className="bg-white rounded-xl border overflow-hidden hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
       {/* Card header */}
       <div
         className="p-4 flex items-start justify-between cursor-pointer hover:bg-gray-50 transition-colors"
@@ -292,7 +292,7 @@ export default function Templates() {
       {/* Content */}
       <div className="max-w-3xl space-y-3">
         {!loading && !error && templates.length === 0 && (
-          <div className="bg-white rounded-xl border p-8 text-center text-gray-400">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center text-gray-400">
             <Library size={32} className="mx-auto mb-3 text-gray-300" />
             <p className="text-sm">No hay templates cargados.</p>
             <p className="text-xs mt-1">

@@ -343,7 +343,7 @@ function ResourceSection({ tipo, recursos, itemQty, budgetId, itemId, onReload }
     : 'Sub'
 
   return (
-    <div className="bg-white rounded-xl border overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       {/* Section header */}
       <button
         onClick={() => setOpen(!open)}
@@ -546,7 +546,7 @@ function GrandTotal({ item, indirects, recursos }: GrandTotalProps) {
   )
 
   return (
-    <div className="bg-white rounded-xl border overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="bg-[#E8F5EE]/30 px-4 py-2.5 border-b flex items-center gap-2">
         <Calculator size={14} className="text-[#2D8D68]" />
         <span className="font-bold text-sm text-[#2D8D68]">Resumen de Costos</span>
@@ -977,7 +977,7 @@ export default function ItemDetail() {
       )}
 
       {/* Memoria de Calculo */}
-      <div className="bg-white rounded-xl border overflow-hidden mb-6">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-6">
         <button
           onClick={() => setMemoriaOpen(!memoriaOpen)}
           className="w-full bg-[#E8F5EE]/30 px-4 py-2.5 flex items-center gap-2 border-b hover:bg-[#E8F5EE]/60 transition-colors"
@@ -1068,7 +1068,7 @@ export default function ItemDetail() {
       </div>
 
       {/* Audit History */}
-      <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="bg-[#E8F5EE]/30 px-4 py-2.5 flex items-center gap-2 border-b">
           <History size={14} className="text-[#2D8D68]" />
           <span className="font-bold text-sm text-[#2D8D68]">Historial de cambios</span>

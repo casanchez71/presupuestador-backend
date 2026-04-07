@@ -77,7 +77,7 @@ export default function BudgetCard({ budget, directTotal, netoTotal, subtitle, t
   return (
     <div
       onClick={() => navigate(`/app/budgets/${budget.id}/editor`)}
-      className="bg-white rounded-xl border hover:shadow-md transition cursor-pointer overflow-hidden"
+      className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition cursor-pointer overflow-hidden"
     >
       <div className={`h-1 ${BAR_COLORS[status] ?? 'bg-gray-300'}`} />
       <div className="p-5">
