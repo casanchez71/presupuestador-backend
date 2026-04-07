@@ -10,6 +10,8 @@ import {
   ImageIcon,
   Edit3,
   AlertCircle,
+  Link,
+  AlertTriangle,
 } from 'lucide-react'
 import { budgetApi } from '../lib/api'
 import type { AIAnalysisResult, AISeccion, AIItem, AIItemToInsert } from '../types'
@@ -499,6 +501,21 @@ export default function AIPlans() {
                                     {item.notas && (
                                       <span className="text-[10px] text-gray-400 truncate max-w-[200px]" title={item.notas}>
                                         {item.notas}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Template match badge */}
+                                  <div className="mt-1">
+                                    {item.template_match ? (
+                                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                                        <Link size={9} />
+                                        Template: {item.template_match.nombre}
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                                        <AlertTriangle size={9} />
+                                        Sin template — composicion estimada por IA
                                       </span>
                                     )}
                                   </div>

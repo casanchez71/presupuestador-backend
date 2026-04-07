@@ -516,6 +516,53 @@ async def analyze_plan(
 
     total_items = sum(len(s["items"]) for s in normalized_sections)
 
+    # Try to match each item against the org's template library
+    templates: list[dict] = []
+    try:
+        templates_result = (
+            db.table("item_templates")
+            .select("id,nombre,unidad,categoria,recursos")
+            .eq("org_id", org_id)
+            .execute()
+        )
+        templates = templates_result.data or []
+
+        if templates:
+            for section in normalized_sections:
+                for item in section.get("items", []):
+                    item_desc = (item.get("descripcion") or "").lower()
+                    item_unit = (item.get("unidad") or "").lower()
+
+                    best_match = None
+                    best_score = 0
+
+                    for tmpl in templates:
+                        tmpl_name = (tmpl.get("nombre") or "").lower()
+                        tmpl_unit = (tmpl.get("unidad") or "").lower()
+
+                        # Simple keyword matching
+                        score = 0
+                        for word in tmpl_name.split():
+                            if len(word) > 2 and word in item_desc:
+                                score += 1
+                        # Bonus for matching unit
+                        if tmpl_unit and tmpl_unit == item_unit:
+                            score += 2
+
+                        if score > best_score:
+                            best_score = score
+                            best_match = tmpl
+
+                    if best_match and best_score >= 2:
+                        item["template_match"] = {
+                            "id": best_match["id"],
+                            "nombre": best_match["nombre"],
+                            "score": best_score,
+                            "recursos": best_match.get("recursos", []),
+                        }
+    except Exception:
+        pass  # Non-fatal
+
     return {
         "budget_id": str(budget_id),
         "proyecto": {
@@ -526,6 +573,7 @@ async def analyze_plan(
         "secciones": normalized_sections,
         "total_items": total_items,
         "catalog_loaded": bool(catalog_context),
+        "templates_available": len(templates),
     }
 
 

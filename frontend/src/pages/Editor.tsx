@@ -52,6 +52,7 @@ export default function Editor() {
   const [indirectConfig, setIndirectConfig] = useState<{estructura_pct: number, jefatura_pct: number, logistica_pct: number, herramientas_pct: number} | null>(null)
 
   const [recalculating, setRecalculating] = useState(false)
+  const [autoRecalculating, setAutoRecalculating] = useState(false)
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [statusChanging, setStatusChanging] = useState(false)
 
@@ -189,17 +190,19 @@ export default function Editor() {
     }
   }
 
-  // Handle inline cell edit
+  // Handle inline cell edit — PATCH → auto-apply indirects → refresh
   const handleEditItem = useCallback(async (itemId: string, field: string, oldValue: number, newValue: number) => {
     if (!id) throw new Error('No budget ID')
 
     const fieldLabel = FIELD_LABELS[field] ?? field
     const formatVal = field === 'cantidad' ? (v: number) => fmtNumber(v, 2) : fmtCurrency
 
+    // 1. PATCH the item
     const result = await budgetApi.updateItem(id, itemId, { [field]: newValue })
     const updatedItem = (result as unknown as { item: BudgetItem }).item
     if (!updatedItem) throw new Error('No updated item in response')
 
+    // Optimistic update — show new directo_total immediately
     setAllItems((prev) =>
       prev.map((item) => (item.id === itemId ? { ...item, ...updatedItem } : item)),
     )
@@ -208,6 +211,24 @@ export default function Editor() {
     )
 
     addToast(`${fieldLabel} actualizado: ${formatVal(oldValue)} → ${formatVal(newValue)}`)
+
+    // 2. Auto-apply indirects (non-blocking — runs in background)
+    setAutoRecalculating(true)
+    try {
+      await budgetApi.applyIndirects(id)
+      // 3. Refresh to show updated indirecto_total / neto_total
+      const freshItems = await budgetApi.getItems(id)
+      setAllItems(freshItems)
+      setItems((prev) => {
+        // Keep same items visible — just update values
+        const freshById = new Map(freshItems.map((i) => [i.id, i]))
+        return prev.map((item) => freshById.get(item.id) ?? item)
+      })
+    } catch {
+      // Non-fatal — values will be correct on next manual recalc
+    } finally {
+      setAutoRecalculating(false)
+    }
   }, [id, addToast])
 
   /** Suggest next section code */
@@ -490,14 +511,20 @@ export default function Editor() {
             )}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {autoRecalculating && (
+            <span className="flex items-center gap-1 text-[10px] text-[#2D8D68] font-medium px-2 py-1 bg-[#E8F5EE] rounded-full">
+              <Loader2 size={10} className="animate-spin" />
+              Recalculando...
+            </span>
+          )}
           <button
             onClick={handleRecalculate}
             disabled={recalculating}
             className="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 flex items-center gap-1.5 transition-colors disabled:opacity-50"
           >
             <RefreshCw size={13} className={recalculating ? 'animate-spin' : ''} />
-            {recalculating ? 'Recalculando...' : 'Recalcular'}
+            {recalculating ? 'Recalculando...' : 'Recálculo completo'}
           </button>
           <button
             onClick={() => navigate(`/app/budgets/${id ?? '1'}/ai`)}

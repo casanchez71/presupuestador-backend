@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FileText,
+  FileSpreadsheet,
   Upload,
   Building2,
   Percent,
@@ -16,6 +17,9 @@ import {
   Sparkles,
   ArrowRight,
   ClipboardList,
+  Link,
+  AlertTriangle,
+  Check,
 } from 'lucide-react'
 import { budgetApi, catalogApi } from '../lib/api'
 import type { Budget, PriceCatalog, AIAnalysisResult } from '../types'
@@ -53,7 +57,7 @@ interface IndirectCosts {
   beneficio: number
 }
 
-type PriceOption = 'csv' | 'catalog' | 'skip'
+type PriceOption = 'csv' | 'excel' | 'catalog' | 'skip'
 type CsvTipo = 'material' | 'mano_obra' | 'equipo' | 'subcontrato'
 
 interface CsvEntry {
@@ -63,6 +67,26 @@ interface CsvEntry {
   file: File
 }
 type StructureOption = 'template' | 'plan' | 'manual' | 'json'
+
+interface AIReviewItem {
+  _key: string
+  seccion_nombre: string
+  seccion_codigo: string
+  codigo: string
+  descripcion: string
+  unidad: string
+  cantidad: number
+  notas: string
+  notas_calculo: string
+  recursos?: object
+  template_match?: {
+    id: string
+    nombre: string
+    score: number
+    recursos: any[]
+  }
+  accepted: boolean
+}
 
 const STEPS = [
   { label: 'Datos', icon: FileText },
@@ -95,6 +119,7 @@ export default function NewProject() {
   // Step 2
   const [priceOption, setPriceOption] = useState<PriceOption>('skip')
   const [csvEntries, setCsvEntries] = useState<CsvEntry[]>([])
+  const [excelFile, setExcelFile] = useState<File | null>(null)
   const [catalogs, setCatalogs] = useState<PriceCatalog[]>([])
   const [selectedCatalog, setSelectedCatalog] = useState('')
   const [catalogsLoaded, setCatalogsLoaded] = useState(false)
@@ -107,6 +132,8 @@ export default function NewProject() {
   const [aiSections, setAiSections] = useState<Section[]>([])
   const [aiAnalyzing, setAiAnalyzing] = useState(false)
   const [aiError, setAiError] = useState('')
+  const [aiReviewItems, setAiReviewItems] = useState<AIReviewItem[]>([])
+  const [showAiReview, setShowAiReview] = useState(false)
   const [sections, setSections] = useState<Section[]>([
     { id: uid(), nombre: '', items: [] },
   ])
@@ -136,9 +163,14 @@ export default function NewProject() {
     return true
   }
 
-  function next() {
+  async function next() {
     if (!canAdvance()) return
     if (step === 3) {
+      // If plan mode with a file and no pre-analyzed result, analyze first and show review
+      if (structureOption === 'plan' && planFile && aiSections.length === 0) {
+        await handleAnalyzeAndReview()
+        return
+      }
       handleCreate()
       return
     }
@@ -269,6 +301,138 @@ export default function NewProject() {
       ;[arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]]
       return arr
     })
+  }
+
+  // ─── Analyze plan and show review panel ──────────────────────────────────
+
+  async function handleAnalyzeAndReview() {
+    if (!planFile) return
+    setCreating(true)
+    setError('')
+    setAiError('')
+    try {
+      // Create the budget first so we have an ID to pass to analyze-plan
+      const budget = await budgetApi.create({
+        name: project.name,
+        description: project.description || undefined,
+        status: 'borrador',
+      } as Partial<Budget>)
+
+      const budgetId = budget.id
+
+      // Analyze the plan
+      const formData = new FormData()
+      formData.append('file', planFile)
+      const aiRes = await budgetApi.analyzePlan(budgetId, formData)
+      setAiResult(aiRes)
+
+      // Flatten into review items
+      let keyIdx = 0
+      const reviewItems: AIReviewItem[] = []
+      for (const sec of aiRes.secciones) {
+        for (const item of sec.items) {
+          reviewItems.push({
+            _key: `rev-${keyIdx++}`,
+            seccion_nombre: sec.nombre,
+            seccion_codigo: sec.codigo,
+            codigo: item.codigo,
+            descripcion: item.descripcion,
+            unidad: item.unidad,
+            cantidad: item.cantidad,
+            notas: item.notas,
+            notas_calculo: item.notas_calculo ?? '',
+            recursos: item.recursos,
+            template_match: item.template_match,
+            accepted: true,
+          })
+        }
+      }
+      setAiReviewItems(reviewItems)
+      // Store budget id temporarily so handleConfirmReview can use it
+      setResult({ budgetId, sectionsCount: 0, itemsCount: 0 })
+      setShowAiReview(true)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error desconocido'
+      setError(`Error al analizar el plano: ${msg}`)
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  // ─── Confirm review and finish creating the budget ────────────────────────
+
+  async function handleConfirmReview() {
+    if (!result) return
+    const budgetId = result.budgetId
+    setCreating(true)
+    setError('')
+    try {
+      const acceptedItems = aiReviewItems.filter((i) => i.accepted)
+
+      let totalItems = 0
+      let totalSections = 0
+
+      if (acceptedItems.length > 0) {
+        const payload = acceptedItems.map((i) => ({
+          seccion_nombre: i.seccion_nombre,
+          seccion_codigo: i.seccion_codigo,
+          codigo: i.codigo,
+          descripcion: i.descripcion,
+          unidad: i.unidad,
+          cantidad: i.cantidad,
+          notas: i.notas,
+          notas_calculo: i.notas_calculo,
+          recursos: i.recursos,
+        }))
+        const insertRes = await budgetApi.addItemsFromAI(budgetId, payload)
+        totalItems = insertRes.inserted
+        totalSections = insertRes.sections_created
+      }
+
+      // Apply indirects
+      try {
+        await budgetApi.updateIndirects(budgetId, {
+          estructura_pct: indirects.estructura,
+          jefatura_pct: indirects.jefatura,
+          logistica_pct: indirects.logistica,
+          herramientas_pct: indirects.herramientas,
+        })
+      } catch {
+        // continue
+      }
+
+      // Upload CSVs, Excel, or apply catalog
+      if (priceOption === 'csv' && csvEntries.length > 0) {
+        for (const entry of csvEntries) {
+          try {
+            await catalogApi.uploadCsv(entry.nombre, entry.tipo, entry.file)
+          } catch {
+            // continue
+          }
+        }
+      } else if (priceOption === 'excel' && excelFile) {
+        try {
+          await catalogApi.uploadExcel(excelFile)
+        } catch {
+          // continue
+        }
+      } else if (priceOption === 'catalog' && selectedCatalog) {
+        try {
+          await catalogApi.apply(budgetId, selectedCatalog)
+        } catch {
+          // continue
+        }
+      }
+
+      setResult({ budgetId, sectionsCount: totalSections, itemsCount: totalItems })
+      setShowAiReview(false)
+      setStep(4)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error desconocido'
+      setError(`Error al crear el presupuesto: ${msg}`)
+    } finally {
+      setCreating(false)
+    }
   }
 
   // ─── Create budget ────────────────────────────────────────────────────────
@@ -405,7 +569,7 @@ export default function NewProject() {
         // Indirects endpoint may not exist yet - continue
       }
 
-      // 5. Upload CSVs or apply catalog
+      // 5. Upload CSVs, Excel, or apply catalog
       if (priceOption === 'csv' && csvEntries.length > 0) {
         for (const entry of csvEntries) {
           try {
@@ -413,6 +577,12 @@ export default function NewProject() {
           } catch {
             // Continue even if one CSV fails
           }
+        }
+      } else if (priceOption === 'excel' && excelFile) {
+        try {
+          await catalogApi.uploadExcel(excelFile)
+        } catch {
+          // Continue even if Excel upload fails
         }
       } else if (priceOption === 'catalog' && selectedCatalog) {
         try {
@@ -493,9 +663,21 @@ export default function NewProject() {
         </div>
       </div>
 
+      {/* AI Review Panel overlay */}
+      {showAiReview && (
+        <AIReviewPanel
+          items={aiReviewItems}
+          setItems={setAiReviewItems}
+          onConfirm={handleConfirmReview}
+          onCancel={() => setShowAiReview(false)}
+          confirming={creating}
+          error={error}
+        />
+      )}
+
       {/* Step content */}
       <div className="max-w-4xl mx-auto">
-        {error && (
+        {error && !showAiReview && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
             {error}
           </div>
@@ -511,6 +693,8 @@ export default function NewProject() {
             csvEntries={csvEntries}
             onAddCsvEntry={addCsvEntry}
             onRemoveCsvEntry={removeCsvEntry}
+            excelFile={excelFile}
+            setExcelFile={setExcelFile}
             catalogs={catalogs}
             selectedCatalog={selectedCatalog}
             setSelectedCatalog={setSelectedCatalog}
@@ -566,10 +750,12 @@ export default function NewProject() {
               )}
               {step === 3
                 ? creating
-                  ? structureOption === 'plan' && planFile
+                  ? structureOption === 'plan' && planFile && aiSections.length === 0
                     ? 'Analizando plano con IA...'
                     : 'Creando...'
-                  : 'Crear Presupuesto'
+                  : structureOption === 'plan' && planFile && aiSections.length === 0
+                    ? 'Analizar plano con IA'
+                    : 'Crear Presupuesto'
                 : 'Siguiente'}
               {!creating && step < 3 && <ChevronRight size={16} />}
             </button>
@@ -677,6 +863,8 @@ function StepPrecios({
   csvEntries,
   onAddCsvEntry,
   onRemoveCsvEntry,
+  excelFile,
+  setExcelFile,
   catalogs,
   selectedCatalog,
   setSelectedCatalog,
@@ -687,6 +875,8 @@ function StepPrecios({
   csvEntries: CsvEntry[]
   onAddCsvEntry: (nombre: string, tipo: CsvTipo, file: File) => void
   onRemoveCsvEntry: (id: string) => void
+  excelFile: File | null
+  setExcelFile: (f: File | null) => void
   catalogs: PriceCatalog[]
   selectedCatalog: string
   setSelectedCatalog: (v: string) => void
@@ -714,13 +904,20 @@ function StepPrecios({
           Podes cargar un catalogo de precios ahora o hacerlo despues.
         </p>
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-4 gap-3 mb-6">
           <OptionCard
             active={priceOption === 'csv'}
             onClick={() => setPriceOption('csv')}
             icon={<Upload size={20} />}
-            title="Subir CSV"
-            description="Materiales, MO, equipos"
+            title="Subir CSVs"
+            description="Archivos por tipo"
+          />
+          <OptionCard
+            active={priceOption === 'excel'}
+            onClick={() => setPriceOption('excel')}
+            icon={<FileSpreadsheet size={20} />}
+            title="Subir Excel"
+            description="Con 4 solapas"
           />
           <OptionCard
             active={priceOption === 'catalog'}
@@ -818,6 +1015,29 @@ function StepPrecios({
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {priceOption === 'excel' && (
+          <div className="fade-in space-y-3">
+            <div className="bg-[#E8F5EE] rounded-lg px-4 py-2.5 border border-green-200 text-sm text-[#143D34]">
+              El Excel debe tener solapas: <strong>Materiales</strong>, <strong>Mano de obra</strong>, <strong>Equipos</strong>, <strong>Subcontratos</strong> (o variantes como Mat, MO, Eq, Sub).
+              Se crea un catálogo por solapa.
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Archivo Excel (.xlsx)</label>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => setExcelFile(e.target.files?.[0] ?? null)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-white file:mr-3 file:text-sm file:font-medium file:border-0 file:bg-[#E8F5EE] file:text-[#1B5E4B] file:rounded file:px-3 file:py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2D8D68]/30"
+              />
+              {excelFile && (
+                <div className="mt-1.5 text-xs text-[#2D8D68] font-medium">
+                  {excelFile.name} ({(excelFile.size / 1024).toFixed(0)} KB) — se va a subir al crear el presupuesto
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -1255,6 +1475,175 @@ function StepResultado({
             className="bg-white border text-gray-600 px-6 py-2.5 rounded-lg text-sm hover:bg-gray-50 transition-colors"
           >
             Volver al Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── AI Review Panel ────────────────────────────────────────────────────────
+
+function AIReviewPanel({
+  items,
+  setItems,
+  onConfirm,
+  onCancel,
+  confirming,
+  error,
+}: {
+  items: AIReviewItem[]
+  setItems: React.Dispatch<React.SetStateAction<AIReviewItem[]>>
+  onConfirm: () => void
+  onCancel: () => void
+  confirming: boolean
+  error: string
+}) {
+  const accepted = items.filter((i) => i.accepted)
+  const withTemplate = items.filter((i) => i.template_match)
+
+  function toggle(key: string) {
+    setItems((prev) => prev.map((i) => (i._key === key ? { ...i, accepted: !i.accepted } : i)))
+  }
+
+  function updateCantidad(key: string, val: string) {
+    const n = parseFloat(val)
+    if (!isNaN(n) && n >= 0) {
+      setItems((prev) => prev.map((i) => (i._key === key ? { ...i, cantidad: n } : i)))
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="bg-[#2D8D68] text-white rounded-t-2xl px-6 py-4 flex-shrink-0">
+          <div className="flex items-center gap-2 mb-1">
+            <CheckCircle size={18} />
+            <span className="font-bold text-base">REVISION DE ITEMS GENERADOS POR IA</span>
+          </div>
+          <p className="text-xs text-white/80">
+            La IA genero {items.length} items.{' '}
+            {withTemplate.length > 0 && (
+              <span className="text-green-200 font-medium">
+                {withTemplate.length} coinciden con tu biblioteca de templates.{' '}
+              </span>
+            )}
+            Revisa y ajusta antes de crear el presupuesto.
+          </p>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 border-b border-red-200 text-red-700 text-xs px-6 py-2.5 flex-shrink-0">
+            {error}
+          </div>
+        )}
+
+        {/* Toolbar */}
+        <div className="px-6 py-2.5 border-b bg-gray-50 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setItems((prev) => prev.map((i) => ({ ...i, accepted: true })))}
+              className="text-[10px] font-medium text-[#2D8D68] hover:text-[#1B5E4B] transition-colors"
+            >
+              Seleccionar todos
+            </button>
+            <span className="text-gray-300">|</span>
+            <button
+              onClick={() => setItems((prev) => prev.map((i) => ({ ...i, accepted: false })))}
+              className="text-[10px] font-medium text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Deseleccionar todos
+            </button>
+          </div>
+          <span className="text-[10px] text-gray-400">
+            {accepted.length} de {items.length} seleccionados
+          </span>
+        </div>
+
+        {/* Items list */}
+        <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+          {items.map((item) => (
+            <div
+              key={item._key}
+              className={`px-6 py-3 flex items-start gap-3 transition-colors ${
+                item.accepted ? 'bg-white' : 'bg-gray-50 opacity-60'
+              }`}
+            >
+              {/* Checkbox */}
+              <button
+                onClick={() => toggle(item._key)}
+                className={`mt-0.5 w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+                  item.accepted
+                    ? 'bg-[#2D8D68] border-[#2D8D68] text-white'
+                    : 'border-gray-300 hover:border-[#2D8D68]'
+                }`}
+              >
+                {item.accepted && <Check size={12} />}
+              </button>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                {/* Top row: code + description + unidad + cantidad */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] text-gray-400 font-mono">{item.codigo}</span>
+                  <span className="text-xs font-medium text-gray-800 flex-1 min-w-0 truncate">
+                    {item.descripcion}
+                  </span>
+                  <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">
+                    {item.unidad}
+                  </span>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <span className="text-[10px] text-gray-400">Cant:</span>
+                    <input
+                      type="number"
+                      value={item.cantidad}
+                      onChange={(e) => updateCantidad(item._key, e.target.value)}
+                      step="0.1"
+                      min="0"
+                      className="w-16 text-xs text-right border border-gray-200 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#2D8D68]/30 focus:border-[#2D8D68]"
+                    />
+                  </div>
+                </div>
+
+                {/* Template match badge or warning */}
+                <div className="mt-1">
+                  {item.template_match ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                      <Link size={9} />
+                      Template: {item.template_match.nombre}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                      <AlertTriangle size={9} />
+                      Sin template — se usara composicion estimada por IA
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t bg-gray-50 rounded-b-2xl flex items-center justify-between flex-shrink-0">
+          <button
+            onClick={onCancel}
+            disabled={confirming}
+            className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-40 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={accepted.length === 0 || confirming}
+            className="bg-[#2D8D68] hover:bg-[#1B5E4B] disabled:opacity-50 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-2"
+          >
+            {confirming && (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            {confirming ? 'Creando...' : `Confirmar y crear (${accepted.length} items)`}
           </button>
         </div>
       </div>

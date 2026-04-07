@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Download, FileText, Table, Users } from 'lucide-react'
 import { budgetApi } from '../lib/api'
+import type { Budget } from '../types'
 
 interface ExportOption {
   id: string
@@ -13,11 +14,23 @@ interface ExportOption {
   action: () => Promise<void>
 }
 
+function safeName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_\-áéíóúÁÉÍÓÚñÑüÜ ]/g, '').trim().replace(/\s+/g, '_')
+}
+
 export default function Export() {
   const { id } = useParams<{ id: string }>()
   const [loading, setLoading] = useState<string | null>(null)
   const [done, setDone] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [budget, setBudget] = useState<Budget | null>(null)
+
+  useEffect(() => {
+    if (!id) return
+    budgetApi.get(id).then(setBudget).catch(() => {})
+  }, [id])
+
+  const budgetName = budget?.name ? safeName(budget.name) : 'presupuesto'
 
   async function downloadBlob(blob: Blob, filename: string) {
     const url = URL.createObjectURL(blob)
@@ -33,13 +46,13 @@ export default function Export() {
       id: 'pdf',
       icon: <FileText size={28} strokeWidth={1.5} className="text-[#2D8D68]" />,
       title: 'PDF Profesional',
-      subtitle: 'Resumen + tabla + branding SOLE',
+      subtitle: 'Portada · tabla · cascada de costos',
       badge: 'UNIVERSAL',
       badgeStyle: 'bg-[#E8F5EE] text-[#166534]',
       action: async () => {
         if (!id) return
         const blob = await budgetApi.exportPdf(id)
-        await downloadBlob(blob, 'presupuesto.pdf')
+        await downloadBlob(blob, `${budgetName}_presupuesto.pdf`)
       },
     },
     {
@@ -52,7 +65,7 @@ export default function Export() {
       action: async () => {
         if (!id) return
         const blob = await budgetApi.exportExcel(id)
-        await downloadBlob(blob, 'presupuesto.xlsx')
+        await downloadBlob(blob, `${budgetName}.xlsx`)
       },
     },
     {
@@ -65,7 +78,7 @@ export default function Export() {
       action: async () => {
         if (!id) return
         const blob = await budgetApi.exportExcel(id)
-        await downloadBlob(blob, 'presupuesto_terrac.xlsx')
+        await downloadBlob(blob, `${budgetName}_terrac.xlsx`)
       },
     },
     {
@@ -78,7 +91,7 @@ export default function Export() {
       action: async () => {
         if (!id) return
         const blob = await budgetApi.exportPdf(id)
-        await downloadBlob(blob, 'presupuesto_cliente.pdf')
+        await downloadBlob(blob, `${budgetName}_cliente.pdf`)
       },
     },
   ]

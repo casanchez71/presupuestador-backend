@@ -198,4 +198,9 @@ export const catalogApi = {
     formData.append('file', file)
     return postFile<any>('/catalogs/upload', formData)
   },
+  uploadExcel: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return postFile<{ catalogs_created: number; entries: Record<string, number>; warnings: string[]; source_file: string }>('/catalogs/upload-excel', formData)
+  },
 }
