@@ -170,25 +170,31 @@ def _resize_image_if_needed(content: bytes, ext: str) -> bytes:
         return content
 
 
-def _pdf_first_page_to_image(content: bytes) -> bytes:
-    """Extract first page of PDF as a PNG image, capped at MAX_DIMENSION px."""
+def _pdf_pages_to_images(content: bytes) -> list[bytes]:
+    """Extract ALL pages of PDF as PNG images, capped at MAX_DIMENSION px each.
+
+    Returns a list of PNG bytes, one per page (max 8 pages).
+    """
     try:
         import fitz  # PyMuPDF
 
         doc = fitz.open(stream=content, filetype="pdf")
-        page = doc[0]
-        # Render at 1x (72 DPI) first to check native size, then scale
-        # so the longest side does not exceed MAX_DIMENSION.
-        rect = page.rect
-        native_w, native_h = rect.width, rect.height
-        # Choose a scale so the output stays within MAX_DIMENSION px
-        max_native = max(native_w, native_h)
-        scale = min(MAX_DIMENSION / max_native, 2.0) if max_native > 0 else 1.0
-        mat = fitz.Matrix(scale, scale)
-        pix = page.get_pixmap(matrix=mat)
-        png_bytes = pix.tobytes("png")
+        pages_png: list[bytes] = []
+        max_pages = min(len(doc), 8)  # cap at 8 pages to avoid huge payloads
+
+        for page_num in range(max_pages):
+            page = doc[page_num]
+            rect = page.rect
+            native_w, native_h = rect.width, rect.height
+            max_native = max(native_w, native_h)
+            scale = min(MAX_DIMENSION / max_native, 2.0) if max_native > 0 else 1.0
+            mat = fitz.Matrix(scale, scale)
+            pix = page.get_pixmap(matrix=mat)
+            png_bytes = pix.tobytes("png")
+            pages_png.append(png_bytes)
+
         doc.close()
-        return png_bytes
+        return pages_png
     except ImportError:
         raise HTTPException(
             501,
@@ -372,24 +378,43 @@ async def analyze_plan(
     if len(content) > 20 * 1024 * 1024:
         raise HTTPException(400, "El archivo es muy grande. Máximo 20 MB.")
 
-    # Handle PDF: extract first page as image
+    # Handle PDF: extract ALL pages as images
+    image_contents: list[dict] = []  # list of {"b64": ..., "mime": ...}
+
     if ext in ALLOWED_PDF_EXT:
-        content = _pdf_first_page_to_image(content)
-        mime = "image/png"
+        pages = _pdf_pages_to_images(content)
+        logger.info("PDF has %d page(s) — sending all to GPT-4o Vision", len(pages))
+        for page_bytes in pages:
+            # Validate each page size
+            if len(page_bytes) > 10 * 1024 * 1024:
+                logger.warning("PDF page too large (%d bytes), skipping", len(page_bytes))
+                continue
+            image_contents.append({
+                "b64": base64.b64encode(page_bytes).decode("utf-8"),
+                "mime": "image/png",
+            })
+
+        # Save first page to storage
+        content = pages[0] if pages else content
     else:
         # Resize large images
         content = _resize_image_if_needed(content, ext)
         mime = "image/jpeg" if ext in (".jpg", ".jpeg") else f"image/{ext.lstrip('.')}"
 
-    # Validate final size after processing
-    if len(content) > 10 * 1024 * 1024:
-        raise HTTPException(
-            400,
-            "El archivo procesado supera los 10 MB. "
-            "Por favor, reducí la resolución del plano o exportalo como JPG de menor calidad antes de subirlo.",
-        )
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(
+                400,
+                "El archivo procesado supera los 10 MB. "
+                "Por favor, reducí la resolución del plano o exportalo como JPG de menor calidad antes de subirlo.",
+            )
 
-    b64 = base64.b64encode(content).decode("utf-8")
+        image_contents.append({
+            "b64": base64.b64encode(content).decode("utf-8"),
+            "mime": mime,
+        })
+
+    if not image_contents:
+        raise HTTPException(400, "No se pudo procesar el archivo. Verificá que sea un PDF o imagen válida.")
 
     # Save plan image to Supabase Storage (non-fatal)
     try:
@@ -415,6 +440,19 @@ async def analyze_plan(
 
     system_prompt = _build_system_prompt(catalog_context)
 
+    # Build message content: text prompt + all images
+    num_pages = len(image_contents)
+    page_note = f"\n\nNOTA: Te estoy enviando {num_pages} página(s) del plano. Analizá TODAS las páginas en conjunto para generar la lista COMPLETA de ítems." if num_pages > 1 else ""
+
+    message_content: list[dict] = [
+        {"type": "text", "text": system_prompt + page_note},
+    ]
+    for img in image_contents:
+        message_content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:{img['mime']};base64,{img['b64']}"},
+        })
+
     # Call GPT-4o Vision with timeout
     try:
         response = await client.chat.completions.create(
@@ -422,18 +460,12 @@ async def analyze_plan(
             messages=[
                 {
                     "role": "user",
-                    "content": [
-                        {"type": "text", "text": system_prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:{mime};base64,{b64}"},
-                        },
-                    ],
+                    "content": message_content,
                 }
             ],
             max_tokens=16384,
-            temperature=0.2,
-            timeout=120,
+            temperature=0,
+            timeout=180,
         )
     except Exception as e:
         logger.error("OpenAI API error: %s", str(e))
