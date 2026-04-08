@@ -75,18 +75,7 @@ Respondé ÚNICAMENTE con un JSON válido con esta estructura exacta:
           "cantidad": 12.5,
           "confianza": "alta",
           "notas": "4 columnas de 30x30cm x 3m altura",
-          "memoria_calculo": "4 columnas x 0.30m x 0.30m x 3.00m = 1.08 m3\\nDesperdicio 5%: 1.08 x 1.05 = 1.13 m3\\nTotal redondeado: 1.15 m3",
-          "recursos": {{
-            "materiales": [
-              {{"codigo": "H30", "descripcion": "Hormigón H-30", "unidad": "m3", "cantidad_por_unidad": 1.0, "desperdicio_pct": 10}}
-            ],
-            "mano_obra": [
-              {{"codigo": "MO-OF", "descripcion": "Oficial", "trabajadores": 2, "dias_por_unidad": 0.33, "cargas_sociales_pct": 25}}
-            ],
-            "equipos": [],
-            "mo_materiales": [],
-            "subcontratos": []
-          }}
+          "memoria_calculo": "4 columnas x 0.30m x 0.30m x 3.00m = 1.08 m3. Desperdicio 5%: 1.13 m3"
         }}
       ]
     }}
@@ -107,22 +96,15 @@ Secciones típicas a considerar:
 - Pintura (interior, exterior, impermeabilizante)
 - Varios (limpieza final, conexiones a red)
 
-Para cada item, incluí un campo "memoria_calculo" con el desglose paso a paso
-de cómo calculaste la cantidad. Mostrá las dimensiones, fórmulas y operaciones
-intermedias. Ejemplo: "Largo 4.50m x Ancho 3.20m = 14.40 m2".
-
-{recursos_instruction}
-
+Para cada item, el campo "memoria_calculo" debe tener el desglose breve de cómo calculaste la cantidad.
 Sé preciso con las cantidades. Usá las dimensiones del plano.
 Si no podés medir algo con certeza, indicá confianza "baja".
-No incluyas texto adicional, explicaciones ni markdown. Solo el JSON."""
+No incluyas texto adicional, explicaciones ni markdown. Solo el JSON.
+{recursos_instruction}"""
 
-_RECURSOS_INSTRUCTION_WITH_CATALOG = """IMPORTANTE: Para cada ítem, DEBÉS incluir la composición de recursos usando los códigos del catálogo de arriba.
-Cada recurso debe tener el código exacto del catálogo para poder vincular precios automáticamente.
-Si no encontrás un código exacto en el catálogo, usá el más cercano o dejá el código vacío."""
+_RECURSOS_INSTRUCTION_WITH_CATALOG = ""
 
-_RECURSOS_INSTRUCTION_WITHOUT_CATALOG = """IMPORTANTE: Para cada ítem, incluí la composición de recursos estimada.
-Usá códigos descriptivos para los recursos (ej: "H30" para hormigón H-30, "MO-OF" para oficial)."""
+_RECURSOS_INSTRUCTION_WITHOUT_CATALOG = ""
 
 
 def _build_system_prompt(catalog_context: str) -> str:
@@ -477,6 +459,11 @@ async def analyze_plan(
     raw = response.choices[0].message.content or ""
     logger.info("AI raw response length: %d chars", len(raw))
     logger.debug("AI raw response: %s", raw[:2000])
+
+    # Check if response was truncated
+    finish_reason = response.choices[0].finish_reason
+    if finish_reason == "length":
+        logger.warning("AI response was TRUNCATED (finish_reason=length). Response length: %d chars", len(raw))
 
     # Extract JSON from response (handle markdown code blocks)
     cleaned = raw.strip()
