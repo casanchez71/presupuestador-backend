@@ -848,6 +848,204 @@ def _create_resources_for_item(
         return []
 
 
+def _auto_assign_catalog_resources(
+    db,
+    item_id: str,
+    org_id: str,
+    item_desc: str,
+    item_unidad: str,
+    item_cantidad: float,
+) -> list[dict]:
+    """Auto-generate basic resources for an item by matching catalog entries.
+
+    Uses simple keyword matching to find relevant materials and MO,
+    then creates resources with catalog prices.
+    Returns list of created resource rows.
+    """
+    try:
+        # Load all catalog entries for this org
+        catalogs = (
+            db.table("price_catalogs")
+            .select("id")
+            .eq("org_id", org_id)
+            .execute()
+        )
+        if not catalogs.data:
+            return []
+
+        catalog_ids = [c["id"] for c in catalogs.data]
+        entries = (
+            db.table("catalog_entries")
+            .select("id,codigo,descripcion,unidad,precio_sin_iva,tipo")
+            .in_("catalog_id", catalog_ids)
+            .execute()
+        )
+        if not entries.data:
+            return []
+
+        desc_lower = item_desc.lower()
+        rows: list[dict] = []
+
+        # --- Step 1: Find best matching MATERIAL ---
+        ITEM_MATERIAL_MAP = {
+            "hormigón": ["hormigon", "h-21", "h-30", "h21", "h30"],
+            "h-30": ["h-30", "h30", "hormigon"],
+            "h-21": ["h-21", "h21", "hormigon"],
+            "zapata": ["hormigon", "h-30", "h30"],
+            "columna": ["hormigon", "h-30", "h30"],
+            "viga": ["hormigon", "h-21", "h21"],
+            "losa": ["hormigon", "h-21", "h21"],
+            "escalera": ["hormigon", "h-21", "h21"],
+            "mampostería": ["ladrillo", "LH"],
+            "muro": ["ladrillo", "LH"],
+            "tabique": ["ladrillo", "LH"],
+            "revoque grueso": ["cemite", "cemento", "arena", "cal"],
+            "revoque fino": ["cemite", "cemento", "arena", "cal"],
+            "contrapiso": ["hormigon", "cemento", "arena"],
+            "carpeta": ["cemento", "arena"],
+            "piso": ["ceramico", "porcelanato", "pegamento"],
+            "cerámico": ["ceramico", "pegamento"],
+            "porcelanato": ["porcelanato", "pegamento"],
+            "azulejo": ["ceramico", "azulejo", "pegamento"],
+            "pintura": ["pintura", "latex", "rodillo"],
+            "cielorraso": ["durlock", "placa", "perfil"],
+            "durlock": ["durlock", "placa", "perfil"],
+            "membrana": ["membrana", "asfaltica"],
+            "puerta": ["puerta"],
+            "ventana": ["ventana", "aluminio"],
+            "excavación": [],
+            "replanteo": [],
+            "limpieza": [],
+            "obrador": [],
+        }
+
+        match_keywords = []
+        for key, keywords in ITEM_MATERIAL_MAP.items():
+            if key in desc_lower:
+                match_keywords.extend(keywords)
+                break
+
+        best_material = None
+        best_score = 0
+        for entry in entries.data:
+            if entry.get("tipo") != "material":
+                continue
+            entry_desc = (entry.get("descripcion") or "").lower()
+            entry_code = (entry.get("codigo") or "").lower()
+            score = 0
+            for kw in match_keywords:
+                if kw.lower() in entry_desc or kw.lower() in entry_code:
+                    score += 1
+            if score > best_score:
+                best_score = score
+                best_material = entry
+
+        if best_material and best_score >= 1:
+            precio = float(best_material.get("precio_sin_iva") or 0)
+            qty_per_unit = 1.0
+            if item_unidad in ("m2", "m²"):
+                qty_per_unit = 1.05
+            elif item_unidad in ("m3", "m³"):
+                qty_per_unit = 1.10
+            elif item_unidad in ("ml", "m"):
+                qty_per_unit = 1.05
+
+            resource = {
+                "item_id": item_id,
+                "org_id": org_id,
+                "tipo": "material",
+                "codigo": best_material.get("codigo", ""),
+                "descripcion": best_material.get("descripcion", ""),
+                "unidad": best_material.get("unidad", "u"),
+                "cantidad": qty_per_unit * item_cantidad,
+                "desperdicio_pct": 5,
+                "precio_unitario": precio,
+                "catalog_entry_id": best_material.get("id"),
+                "trabajadores": 0,
+                "dias": 0,
+                "cargas_sociales_pct": 0,
+            }
+            calc_resource_subtotal(resource)
+            rows.append(resource)
+
+        # --- Step 2: Always add MO (Oficial + Ayudante) ---
+        mo_entries = {e.get("codigo", "").upper(): e for e in entries.data if e.get("tipo") == "mano_obra"}
+
+        oficial = mo_entries.get("MO-OF")
+        ayudante = mo_entries.get("MO-AY")
+
+        dias_oficial = 0.5
+        dias_ayudante = 0.5
+        if any(kw in desc_lower for kw in ["hormigón", "h-30", "h-21", "zapata", "columna", "viga", "losa"]):
+            dias_oficial = 0.8
+            dias_ayudante = 1.0
+        elif any(kw in desc_lower for kw in ["mampostería", "muro", "tabique"]):
+            dias_oficial = 0.15
+            dias_ayudante = 0.15
+        elif any(kw in desc_lower for kw in ["revoque", "enlucido"]):
+            dias_oficial = 0.12
+            dias_ayudante = 0.10
+        elif any(kw in desc_lower for kw in ["pintura", "latex"]):
+            dias_oficial = 0.05
+            dias_ayudante = 0.03
+        elif any(kw in desc_lower for kw in ["piso", "cerám", "porcelan"]):
+            dias_oficial = 0.15
+            dias_ayudante = 0.10
+        elif any(kw in desc_lower for kw in ["cielorraso", "durlock"]):
+            dias_oficial = 0.20
+            dias_ayudante = 0.15
+        elif any(kw in desc_lower for kw in ["excavación", "movimiento"]):
+            dias_oficial = 0.0
+            dias_ayudante = 0.5
+
+        if oficial and dias_oficial > 0:
+            resource = {
+                "item_id": item_id,
+                "org_id": org_id,
+                "tipo": "mano_obra",
+                "codigo": "MO-OF",
+                "descripcion": oficial.get("descripcion", "Oficial"),
+                "unidad": "día",
+                "cantidad": 0,
+                "desperdicio_pct": 0,
+                "precio_unitario": float(oficial.get("precio_sin_iva") or 0),
+                "catalog_entry_id": oficial.get("id"),
+                "trabajadores": 1,
+                "dias": dias_oficial * item_cantidad,
+                "cargas_sociales_pct": 25,
+            }
+            calc_resource_subtotal(resource)
+            rows.append(resource)
+
+        if ayudante and dias_ayudante > 0:
+            resource = {
+                "item_id": item_id,
+                "org_id": org_id,
+                "tipo": "mano_obra",
+                "codigo": "MO-AY",
+                "descripcion": ayudante.get("descripcion", "Ayudante"),
+                "unidad": "día",
+                "cantidad": 0,
+                "desperdicio_pct": 0,
+                "precio_unitario": float(ayudante.get("precio_sin_iva") or 0),
+                "catalog_entry_id": ayudante.get("id"),
+                "trabajadores": 1,
+                "dias": dias_ayudante * item_cantidad,
+                "cargas_sociales_pct": 25,
+            }
+            calc_resource_subtotal(resource)
+            rows.append(resource)
+
+        if not rows:
+            return []
+
+        result = db.table("item_resources").insert(rows).execute()
+        return result.data or []
+    except Exception:
+        logger.warning("Failed to auto-assign catalog resources for item %s", item_id, exc_info=True)
+        return []
+
+
 @router.post("/{budget_id}/items/from-ai")
 async def insert_ai_suggestions(
     budget_id: UUID,
@@ -958,6 +1156,7 @@ async def insert_ai_suggestions(
             created_items.append(result.data[0])
 
             # Create resources if the item has them
+            item_resources_count = 0
             recursos = item.get("recursos")
             if isinstance(recursos, dict):
                 inserted_resources = _create_resources_for_item(
@@ -969,6 +1168,7 @@ async def insert_ai_suggestions(
                 )
                 resources_count = len(inserted_resources)
                 total_resources_created += resources_count
+                item_resources_count = resources_count
 
                 if resources_count > 0:
                     # Recalculate item unit prices from the inserted resources
@@ -985,6 +1185,37 @@ async def insert_ai_suggestions(
                     except Exception:
                         logger.warning(
                             "Failed to recalculate item %s from resources",
+                            new_item_id,
+                            exc_info=True,
+                        )
+
+            # FALLBACK: If no resources were created (AI didn't generate any),
+            # auto-assign from catalog based on item description
+            if item_resources_count == 0:
+                auto_resources = _auto_assign_catalog_resources(
+                    db,
+                    item_id=new_item_id,
+                    org_id=org_id,
+                    item_desc=item.get("descripcion", ""),
+                    item_unidad=item.get("unidad", "u"),
+                    item_cantidad=item_cantidad,
+                )
+                if auto_resources:
+                    total_resources_created += len(auto_resources)
+                    # Recalculate item from auto-assigned resources
+                    try:
+                        calc_item_from_resources(row, auto_resources)
+                        db.table("budget_items").update({
+                            "mat_unitario": row.get("mat_unitario", 0),
+                            "mo_unitario": row.get("mo_unitario", 0),
+                            "mat_total": row.get("mat_total", 0),
+                            "mo_total": row.get("mo_total", 0),
+                            "directo_total": row.get("directo_total", 0),
+                            "neto_total": row.get("directo_total", 0),
+                        }).eq("id", new_item_id).execute()
+                    except Exception:
+                        logger.warning(
+                            "Failed to recalculate item %s from auto resources",
                             new_item_id,
                             exc_info=True,
                         )
