@@ -199,7 +199,7 @@ def _pdf_pages_to_images(content: bytes) -> list[bytes]:
 
         doc = fitz.open(stream=content, filetype="pdf")
         pages_png: list[bytes] = []
-        max_pages = min(len(doc), 8)  # cap at 8 pages to avoid huge payloads
+        max_pages = min(len(doc), 16)  # cap at 16 pages for multi-plan buildings
 
         for page_num in range(max_pages):
             page = doc[page_num]
