@@ -7,7 +7,7 @@ import io
 import warnings
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile
 
 from app.auth import get_current_user
 from app.db import get_data_db
@@ -407,6 +407,157 @@ async def search_catalog_entries(
         .execute()
     )
     return result.data or []
+
+
+# ── Delete catalog ───────────────────────────────────────────────────────────
+
+
+@router.delete("/{catalog_id}")
+async def delete_catalog(
+    catalog_id: UUID,
+    user: dict = Depends(get_current_user),
+):
+    """Delete a price catalog and all its entries."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    cid = str(catalog_id)
+
+    # Verify catalog belongs to org
+    catalog = (
+        db.table("price_catalogs")
+        .select("id")
+        .eq("id", cid)
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not catalog.data:
+        raise HTTPException(404, "Catalogo no encontrado")
+
+    # Delete entries first, then catalog
+    db.table("catalog_entries").delete().eq("catalog_id", cid).eq("org_id", org_id).execute()
+    db.table("price_catalogs").delete().eq("id", cid).eq("org_id", org_id).execute()
+
+    return {"deleted": True, "catalog_id": cid}
+
+
+# ── Create catalog entry ─────────────────────────────────────────────────────
+
+
+@router.post("/{catalog_id}/entries")
+async def create_catalog_entry(
+    catalog_id: UUID,
+    data: dict = Body(...),
+    user: dict = Depends(get_current_user),
+):
+    """Create a new entry in a catalog."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    cid = str(catalog_id)
+
+    # Verify catalog belongs to org
+    catalog = (
+        db.table("price_catalogs")
+        .select("id")
+        .eq("id", cid)
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not catalog.data:
+        raise HTTPException(404, "Catalogo no encontrado")
+
+    entry = {
+        "catalog_id": cid,
+        "org_id": org_id,
+        "codigo": data.get("codigo", ""),
+        "descripcion": data.get("descripcion", ""),
+        "unidad": data.get("unidad", ""),
+        "precio_sin_iva": data.get("precio_sin_iva", 0),
+        "tipo": data.get("tipo", "material"),
+    }
+    result = db.table("catalog_entries").insert(entry).execute()
+    if not result.data:
+        raise HTTPException(500, "Error al crear entrada")
+
+    return result.data[0]
+
+
+# ── Update catalog entry ─────────────────────────────────────────────────────
+
+
+@router.patch("/{catalog_id}/entries/{entry_id}")
+async def update_catalog_entry(
+    catalog_id: UUID,
+    entry_id: UUID,
+    data: dict = Body(...),
+    user: dict = Depends(get_current_user),
+):
+    """Update an existing catalog entry."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    cid = str(catalog_id)
+    eid = str(entry_id)
+
+    # Verify entry belongs to catalog and org
+    entry = (
+        db.table("catalog_entries")
+        .select("id")
+        .eq("id", eid)
+        .eq("catalog_id", cid)
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not entry.data:
+        raise HTTPException(404, "Entrada no encontrada")
+
+    # Only allow updating known fields
+    allowed = {"codigo", "descripcion", "unidad", "precio_sin_iva", "tipo"}
+    update_data = {k: v for k, v in data.items() if k in allowed}
+    if not update_data:
+        raise HTTPException(400, "No hay campos validos para actualizar")
+
+    result = (
+        db.table("catalog_entries")
+        .update(update_data)
+        .eq("id", eid)
+        .eq("org_id", org_id)
+        .execute()
+    )
+    return result.data[0] if result.data else {"updated": True}
+
+
+# ── Delete catalog entry ─────────────────────────────────────────────────────
+
+
+@router.delete("/{catalog_id}/entries/{entry_id}")
+async def delete_catalog_entry(
+    catalog_id: UUID,
+    entry_id: UUID,
+    user: dict = Depends(get_current_user),
+):
+    """Delete a single entry from a catalog."""
+    db = get_data_db()
+    org_id = user["org_id"]
+    cid = str(catalog_id)
+    eid = str(entry_id)
+
+    # Verify entry belongs to catalog and org
+    entry = (
+        db.table("catalog_entries")
+        .select("id")
+        .eq("id", eid)
+        .eq("catalog_id", cid)
+        .eq("org_id", org_id)
+        .single()
+        .execute()
+    )
+    if not entry.data:
+        raise HTTPException(404, "Entrada no encontrada")
+
+    db.table("catalog_entries").delete().eq("id", eid).eq("org_id", org_id).execute()
+    return {"deleted": True, "entry_id": eid}
 
 
 # ── Apply catalog prices to budget ──────────────────────────────────────────
