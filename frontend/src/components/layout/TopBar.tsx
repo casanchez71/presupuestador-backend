@@ -16,7 +16,7 @@ export default function TopBar() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const orgName = (user?.user_metadata?.org_name as string) || 'YOPACTO SAS'
+  const orgName = (user?.user_metadata?.org_name as string) || 'TERRAC SA'
   const displayName = user?.email?.split('@')[0]?.toUpperCase() || 'CS'
   const initials = displayName.slice(0, 2)
 

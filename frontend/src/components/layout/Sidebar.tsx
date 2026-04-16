@@ -82,7 +82,7 @@ export default function Sidebar() {
     navigate('/login')
   }
 
-  const orgName = (user?.user_metadata?.org_name as string) || 'YOPACTO SAS'
+  const orgName = (user?.user_metadata?.org_name as string) || 'TERRAC SA'
   const initials = orgName.slice(0, 1).toUpperCase()
 
   return (
